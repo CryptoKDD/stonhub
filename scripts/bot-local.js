@@ -1,0 +1,218 @@
+/**
+ * STON Vibe Studio - Local Bot Simulator (Long Polling)
+ * 
+ * Этот скрипт позволяет запускать и тестировать Telegram-бота локально на вашем компьютере
+ * без необходимости настраивать Webhooks или Vercel. Он автоматически опрашивает API
+ * Telegram с помощью метода getUpdates.
+ * 
+ * Запуск:
+ * 1. Задайте переменную окружения TELEGRAM_BOT_TOKEN
+ * 2. Выполните: node scripts/bot-local.js
+ */
+
+const https = require('https');
+
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://ston-vibe-studio.vercel.app';
+
+if (!BOT_TOKEN) {
+  console.error('\x1b[31m%s\x1b[0m', 'Ошибка: Переменная окружения TELEGRAM_BOT_TOKEN не задана!');
+  console.error('\x1b[33m%s\x1b[0m', 'Пожалуйста, установите её перед запуском:');
+  console.error('На Windows (PowerShell): $env:TELEGRAM_BOT_TOKEN="ваш_токен_бота"');
+  console.error('На macOS/Linux: export TELEGRAM_BOT_TOKEN="ваш_токен_бота"');
+  process.exit(1);
+}
+
+console.log('\x1b[36m%s\x1b[0m', 'STON Vibe Studio Bot Simulator запущен...');
+console.log(`URL Приложения: ${APP_URL}`);
+console.log('Ожидание сообщений от Telegram (Long Polling)... Прервать: Ctrl+C\n');
+
+let lastUpdateId = 0;
+
+// Функция отправки POST запросов к API Telegram
+function callTelegramAPI(method, payload) {
+  return new Promise((resolve, reject) => {
+    const postData = JSON.stringify(payload);
+    
+    const options = {
+      hostname: 'api.telegram.org',
+      port: 448,
+      path: `/bot${BOT_TOKEN}/${method}`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          resolve(parsed);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+
+    req.on('error', (e) => {
+      reject(e);
+    });
+
+    req.write(postData);
+    req.end();
+  });
+}
+
+// Главная логика обработки сообщений
+async function handleMessage(message) {
+  if (!message || !message.text) return;
+
+  const chatId = message.chat.id;
+  const text = message.text.trim();
+  const firstName = message.from?.first_name || 'Амбассадор';
+  const username = message.from?.username ? `@${message.from.username}` : 'без юзернейма';
+
+  console.log(`[Сообщение] От: ${firstName} (${username}) | Текст: "${text}"`);
+
+  // Обработка /start
+  if (text.startsWith('/start')) {
+    const parts = text.split(' ');
+    const refParam = parts.length > 1 ? parts[1] : null;
+    let refText = '';
+    
+    if (refParam && refParam.startsWith('ref_')) {
+      const referrerId = refParam.replace('ref_', '');
+      refText = `\n\n<i>Ваш пригласитель: Амбассадор #${referrerId} 🤝</i>`;
+    }
+
+    const welcomeMessage = `🚀 <b>Добро пожаловать в STON Vibe Studio, ${firstName}!</b>\n\n` +
+      `Мы рады видеть вас в нашей премиальной геймифицированной Web3-экосистеме для <b>STON.fi</b>.\n\n` +
+      `💎 <b>Что вас ждет внутри:</b>\n` +
+      `• <b>Academy:</b> Учите основы DeFi, проходите викторины и зарабатывайте XP.\n` +
+      `• <b>Missions Hub:</b> Выполняйте социальные и ончейн квесты.\n` +
+      `• <b>Vibe Swap:</b> Обменивайте TON / STON прямо в приложении.\n` +
+      `• <b>Ambassador Profile:</b> Повышайте ранг и претендуйте на эксклюзивные пулы наград.${refText}\n\n` +
+      `Нажмите на кнопку ниже, чтобы запустить приложение и активировать свой Вайб-Профиль! 👇`;
+
+    const inlineKeyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: 'Открыть STON Vibe Studio 🚀',
+            web_app: {
+              url: APP_URL,
+            },
+          },
+        ],
+        [
+          {
+            text: 'Официальный канал STON.fi 📢',
+            url: 'https://t.me/stonfidex',
+          },
+        ],
+      ],
+    };
+
+    await callTelegramAPI('sendMessage', {
+      chat_id: chatId,
+      text: welcomeMessage,
+      parse_mode: 'HTML',
+      reply_markup: inlineKeyboard
+    });
+  } 
+  // Обработка /help
+  else if (text === '/help') {
+    const helpMessage = `❓ <b>Как это работает?</b>\n\n` +
+      `1. Нажмите кнопку <b>Открыть STON Vibe Studio</b>.\n` +
+      `2. Подключите свой TON-кошелек (например, Tonkeeper).\n` +
+      `3. Выполняйте ежедневные задания и тесты в Академии.\n` +
+      `4. Получайте Вайб-Очки (XP) и повышайте свой ранг амбассадора.\n\n` +
+      `Если у вас возникли вопросы, обратитесь в нашу службу поддержки или посетите официальный чат!`;
+
+    const inlineKeyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: 'Запустить Приложение 🚀',
+            web_app: {
+              url: APP_URL,
+            },
+          },
+        ],
+      ],
+    };
+
+    await callTelegramAPI('sendMessage', {
+      chat_id: chatId,
+      text: helpMessage,
+      parse_mode: 'HTML',
+      reply_markup: inlineKeyboard
+    });
+  } 
+  // Любое другое сообщение
+  else {
+    const defaultMessage = `Я получил ваше сообщение! Но лучше всего использовать интерактивные функции внутри нашего Mini App.\n\n` +
+      `Нажмите на кнопку ниже, чтобы открыть студию:`;
+
+    const inlineKeyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: 'Открыть STON Vibe Studio 🚀',
+            web_app: {
+              url: APP_URL,
+            },
+          },
+        ],
+      ],
+    };
+
+    await callTelegramAPI('sendMessage', {
+      chat_id: chatId,
+      text: defaultMessage,
+      parse_mode: 'HTML',
+      reply_markup: inlineKeyboard
+    });
+  }
+}
+
+// Функция длинного опроса Telegram (Long Polling)
+async function pollUpdates() {
+  try {
+    const payload = {
+      timeout: 30,
+      offset: lastUpdateId + 1
+    };
+    
+    const response = await callTelegramAPI('getUpdates', payload);
+    
+    if (response.ok && response.result.length > 0) {
+      for (const update of response.result) {
+        lastUpdateId = update.update_id;
+        if (update.message) {
+          try {
+            await handleMessage(update.message);
+          } catch (err) {
+            console.error('Ошибка при обработке сообщения:', err);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Ошибка во время опроса Telegram API (getUpdates):', error.message || error);
+    // Ждем 5 секунд перед повторной попыткой при ошибке сети
+    await new Promise(r => setTimeout(r, 5000));
+  }
+  
+  // Рекурсивный вызов для непрерывного опроса
+  setTimeout(pollUpdates, 100);
+}
+
+// Запуск опроса
+pollUpdates();
