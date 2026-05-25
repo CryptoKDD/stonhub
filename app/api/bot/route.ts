@@ -29,7 +29,7 @@ interface TelegramUpdate {
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 // URL нашего Web App (будет браться из переменных окружения Vercel или дефолтное значение)
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://ston-vibe-studio.vercel.app';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://stonhub.vercel.app';
 
 async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: object) {
   if (!BOT_TOKEN) {

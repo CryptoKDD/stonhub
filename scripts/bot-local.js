@@ -13,7 +13,7 @@
 const https = require('https');
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://ston-vibe-studio.vercel.app';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://stonhub.vercel.app';
 
 if (!BOT_TOKEN) {
   console.error('\x1b[31m%s\x1b[0m', 'Ошибка: Переменная окружения TELEGRAM_BOT_TOKEN не задана!');
