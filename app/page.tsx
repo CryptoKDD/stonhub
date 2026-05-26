@@ -53,7 +53,7 @@ export default function Home() {
   const [userXp, setUserXp] = useState<number>(350);
   const [userRank, setUserRank] = useState<string>('Silver Vibe');
   const [dailyClaimed, setDailyClaimed] = useState<boolean>(false);
-  const [stonPrice, setStonPrice] = useState<number>(5.34);
+  const [stonPrice, setStonPrice] = useState<number>(3.25);
   const [priceDirection, setPriceDirection] = useState<'up' | 'down'>('up');
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -167,16 +167,47 @@ export default function Home() {
     { rank: 7, name: 'LiquidityPanda', xp: 980, badge: 'Gold Vibe' }
   ]);
 
-  // === Price Ticker Simulator ===
+  // === Real Price Fetcher & Simulator fallback ===
   useEffect(() => {
-    const interval = setInterval(() => {
-      const change = (Math.random() - 0.48) * 0.06;
-      setStonPrice(prev => {
-        const nextPrice = Number((prev + change).toFixed(3));
-        setPriceDirection(nextPrice >= prev ? 'up' : 'down');
-        return nextPrice;
-      });
-    }, 4000);
+    const fetchRealPrice = async () => {
+      try {
+        const res = await fetch(
+          'https://api.geckoterminal.com/api/v2/networks/ton/tokens/EQA2kCVNwVsil2EM2mB0SkXytxCqQjS4mttjDpnXmwG9T6bO',
+          { headers: { 'Accept': 'application/json;version=20230203' } }
+        );
+        const json = await res.json();
+        const priceStr = json?.data?.attributes?.price_usd;
+        if (priceStr) {
+          const nextPrice = parseFloat(priceStr);
+          setStonPrice(prev => {
+            setPriceDirection(nextPrice >= prev ? 'up' : 'down');
+            return Number(nextPrice.toFixed(3));
+          });
+          return true;
+        }
+      } catch (err) {
+        console.warn('GeckoTerminal fetch failed, using simulator fallback', err);
+      }
+      return false;
+    };
+
+    // Initial fetch
+    fetchRealPrice();
+
+    // Poll every 15 seconds
+    const interval = setInterval(async () => {
+      const success = await fetchRealPrice();
+      // If fetch failed, run simulator drift to keep UI feeling alive
+      if (!success) {
+        const change = (Math.random() - 0.48) * 0.04;
+        setStonPrice(prev => {
+          const nextPrice = Number((prev + change).toFixed(3));
+          setPriceDirection(nextPrice >= prev ? 'up' : 'down');
+          return nextPrice;
+        });
+      }
+    }, 15000);
+
     return () => clearInterval(interval);
   }, []);
 
