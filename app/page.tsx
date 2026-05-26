@@ -8,7 +8,7 @@ import {
   ChevronRight, Flame, Award, HelpCircle,
   TrendingUp, RefreshCw, Users, Play, Compass, Info
 } from 'lucide-react';
-import { TonConnectButton, useTonAddress } from '@tonconnect/ui-react';
+import { useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
 
 // === interfaces ===
 interface Lesson {
@@ -87,6 +87,7 @@ const SparkleParticles = () => {
 export default function Home() {
   // === Web3 states ===
   const walletAddress = useTonAddress();
+  const [tonConnectUI] = useTonConnectUI();
 
   // === App navigation states ===
   const [activeTab, setActiveTab] = useState<'home' | 'videos' | 'missions' | 'profile'>('home');
@@ -634,20 +635,40 @@ export default function Home() {
               <span className="text-[10px] tracking-widest text-[#FF9900] font-extrabold uppercase mt-0.5 block">STON IS LOVE. STON IS LIFE.</span>
             </div>
           </div>
-          <nav className="flex items-center gap-8 text-sm font-bold text-neutral-300">
-            <button onClick={() => { setActiveTab('videos'); setShowLeaderboard(false); }} className="hover:text-[#FF9900] transition flex items-center gap-1.5">
-              <BookOpen className="w-4 h-4 text-[#FF9900]" /> LEARN (Академия)
-            </button>
-            <button onClick={() => { setActiveTab('missions'); setShowLeaderboard(false); }} className="hover:text-[#FF9900] transition flex items-center gap-1.5">
-              <Target className="w-4 h-4 text-[#FF9900]" /> EARN (Миссии)
-            </button>
-            <button onClick={() => { setShowSwapModal(true); }} className="hover:text-[#FF9900] transition flex items-center gap-1.5">
-              <ArrowLeftRight className="w-4 h-4 text-[#FF9900]" /> TRADE (Своп)
-            </button>
-            <button onClick={() => { setActiveTab('profile'); setShowLeaderboard(true); }} className="hover:text-[#FF9900] transition flex items-center gap-1.5">
-              <Trophy className="w-4 h-4 text-[#FF9900]" /> GROW (Рейтинг)
-            </button>
-          </nav>
+          <div className="flex items-center gap-6">
+            <nav className="flex items-center gap-8 text-sm font-bold text-neutral-300">
+              <button onClick={() => { setActiveTab('videos'); setShowLeaderboard(false); }} className="hover:text-[#FF9900] transition flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-[#FF9900]" /> LEARN (Академия)
+              </button>
+              <button onClick={() => { setActiveTab('missions'); setShowLeaderboard(false); }} className="hover:text-[#FF9900] transition flex items-center gap-1.5">
+                <Target className="w-4 h-4 text-[#FF9900]" /> EARN (Миссии)
+              </button>
+              <button onClick={() => { setShowSwapModal(true); }} className="hover:text-[#FF9900] transition flex items-center gap-1.5">
+                <ArrowLeftRight className="w-4 h-4 text-[#FF9900]" /> TRADE (Своп)
+              </button>
+              <button onClick={() => { setActiveTab('profile'); setShowLeaderboard(true); }} className="hover:text-[#FF9900] transition flex items-center gap-1.5">
+                <Trophy className="w-4 h-4 text-[#FF9900]" /> GROW (Рейтинг)
+              </button>
+            </nav>
+
+            {/* Desktop Connect Wallet Button */}
+            {walletAddress ? (
+              <button 
+                onClick={() => tonConnectUI.disconnect()}
+                className="bg-neutral-900 hover:bg-neutral-850 border border-emerald-500/30 px-4 py-2 rounded-xl text-xs font-black text-emerald-400 flex items-center gap-2 shadow-sm transition active:scale-95"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}</span>
+              </button>
+            ) : (
+              <button 
+                onClick={() => tonConnectUI.openModal()}
+                className="bg-gradient-to-tr from-[#FF9900] to-[#FF5500] hover:from-[#FF5500] hover:to-[#FF9900] text-black px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-[#FF9900]/10 hover:shadow-[#FF9900]/25 transition active:scale-95"
+              >
+                Connect Wallet
+              </button>
+            )}
+          </div>
         </header>
 
         {/* Desktop Body Main Content (Flanked by decorations and showing mobile frame) */}
@@ -921,8 +942,23 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="scale-[0.82] origin-right">
-            <TonConnectButton />
+          <div className="scale-[0.9] origin-right">
+            {walletAddress ? (
+              <button 
+                onClick={() => tonConnectUI.disconnect()}
+                className="bg-neutral-900 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-[10px] font-black text-emerald-400 flex items-center gap-1.5 shadow-sm active:scale-95 transition"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}</span>
+              </button>
+            ) : (
+              <button 
+                onClick={() => tonConnectUI.openModal()}
+                className="bg-gradient-to-tr from-[#FF9900] to-[#FF5500] hover:from-[#FF5500] hover:to-[#FF9900] text-black px-3.5 py-1.5 rounded-xl text-[10px] font-black shadow-lg shadow-[#FF9900]/10 hover:shadow-[#FF9900]/25 active:scale-95 transition whitespace-nowrap"
+              >
+                Connect Wallet
+              </button>
+            )}
           </div>
         </header>
 
