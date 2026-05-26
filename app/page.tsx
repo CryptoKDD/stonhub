@@ -6,8 +6,7 @@ import {
   User, BookOpen, Target, ArrowLeftRight, Trophy, 
   Sparkles, CheckCircle2, AlertCircle, 
   ChevronRight, Flame, Award, HelpCircle,
-  TrendingUp, RefreshCw, Users, Play, Pause, ThumbsUp, 
-  Share2, Compass, Info
+  TrendingUp, RefreshCw, Users, Play, Compass, Info
 } from 'lucide-react';
 import { TonConnectButton, useTonAddress } from '@tonconnect/ui-react';
 
@@ -29,6 +28,7 @@ interface Lesson {
     options: string[];
     answerIndex: number;
   };
+  content?: string[];
 }
 
 interface Mission {
@@ -114,13 +114,9 @@ export default function Home() {
   const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
   const [quizResult, setQuizResult] = useState<'correct' | 'wrong' | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
-  const [videoFilter, setVideoFilter] = useState<string>('Все');
+  const [videoFilter, setVideoFilter] = useState<string>('Гайды');
 
-  // Video Simulated Playback
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [videoProgress, setVideoProgress] = useState<number>(0);
-  const [videoTime, setVideoTime] = useState<number>(0);
-  const [hasLiked, setHasLiked] = useState<boolean>(false);
+
 
   // === Swap States ===
   const [swapFromAmount, setSwapFromAmount] = useState<string>('');
@@ -131,6 +127,114 @@ export default function Home() {
   // === Mock Data ===
   const [lessons] = useState<Lesson[]>([
     {
+      id: 'guide-stonbassadors-intro',
+      title: 'Кто такой STONbassador и как им стать?',
+      category: 'Гайды',
+      description: 'Полное руководство по участию в амбассадорской программе STON.fi без сложных проверок и верификаций.',
+      xpReward: 80,
+      readTime: '3 мин',
+      completed: false,
+      duration: '3 мин',
+      views: '12.4K просмотров',
+      uploadedAt: 'Сегодня',
+      imageUrl: 'bg-gradient-to-br from-amber-950/40 via-neutral-900 to-black',
+      content: [
+        'STONbassadors — это официальные амбассадоры экосистемы STON.fi, которые помогают развивать бренд и сообщество. Это творческие люди, авторы контента, переводчики, инфлюенсеры и технические специалисты, разделяющие ценности децентрализации.',
+        'Главная прелесть программы — отсутствие сложного отбора. Вам не нужно ждать одобрения заявки или проходить жесткую верификацию личности (KYC). Вы можете начать в любой момент!',
+        'Чтобы присоединиться, достаточно выполнять полезные задания: создавать качественный контент (статьи, видео, инфографику), помогать новичкам в чатах сообщества или организовывать локальные мероприятия. В конце месяца вы отправляете отчет о проделанной работе через специальную форму.'
+      ],
+      quiz: {
+        question: 'Нужно ли проходить сложную верификацию или заполнять заявку, чтобы стать STONbassador?',
+        options: [
+          'Да, требуется верификация личности (KYC) и одобрение анкеты',
+          'Нет, можно сразу начать выполнять задания и отправлять отчеты',
+          'Да, нужен специальный инвайт-код от администрации'
+        ],
+        answerIndex: 1
+      }
+    },
+    {
+      id: 'guide-stonbassadors-rewards',
+      title: 'Система наград и правила отправки отчетов',
+      category: 'Гайды',
+      description: 'Как распределяется ежемесячный пул наград до 10,000 STON и как правильно отправлять свои работы на проверку.',
+      xpReward: 90,
+      readTime: '4 мин',
+      completed: false,
+      duration: '4 мин',
+      views: '9.8K просмотров',
+      uploadedAt: 'Вчера',
+      imageUrl: 'bg-gradient-to-br from-zinc-900 via-stone-900 to-orange-950/20',
+      content: [
+        'Каждый месяц команда STON.fi выделяет крупный призовой пул — до 10,000 токенов STON — для вознаграждения лучших участников программы STONbassadors.',
+        'Награды распределяются на основе качества, охвата аудитории и разнообразия вашего вклада. Все отправленные работы оцениваются модераторами вручную по нескольким критериям.',
+        'Чтобы получить награду, необходимо в конце каждого месяца заполнить специальную форму отправки отчета в Telegram-боте. Убедитесь, что все ваши ссылки активны, а работы оформлены аккуратно. Плагиат и накрутка просмотров строго запрещены и ведут к дисквалификации.'
+      ],
+      quiz: {
+        question: 'Какой максимальный ежемесячный пул наград выделяется для лучших STONbassadors?',
+        options: [
+          '1,000 STON',
+          '5,000 STON',
+          '10,000 STON'
+        ],
+        answerIndex: 2
+      }
+    },
+    {
+      id: 'guide-stonbassadors-content',
+      title: 'Создание контента: Советы и лучшие практики',
+      category: 'Гайды',
+      description: 'Как создавать вовлекающий, качественный контент о STON.fi, который получит максимальные оценки от команды.',
+      xpReward: 100,
+      readTime: '5 мин',
+      completed: false,
+      duration: '5 мин',
+      views: '7.5K просмотров',
+      uploadedAt: '2 дня назад',
+      imageUrl: 'bg-gradient-to-br from-neutral-900 via-orange-900/10 to-stone-950',
+      content: [
+        'Качественный контент — залог высокой оценки вашей работы. Команда STON.fi ценит уникальные материалы, которые действительно помогают пользователям разобраться в продукте.',
+        'При написании статей или гайдов используйте понятную структуру: четкое введение, разделы с подзаголовками, пошаговые инструкции и качественные скриншоты. Если вы описываете сложные DeFi-механики, добавьте наглядные примеры.',
+        'Продвигайте свои материалы на популярных платформах (Teletype, Medium, X, Telegram). Высокий органический охват и активные комментарии читателей существенно увеличат ваши шансы на получение повышенной награды.'
+      ],
+      quiz: {
+        question: 'Что из перечисленного является важным при создании качественного гайда по мнению команды STON.fi?',
+        options: [
+          'Использование сложных терминов без объяснений',
+          'Понятная структура, качественные скриншоты и пошаговые инструкции',
+          'Простое копирование чужих материалов с других сайтов'
+        ],
+        answerIndex: 1
+      }
+    },
+    {
+      id: 'guide-stonbassadors-referrals',
+      title: 'Реферальная программа для амбассадоров',
+      category: 'Гайды',
+      description: 'Узнайте, как приглашать друзей в программу и получать 10% от их наград в течение 6 месяцев.',
+      xpReward: 70,
+      readTime: '3 мин',
+      completed: false,
+      duration: '3 мин',
+      views: '5.2K просмотров',
+      uploadedAt: '3 дня назад',
+      imageUrl: 'bg-gradient-to-br from-amber-950/40 via-neutral-900 to-black',
+      content: [
+        'Программа STONbassadors включает в себя выгодную реферальную систему, которая позволяет получать пассивный доход за приглашение новых амбассадоров.',
+        'Вы можете поделиться своей уникальной реферальной ссылкой с друзьями. Если приглашенный пользователь регистрируется в программе и начинает зарабатывать награды, вы будете получать бонус в размере 10% от его ежемесячных начислений.',
+        'Этот реферальный бонус выплачивается из специального фонда команды STON.fi в течение 6 месяцев с момента регистрации реферала. При этом награда самого реферала никак не уменьшается.'
+      ],
+      quiz: {
+        question: 'Какой процент от наград ваших рефералов вы будете получать в течение 6 месяцев?',
+        options: [
+          '5%',
+          '10%',
+          '15%'
+        ],
+        answerIndex: 1
+      }
+    },
+    {
       id: 'lesson-1',
       title: 'Что такое STON.fi? Полный гайд для новичков',
       category: 'Академия',
@@ -138,10 +242,15 @@ export default function Home() {
       xpReward: 75,
       readTime: '3 мин',
       completed: false,
-      duration: '12:45',
+      duration: '3 мин',
       views: '8.4K просмотров',
       uploadedAt: '2 дня назад',
       imageUrl: 'bg-gradient-to-br from-amber-950/40 via-neutral-900 to-black',
+      content: [
+        'STON.fi — это ведущий децентрализованный автоматический маркетмейкер (AMM DEX) на блокчейне TON, предлагающий пользователям сверхнизкие комиссии, минимальное проскальзывание и удобный интерфейс.',
+        'В отличие от традиционных централизованных бирж, на STON.fi вам не нужно проходить регистрацию или доверять свои средства третьим лицам. Все обмены происходят напрямую между кошельками пользователей через безопасные смарт-контракты.',
+        'Благодаря архитектуре блокчейна TON, транзакции на STON.fi проходят практически мгновенно, делая торговлю криптовалютой доступной и быстрой для каждого.'
+      ],
       quiz: {
         question: 'Какую архитектуру использует STON.fi DEX?',
         options: [
@@ -160,10 +269,15 @@ export default function Home() {
       xpReward: 100,
       readTime: '5 мин',
       completed: false,
-      duration: '08:32',
+      duration: '5 мин',
       views: '6.1K просмотров',
       uploadedAt: '4 дня назад',
       imageUrl: 'bg-gradient-to-br from-zinc-900 via-stone-900 to-orange-950/20',
+      content: [
+        'Фарминг и предоставление ликвидности — один из самых популярных способов пассивного заработка в децентрализованных финансах (DeFi) на платформе STON.fi.',
+        'Когда вы вносите пару токенов (например, TON и STON) в пул ликвидности, вы получаете LP-токены, подтверждающие вашу долю в пуле. Провайдеры ликвидности получают часть торговых комиссий с каждого обмена в этой паре.',
+        'Дополнительно вы можете отправлять свои LP-токены в стейкинг в разделе фарминга, чтобы зарабатывать бонусные токены управления STON с высокой процентной ставкой APY.'
+      ],
       quiz: {
         question: 'Что получает провайдер ликвидности взамен внесенных токенов?',
         options: [
@@ -182,10 +296,15 @@ export default function Home() {
       xpReward: 120,
       readTime: '4 мин',
       completed: false,
-      duration: '04:15',
+      duration: '4 мин',
       views: '3.2K просмотров',
       uploadedAt: '1 неделю назад',
       imageUrl: 'bg-gradient-to-br from-neutral-900 via-orange-900/10 to-stone-950',
+      content: [
+        'Токен $STON является ключевым элементом управления и стимуляции всей экосистемы децентрализованной биржи STON.fi.',
+        'Стейкинг токенов STON позволяет пользователям блокировать свои средства на определенный период в обмен на получение специальных токенов AR-STON. Эти токены дают право участвовать в голосованиях за ключевые изменения платформы.',
+        'Кроме того, стейкеры получают долю от доходов протокола, что делает долгосрочное удержание токена STON еще более выгодным и стратегически важным для участников.'
+      ],
       quiz: {
         question: 'Какое ключевое преимущество стейкинга $STON на платформе STON.fi?',
         options: [
@@ -220,7 +339,7 @@ export default function Home() {
     {
       id: 'm-3',
       title: 'Пройди урок в Академии',
-      description: 'Изучите любой видео-гайд в разделе «Видео» и решите тест без ошибок.',
+      description: 'Изучите любой гайд в разделе «Академия» и решите тест без ошибок.',
       xpReward: 75,
       type: 'daily',
       status: 'available',
@@ -256,33 +375,7 @@ export default function Home() {
     { rank: 7, name: 'Твой рейтинг (Вы)', xp: 4250, badge: 'Gold Vibe', isCurrentUser: true }
   ]);
 
-  // Simulated live video progress
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setVideoTime(prev => {
-          const next = prev + 1;
-          const maxSec = selectedLesson ? (selectedLesson.id === 'lesson-1' ? 765 : selectedLesson.id === 'lesson-2' ? 512 : 255) : 100;
-          setVideoProgress((next / maxSec) * 100);
-          if (next >= maxSec) {
-            setIsPlaying(false);
-            return maxSec;
-          }
-          return next;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, selectedLesson]);
 
-  // Reset video progress when changing selected lesson
-  useEffect(() => {
-    setIsPlaying(false);
-    setVideoProgress(0);
-    setVideoTime(0);
-    setHasLiked(false);
-  }, [selectedLesson]);
 
   // === Real Price Fetcher & Simulator fallback ===
   useEffect(() => {
@@ -509,15 +602,10 @@ export default function Home() {
     }, 2500);
   };
 
-  // Helper for video progress clock display
-  const formatSeconds = (sec: number) => {
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  };
+
 
   // Filter lessons
-  const filteredLessons = lessons.filter(l => videoFilter === 'Все' || l.category === videoFilter);
+  const filteredLessons = videoFilter === 'Гайды' ? lessons : [];
 
 
   return (
@@ -1087,171 +1175,120 @@ export default function Home() {
                 className="space-y-4 text-left"
               >
                 {selectedLesson ? (
-                  // --- Detailed Video Player View ---
+                  // --- Detailed Text Guide View ---
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="glass-panel rounded-2xl p-4 space-y-4 border-[#FF9900]/20"
+                    className="glass-panel rounded-2xl p-5 space-y-5 border-[#FF9900]/20 text-left"
                   >
                     {/* Back Button */}
-                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                      <span className="text-[9px] font-black text-[#FF9900] uppercase bg-[#FF9900]/10 px-2 py-0.5 rounded border border-[#FF9900]/20">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-[9px] font-black text-[#FF9900] uppercase bg-[#FF9900]/10 px-2.5 py-0.5 rounded-full border border-[#FF9900]/20">
                         {selectedLesson.category}
                       </span>
                       <button 
                         onClick={() => setSelectedLesson(null)}
-                        className="text-xs text-neutral-400 hover:text-white flex items-center gap-0.5"
+                        className="text-xs text-neutral-400 hover:text-white flex items-center gap-0.5 font-bold"
                       >
-                        ← Назад
+                        ← К списку гайдов
                       </button>
                     </div>
 
-                    {/* Custom Parody Video Player */}
-                    <div className="w-full aspect-video rounded-xl bg-neutral-950 border border-white/5 relative overflow-hidden flex flex-col justify-between shadow-2xl group">
-                      
-                      {/* Buffering simulation gradient or thumbnail backdrop */}
-                      <div className="absolute inset-0 bg-neutral-900 flex items-center justify-center">
-                        <div className="text-center space-y-2">
-                          <Play className="w-12 h-12 text-[#FF9900] mx-auto opacity-70 group-hover:scale-110 transition duration-300" />
-                          <p className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">STON Hub PLAYER</p>
-                        </div>
+                    {/* Elegant Header Banner */}
+                    <div className="w-full rounded-xl bg-gradient-to-br from-amber-950/20 via-neutral-900/80 to-black p-5 border border-white/5 relative overflow-hidden shadow-inner">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#FF9900]/5 to-transparent rounded-full blur-2xl pointer-events-none" />
+                      <div className="flex items-center gap-2 text-[10px] text-[#FF9900] font-bold uppercase tracking-wider mb-2">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Учебный материал</span>
                       </div>
-
-                      {/* Video Top Details */}
-                      <div className="p-3 bg-gradient-to-b from-black/80 to-transparent z-10 flex justify-between items-center text-[10px] text-neutral-300">
-                        <span>Стриминг 1080p HD</span>
-                        <span className="text-[#FF9900] font-bold">100% FREE</span>
-                      </div>
-
-                      {/* Video Central Play Overlay Button */}
-                      <button 
-                        onClick={() => setIsPlaying(!isPlaying)}
-                        className="absolute inset-0 m-auto w-14 h-14 rounded-full bg-black/60 backdrop-blur-sm border border-[#FF9900]/30 z-20 flex items-center justify-center hover:bg-black/80 active:scale-95 transition"
-                      >
-                        {isPlaying ? <Pause className="w-6 h-6 text-[#FF9900]" /> : <Play className="w-6 h-6 text-[#FF9900] ml-0.5" />}
-                      </button>
-
-                      {/* Video Player Seeker and Controls */}
-                      <div className="p-2.5 bg-gradient-to-t from-black/90 to-transparent z-10 space-y-2">
-                        {/* Seeker Bar */}
-                        <div 
-                          className="h-1.5 w-full bg-neutral-800 rounded-full cursor-pointer relative overflow-hidden"
-                          onClick={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const pct = (e.clientX - rect.left) / rect.width;
-                            const maxSec = selectedLesson.id === 'lesson-1' ? 765 : selectedLesson.id === 'lesson-2' ? 512 : 255;
-                            setVideoProgress(pct * 100);
-                            setVideoTime(Math.floor(pct * maxSec));
-                          }}
-                        >
-                          <div 
-                            className="h-full bg-[#FF9900] rounded-full orange-glow-sm"
-                            style={{ width: `${videoProgress}%` }}
-                          />
-                        </div>
-
-                        {/* Control Buttons row */}
-                        <div className="flex justify-between items-center text-[10px] text-neutral-300">
-                          <div className="flex items-center gap-3">
-                            <button onClick={() => setIsPlaying(!isPlaying)}>
-                              {isPlaying ? <Pause className="w-3.5 h-3.5 text-white" /> : <Play className="w-3.5 h-3.5 text-white" />}
-                            </button>
-                            <span>
-                              {formatSeconds(videoTime)} / {selectedLesson.duration}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                            <span className="text-[9px] uppercase font-bold text-neutral-400">ПОДКЛЮЧЕНО</span>
-                          </div>
-                        </div>
+                      <h2 className="text-sm font-black text-white leading-snug mb-3">
+                        {selectedLesson.title}
+                      </h2>
+                      <div className="flex gap-4 text-[10px] text-neutral-400">
+                        <span className="flex items-center gap-1 font-semibold">
+                          <BookOpen className="w-3.5 h-3.5 text-[#FF9900]" />
+                          Время чтения: {selectedLesson.readTime}
+                        </span>
+                        <span>•</span>
+                        <span>{selectedLesson.views}</span>
                       </div>
                     </div>
 
-                    {/* Title and stats bar */}
-                    <div className="space-y-1">
-                      <h3 className="text-sm font-black text-white leading-tight">{selectedLesson.title}</h3>
-                      <div className="flex justify-between items-center text-[10px] text-neutral-400 border-b border-white/5 pb-2">
-                        <span>{selectedLesson.views} • {selectedLesson.uploadedAt}</span>
-                        <div className="flex items-center gap-3 font-bold">
-                          <button onClick={() => setHasLiked(!hasLiked)} className="flex items-center gap-1 hover:text-[#FF9900]">
-                            <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'text-[#FF9900]' : 'text-neutral-400'}`} />
-                            <span>{hasLiked ? '99%' : '98%'}</span>
-                          </button>
-                          <button className="flex items-center gap-1 hover:text-[#FF9900]">
-                            <Share2 className="w-3.5 h-3.5 text-neutral-400" />
-                            <span>Поделиться</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Lesson Description Content */}
-                    <div className="text-[11px] text-neutral-400 space-y-2 leading-relaxed">
-                      <p>{selectedLesson.description}</p>
-                      <p className="bg-[#141416]/70 p-3 rounded-lg border border-white/5">
-                        <strong>Как устроена ликвидность на STON.fi:</strong> Все обмены происходят внутри смарт-контрактов децентрализованных пулов. Внося средства в равной пропорции (например, TON и STON), вы получаете долю в комиссиях от каждой транзакции обмена в этой паре!
-                      </p>
+                    {/* Reading Content Pane */}
+                    <div className="text-xs text-neutral-300 space-y-4 leading-relaxed font-sans border-b border-white/5 pb-4">
+                      {selectedLesson.content ? (
+                        selectedLesson.content.map((paragraph, index) => (
+                          <p key={index} className="text-neutral-300">
+                            {paragraph}
+                          </p>
+                        ))
+                      ) : (
+                        <p className="text-neutral-300">
+                          {selectedLesson.description}
+                        </p>
+                      )}
                     </div>
 
                     {/* Interactive Lesson Quiz */}
-                    <div className="border-t border-white/5 pt-4 space-y-3">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-xs font-black text-white">
                         <HelpCircle className="w-4 h-4 text-[#FF9900]" />
-                        <span>Реши тест и подтверди просмотр (+{selectedLesson.xpReward} XP):</span>
+                        <span>Пройдите тест для получения +{selectedLesson.xpReward} XP:</span>
                       </div>
                       
-                      <p className="text-xs text-white font-bold bg-neutral-900/60 p-3.5 rounded-xl border border-white/5">
+                      <p className="text-xs text-white font-bold bg-neutral-900/60 p-4 rounded-xl border border-white/5 leading-snug">
                         {selectedLesson.quiz.question}
                       </p>
 
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
                         {selectedLesson.quiz.options.map((opt, idx) => (
                           <button
                             key={idx}
                             disabled={quizResult === 'correct'}
                             onClick={() => handleLessonQuizSubmit(idx)}
-                            className={`w-full text-left text-xs p-3 rounded-xl border flex items-center justify-between transition-all duration-300 ${
+                            className={`w-full text-left text-xs p-3.5 rounded-xl border flex items-center justify-between transition-all duration-300 ${
                               quizAnswer === idx
                                 ? quizResult === 'correct'
-                                  ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
-                                  : 'bg-rose-500/10 border-rose-500 text-rose-500'
-                                : 'bg-neutral-900 border-white/5 text-white hover:border-[#FF9900]/30'
+                                  ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400 font-bold'
+                                  : 'bg-rose-500/10 border-rose-500 text-rose-500 font-bold'
+                                : 'bg-neutral-900 border-white/5 text-white hover:border-[#FF9900]/30 active:scale-[0.99]'
                             }`}
                           >
                             <span>{opt}</span>
                             {quizAnswer === idx && (
                               quizResult === 'correct' 
-                                ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 
-                                : <AlertCircle className="w-4 h-4 text-rose-500" />
+                                ? <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 ml-2" /> 
+                                : <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 ml-2" />
                             )}
                           </button>
                         ))}
                       </div>
 
                       {quizResult === 'correct' && (
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex items-center gap-2 text-xs text-emerald-400 font-bold">
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-xl flex items-center gap-2 text-xs text-emerald-400 font-bold">
                           <CheckCircle2 className="w-4 h-4 shrink-0" />
-                          <span>Великолепный ответ! Тест успешно пройден.</span>
+                          <span>Задание успешно выполнено! Награда начислена.</span>
                         </div>
                       )}
                     </div>
                   </motion.div>
                 ) : (
-                  // --- Videos List Grid ---
+                  // --- Academy Section Main View ---
                   <div className="space-y-4">
                     {/* Header titles */}
                     <div className="flex justify-between items-end">
                       <div>
-                        <h2 className="text-base font-black text-white">Видео Академия 🎓</h2>
-                        <p className="text-[11px] text-neutral-400">Смотри ролики, отвечай на тесты и прокачивайся</p>
+                        <h2 className="text-base font-black text-white">Академия STONHub 🎓</h2>
+                        <p className="text-[11px] text-neutral-400">Читай гайды, отвечай на тесты и прокачивайся</p>
                       </div>
-                      <span className="text-[10px] text-neutral-500 font-bold">Всего: {filteredLessons.length}</span>
+                      <span className="text-[10px] text-neutral-500 font-bold">
+                        {videoFilter === 'Гайды' ? `Всего гайдов: ${filteredLessons.length}` : 'Скоро'}
+                      </span>
                     </div>
 
                     {/* Horizontal Categories Scroll */}
                     <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar select-none">
-                      {['Все', 'Академия', 'Гайды'].map(cat => (
+                      {['Гайды', 'Видео'].map(cat => (
                         <button
                           key={cat}
                           onClick={() => setVideoFilter(cat)}
@@ -1266,62 +1303,78 @@ export default function Home() {
                       ))}
                     </div>
 
-                    {/* Videos Grid */}
-                    <div className="space-y-3.5">
-                      {filteredLessons.map(lesson => {
-                        const isCompleted = completedLessonIds.includes(lesson.id);
-                        return (
-                          <div 
-                            key={lesson.id}
-                            onClick={() => setSelectedLesson(lesson)}
-                            className="glass-panel-interactive rounded-xl overflow-hidden cursor-pointer border border-white/5 relative group text-left"
-                          >
-                            {/* Video Thumbnail overlay */}
-                            <div className={`w-full aspect-[16/9] ${lesson.imageUrl} relative flex items-center justify-center overflow-hidden`}>
-                              
-                              {/* Glowing lasers inside thumbnail */}
-                              <div className="absolute inset-0 bg-black/40" />
-                              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(0,0,0,0.8)_100%)]" />
-                              
-                              {/* Large Moai logo watermark inside thumbnail */}
-                              <img src="/logo.png" className="w-16 h-16 rounded-full opacity-15 border border-[#FF9900]/30 transform group-hover:scale-110 transition duration-300" />
-                              
-                              {/* Custom Play Badge Overlay */}
-                              <div className="absolute w-12 h-12 rounded-full bg-black/60 backdrop-blur-sm border border-[#FF9900]/30 flex items-center justify-center group-hover:bg-[#FF9900] group-hover:border-[#FF9900] transition duration-300">
-                                <Play className="w-5 h-5 text-[#FF9900] group-hover:text-black ml-0.5 transition duration-300" />
-                              </div>
-
-                              {/* Duration Badge Bottom Right */}
-                              <div className="absolute bottom-2 right-2 bg-black/85 text-white text-[9px] font-black px-1.5 py-0.5 rounded tracking-wide">
-                                {lesson.duration}
-                              </div>
-
-                              {/* Completion Tick Top Left */}
-                              {isCompleted && (
-                                <div className="absolute top-2 left-2 bg-emerald-500 text-black text-[9px] font-black uppercase py-0.5 px-2.5 rounded shadow flex items-center gap-0.5">
-                                  <CheckCircle2 className="w-3 h-3" /> СДАНО
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Card descriptions */}
-                            <div className="p-3.5 space-y-1.5">
-                              <div className="flex justify-between items-center">
-                                <span className="text-[8px] font-black text-[#FF9900] uppercase bg-[#FF9900]/10 border border-[#FF9900]/20 px-2 py-0.5 rounded">
+                    {videoFilter === 'Видео' ? (
+                      /* Coming Soon Video Empty State */
+                      <div className="glass-panel rounded-2xl p-8 text-center space-y-4 border-white/5 my-4">
+                        <div className="w-16 h-16 rounded-full bg-neutral-900 border border-[#FF9900]/30 flex items-center justify-center mx-auto shadow-lg relative">
+                          <Play className="w-6 h-6 text-[#FF9900] animate-pulse" />
+                          <div className="absolute inset-0 rounded-full border border-[#FF9900]/20 animate-ping opacity-70" />
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="text-sm font-black text-white">Видеокурсы — Скоро будет 🎬</h3>
+                          <p className="text-[11px] text-neutral-400 leading-relaxed max-w-xs mx-auto">
+                            Мы готовим для вас серию эксклюзивных видеоматериалов по трейдингу, ликвидности и стейкингу в экосистеме STON.fi. 
+                          </p>
+                        </div>
+                        <span className="inline-block bg-[#FF9900]/10 text-[#FF9900] text-[8px] font-black tracking-widest px-3 py-1 rounded-full uppercase border border-[#FF9900]/20">
+                          COMING SOON
+                        </span>
+                      </div>
+                    ) : (
+                      /* Elegant list of Text Guides */
+                      <div className="space-y-3.5">
+                        {filteredLessons.map(lesson => {
+                          const isCompleted = completedLessonIds.includes(lesson.id);
+                          return (
+                            <div 
+                              key={lesson.id}
+                              onClick={() => setSelectedLesson(lesson)}
+                              className="glass-panel-interactive rounded-xl p-4 cursor-pointer border border-white/5 relative group text-left transition-all duration-300 hover:border-[#FF9900]/30 hover:shadow-[0_4px_20px_rgba(255,153,0,0.05)]"
+                            >
+                              <div className="flex justify-between items-center mb-2.5">
+                                <span className="text-[8px] font-black text-[#FF9900] uppercase bg-[#FF9900]/10 border border-[#FF9900]/20 px-2.5 py-0.5 rounded-full">
                                   {lesson.category}
                                 </span>
-                                <span className="text-[9px] font-bold text-emerald-400">⚡ +{lesson.xpReward} XP</span>
+                                <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                                  ⚡ +{lesson.xpReward} XP
+                                </span>
                               </div>
-                              <h3 className="font-bold text-xs text-white group-hover:text-[#FF9900] transition duration-200 line-clamp-1">{lesson.title}</h3>
-                              <div className="flex justify-between items-center text-[10px] text-neutral-500">
-                                <span>{lesson.views}</span>
-                                <span>{lesson.uploadedAt}</span>
+                              
+                              <h3 className="font-black text-xs text-white group-hover:text-[#FF9900] transition duration-200 line-clamp-2 leading-snug mb-1.5">
+                                {lesson.title}
+                              </h3>
+                              
+                              <p className="text-[11px] text-neutral-400 line-clamp-2 leading-relaxed mb-3">
+                                {lesson.description}
+                              </p>
+                              
+                              <div className="flex justify-between items-center text-[10px] text-neutral-500 border-t border-white/5 pt-2.5">
+                                <div className="flex items-center gap-3">
+                                  <span className="flex items-center gap-1">
+                                    <BookOpen className="w-3.5 h-3.5 text-neutral-500" />
+                                    {lesson.readTime}
+                                  </span>
+                                  <span>{lesson.views}</span>
+                                </div>
+                                
+                                <div className="flex items-center gap-1.5 font-bold text-[#FF9900] group-hover:translate-x-0.5 transition-transform duration-200">
+                                  {isCompleted ? (
+                                    <span className="text-emerald-400 flex items-center gap-0.5 text-[9px] font-black uppercase">
+                                      <CheckCircle2 className="w-3.5 h-3.5" /> Сдано
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <span>Читать гайд</span>
+                                      <ChevronRight className="w-3.5 h-3.5" />
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </motion.div>
@@ -1667,7 +1720,7 @@ export default function Home() {
             }`}
           >
             <BookOpen className="w-5 h-5" />
-            <span className="text-[9px] font-black uppercase">Видео</span>
+            <span className="text-[9px] font-black uppercase">Академия</span>
             {activeTab === 'videos' && (
               <motion.div layoutId="nav-glow" className="absolute -bottom-3 w-8 h-1 bg-[#FF9900] rounded-t-full shadow-lg shadow-[#FF9900]/50" />
             )}
