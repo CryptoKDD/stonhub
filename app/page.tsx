@@ -357,13 +357,14 @@ export default function Home() {
 
       {/* === HEADER === */}
       <header className="p-4 flex items-center justify-between border-b border-white/5 sticky top-0 bg-[#050816]/80 backdrop-blur-md z-40">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#00D2FF] to-[#7A5CFF] flex items-center justify-center shadow-lg shadow-[#00D2FF]/20">
-            <Sparkles className="w-4 h-4 text-white animate-pulse" />
-          </div>
+        <div className="flex items-center gap-2.5">
+          <img 
+            src="/logo.png" 
+            alt="STONHUB Logo" 
+            className="w-9 h-9 rounded-full object-cover border border-white/10 shadow-md shadow-[#00D2FF]/10"
+          />
           <div>
-            <h1 className="text-sm font-bold tracking-tight bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent">STON Vibe</h1>
-            <p className="text-[10px] text-[#A0AEC0] font-medium tracking-widest uppercase">Studio</p>
+            <h1 className="text-base font-black tracking-wider bg-gradient-to-r from-white via-[#00D2FF] to-[#00FFA3] bg-clip-text text-transparent">STONHUB</h1>
           </div>
         </div>
 
