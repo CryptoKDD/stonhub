@@ -86,30 +86,163 @@ const SparkleParticles = () => {
 
 // === Dynamic Premium Token Logos (Proxied to bypass CORS/Hotlink restrictions and load exact official assets) ===
 const TokenLogo = ({ symbol, className = "w-4 h-4 rounded-full shrink-0" }: { symbol: string; className?: string }) => {
+  const [hasError, setHasError] = useState(false);
+  const [tryRemote, setTryRemote] = useState(false);
+
   // Find token metadata matching symbol
   const tokenKey = Object.keys(SWAP_TOKENS).find(
     k => k.toLowerCase() === symbol.toLowerCase() || SWAP_TOKENS[k as keyof typeof SWAP_TOKENS].symbol.toLowerCase() === symbol.toLowerCase()
   ) as keyof typeof SWAP_TOKENS | undefined;
   
   const token = tokenKey ? SWAP_TOKENS[tokenKey] : null;
-  const logoUrl = token ? token.logo : '';
+  let logoUrl = token ? token.logo : '';
   
-  // Use images.weserv.nl proxy to bypass CORS/hotlinking restrictions in Telegram sandbox
-  // Using w=48&h=48&fit=cover converts high-resolution assets to fast-loading optimized thumbnails
+  // Alternative highly reliable CDNs/URLs for popular tokens to bypass local blocks
+  const symbolUpper = symbol.toUpperCase();
+  if (symbolUpper === 'TON') {
+    logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/TON/logo.png';
+  } else if (symbolUpper === 'USDT' || symbolUpper === 'USD\u20AE') {
+    logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/USD%E2%82%AE/logo.png';
+  } else if (symbolUpper === 'STON') {
+    logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/STON/logo.png';
+  } else if (symbolUpper === 'NOT') {
+    logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/NOT/logo.png';
+  } else if (symbolUpper === 'DOGS') {
+    logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/DOGS/logo.png';
+  } else if (symbolUpper === 'TSTON' || symbolUpper === 'TSTON') {
+    logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/tsTON/logo.png';
+  }
+
   const proxiedUrl = logoUrl 
     ? `https://images.weserv.nl/?url=${encodeURIComponent(logoUrl)}&w=48&h=48&fit=cover`
-    : `https://images.weserv.nl/?url=https%3A%2F%2Fassets.ston.fi%2Fweb%2Fmeta%2Fton%2Flogo.png&w=48&h=48&fit=cover`;
+    : `https://images.weserv.nl/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftonkeeper%2Fton-assets%2Fmain%2Fbranding%2Ftonkeeper%2Flogo_128x128.png&w=48&h=48&fit=cover`;
+
+  // Get fallback styles for a premium gradient-based letter avatar
+  const getFallbackStyle = (sym: string) => {
+    const s = sym.toUpperCase();
+    switch (s) {
+      case 'TON':
+        return {
+          bg: 'bg-gradient-to-br from-[#0088CC] to-[#005588]',
+          text: 'text-white',
+          glow: 'shadow-[#0088CC]/30 border-[#0088CC]/30',
+          char: 'T'
+        };
+      case 'STON':
+        return {
+          bg: 'bg-gradient-to-br from-[#FF9900] to-[#FF5500]',
+          text: 'text-black font-extrabold',
+          glow: 'shadow-[#FF9900]/30 border-[#FF9900]/30',
+          char: 'S'
+        };
+      case 'USDT':
+      case 'USD\u20AE':
+      case 'JUSDT':
+        return {
+          bg: 'bg-gradient-to-br from-[#009393] to-[#005252]',
+          text: 'text-white',
+          glow: 'shadow-[#009393]/30 border-[#009393]/30',
+          char: 'U'
+        };
+      case 'USDC':
+      case 'JUSDC':
+        return {
+          bg: 'bg-gradient-to-br from-[#2775CA] to-[#143A6B]',
+          text: 'text-white',
+          glow: 'shadow-[#2775CA]/30 border-[#2775CA]/30',
+          char: 'C'
+        };
+      case 'TSTON':
+        return {
+          bg: 'bg-gradient-to-br from-[#0088CC] via-[#4EAEFF] to-[#004477]',
+          text: 'text-white',
+          glow: 'shadow-[#0088CC]/30 border-[#4EAEFF]/30',
+          char: 't'
+        };
+      case 'NOT':
+        return {
+          bg: 'bg-gradient-to-br from-[#E5C158] to-[#9E8231]',
+          text: 'text-black font-extrabold',
+          glow: 'shadow-[#E5C158]/30 border-[#E5C158]/30',
+          char: 'N'
+        };
+      case 'DOGS':
+        return {
+          bg: 'bg-gradient-to-br from-[#FFFFFF] to-[#888888]',
+          text: 'text-black font-extrabold',
+          glow: 'shadow-white/20 border-white/20',
+          char: 'D'
+        };
+      case 'REDO':
+        return {
+          bg: 'bg-gradient-to-br from-[#E02424] to-[#7A1212]',
+          text: 'text-white',
+          glow: 'shadow-[#E02424]/30 border-[#E02424]/30',
+          char: 'R'
+        };
+      case 'CATI':
+        return {
+          bg: 'bg-gradient-to-br from-[#FF8A65] to-[#D84315]',
+          text: 'text-white',
+          glow: 'shadow-[#FF8A65]/30 border-[#FF8A65]/30',
+          char: 'C'
+        };
+      case 'HMSTR':
+        return {
+          bg: 'bg-gradient-to-br from-[#D2B48C] to-[#8B5A2B]',
+          text: 'text-white',
+          glow: 'shadow-[#D2B48C]/30 border-[#D2B48C]/30',
+          char: 'H'
+        };
+      default: {
+        // Deterministic gradient from the symbol name characters
+        let hash = 0;
+        for (let i = 0; i < s.length; i++) {
+          hash = s.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const h1 = Math.abs(hash % 360);
+        const h2 = (h1 + 40) % 360;
+        return {
+          style: { background: `linear-gradient(135deg, hsl(${h1}, 75%, 45%), hsl(${h2}, 85%, 25%))` },
+          bg: '',
+          text: 'text-white',
+          glow: 'shadow-black/20 border-white/10',
+          char: s.charAt(0) || '?'
+        };
+      }
+    }
+  };
+
+  const styleObj = getFallbackStyle(symbol);
+
+  if (hasError) {
+    return (
+      <div 
+        className={`${className} flex items-center justify-center overflow-hidden shrink-0 rounded-full border shadow-sm ${styleObj.bg} ${styleObj.glow}`}
+        style={styleObj.style}
+        title={symbol}
+      >
+        <span className={`text-[10px] font-black tracking-tight ${styleObj.text}`}>
+          {styleObj.char}
+        </span>
+      </div>
+    );
+  }
+
+  // First step: Try loading from local public/tokens/ folder
+  const localUrl = `/tokens/${symbol.toLowerCase()}.png`;
 
   return (
-    <div className={`${className} flex items-center justify-center overflow-hidden shrink-0 bg-neutral-900/50 border border-white/5`}>
+    <div className={`${className} flex items-center justify-center overflow-hidden shrink-0 bg-neutral-900/50 border border-white/5 shadow-sm rounded-full`}>
       <img 
-        src={proxiedUrl} 
+        src={tryRemote ? proxiedUrl : localUrl} 
         alt={symbol} 
         className="w-full h-full object-cover rounded-full"
-        onError={(e) => {
-          // Fallback just in case the proxy encounters any issue
-          if (logoUrl) {
-            e.currentTarget.src = logoUrl;
+        onError={() => {
+          if (!tryRemote) {
+            setTryRemote(true);
+          } else {
+            setHasError(true);
           }
         }}
       />
