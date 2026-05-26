@@ -10,12 +10,14 @@ interface TelegramWebApp {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
+  const [manifestUrl, setManifestUrl] = useState('https://stonhub.vercel.app/tonconnect-manifest.json');
 
   useEffect(() => {
     setMounted(true);
     
     // Инициализируем стандартный Telegram WebApp API на клиенте
     if (typeof window !== 'undefined') {
+      setManifestUrl(`${window.location.origin}/tonconnect-manifest.json`);
       const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
       if (tg) {
         try {
@@ -40,7 +42,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <TonConnectUIProvider manifestUrl="/tonconnect-manifest.json">
+    <TonConnectUIProvider manifestUrl={manifestUrl}>
       {children}
     </TonConnectUIProvider>
   );
