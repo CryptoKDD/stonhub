@@ -84,6 +84,37 @@ const SparkleParticles = () => {
   );
 };
 
+const SWAP_TOKENS = {
+  TON: {
+    symbol: 'TON',
+    name: 'The Open Network',
+    logo: 'https://assets.coingecko.com/coins/images/17980/large/ton_token.png',
+    priceUsd: 5.35,
+    balance: '12.45'
+  },
+  STON: {
+    symbol: 'STON',
+    name: 'STON.fi',
+    logo: 'https://assets.coingecko.com/coins/images/32635/large/ston.png',
+    priceUsd: 3.38,
+    balance: '150.00'
+  },
+  USDT: {
+    symbol: 'USD₮',
+    name: 'Tether',
+    logo: 'https://assets.coingecko.com/coins/images/325/large/Tether.png',
+    priceUsd: 1.00,
+    balance: '42.10'
+  },
+  NOT: {
+    symbol: 'NOT',
+    name: 'Notcoin',
+    logo: 'https://assets.coingecko.com/coins/images/37857/large/notcoin.png',
+    priceUsd: 0.0074,
+    balance: '15,000.0'
+  }
+} as const;
+
 export default function Home() {
   // === Web3 states ===
   const walletAddress = useTonAddress();
@@ -120,10 +151,12 @@ export default function Home() {
 
 
   // === Swap States ===
+  const [swapFromToken, setSwapFromToken] = useState<'TON' | 'STON' | 'USDT' | 'NOT'>('TON');
+  const [swapToToken, setSwapToToken] = useState<'TON' | 'STON' | 'USDT' | 'NOT'>('STON');
   const [swapFromAmount, setSwapFromAmount] = useState<string>('');
   const [swapToAmount, setSwapToAmount] = useState<string>('');
-  const [swapToken, setSwapToken] = useState<'TON' | 'STON'>('TON');
   const [isSwapping, setIsSwapping] = useState<boolean>(false);
+  const [activeDropdown, setActiveDropdown] = useState<'from' | 'to' | null>(null);
 
   // === Mock Data ===
   const [lessons] = useState<Lesson[]>([
@@ -563,18 +596,50 @@ export default function Home() {
     }, 3500);
   };
 
-  const handleSwapAmountChange = (val: string) => {
+  const handleSwapAmountChange = (
+    val: string, 
+    fromTokenOverride?: 'TON' | 'STON' | 'USDT' | 'NOT', 
+    toTokenOverride?: 'TON' | 'STON' | 'USDT' | 'NOT'
+  ) => {
     setSwapFromAmount(val);
     if (!val || isNaN(Number(val))) {
       setSwapToAmount('');
       return;
     }
     const amount = Number(val);
-    if (swapToken === 'TON') {
-      setSwapToAmount((amount * 1.58).toFixed(3));
+    const fromToken = fromTokenOverride || swapFromToken;
+    const toToken = toTokenOverride || swapToToken;
+    
+    const priceFrom = SWAP_TOKENS[fromToken].priceUsd;
+    const priceTo = SWAP_TOKENS[toToken].priceUsd;
+    const output = amount * (priceFrom / priceTo);
+    
+    // Use more decimals for tiny rates like NOT (Notcoin)
+    const decimals = (priceFrom / priceTo) < 0.01 ? 5 : 3;
+    setSwapToAmount(output.toFixed(decimals));
+  };
+
+  const handleSelectToken = (type: 'from' | 'to', token: 'TON' | 'STON' | 'USDT' | 'NOT') => {
+    if (type === 'from') {
+      if (token === swapToToken) {
+        setSwapToToken(swapFromToken);
+        setSwapFromToken(token);
+        handleSwapAmountChange(swapFromAmount, token, swapFromToken);
+      } else {
+        setSwapFromToken(token);
+        handleSwapAmountChange(swapFromAmount, token, swapToToken);
+      }
     } else {
-      setSwapToAmount((amount / 1.58).toFixed(3));
+      if (token === swapFromToken) {
+        setSwapFromToken(swapToToken);
+        setSwapToToken(token);
+        handleSwapAmountChange(swapFromAmount, swapToToken, token);
+      } else {
+        setSwapToToken(token);
+        handleSwapAmountChange(swapFromAmount, swapFromToken, token);
+      }
     }
+    setActiveDropdown(null);
   };
 
   const executeSwap = () => {
@@ -799,15 +864,19 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="w-full max-w-sm glass-panel rounded-2xl p-5 border-[#FF9900]/30 space-y-4"
+              className="w-full max-w-sm glass-panel rounded-2xl p-5 border-[#FF9900]/30 space-y-4 relative"
             >
+              {/* Modal Header */}
               <div className="flex justify-between items-center border-b border-white/5 pb-3">
                 <div className="flex items-center gap-1.5">
                   <ArrowLeftRight className="w-5 h-5 text-[#FF9900]" />
-                  <span className="font-black text-sm uppercase tracking-wider text-white">Vibe Swap 🔄</span>
+                  <span className="font-black text-sm uppercase tracking-wider text-white">SWAP 🔄</span>
                 </div>
                 <button
-                  onClick={() => setShowSwapModal(false)}
+                  onClick={() => {
+                    setShowSwapModal(false);
+                    setActiveDropdown(null);
+                  }}
                   className="text-xs text-neutral-500 hover:text-white"
                 >
                   Закрыть
@@ -818,7 +887,7 @@ export default function Home() {
               <div className="bg-neutral-900/60 p-4 rounded-xl border border-white/5 relative">
                 <div className="flex justify-between items-center text-[10px] text-neutral-400 mb-2 font-medium">
                   <span>Вы отправляете:</span>
-                  <span>Баланс: {swapToken === 'TON' ? '12.45' : '150.0'} {swapToken}</span>
+                  <span>Баланс: {SWAP_TOKENS[swapFromToken].balance} {swapFromToken}</span>
                 </div>
                 <div className="flex justify-between items-center gap-3">
                   <input 
@@ -829,26 +898,49 @@ export default function Home() {
                     className="bg-transparent text-white font-black text-lg outline-none w-1/2"
                   />
                   <button 
-                    onClick={() => {
-                      setSwapToken(prev => prev === 'TON' ? 'STON' : 'TON');
-                      setSwapFromAmount('');
-                      setSwapToAmount('');
-                    }}
-                    className="bg-black hover:bg-neutral-900 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 text-[#FF9900]"
+                    onClick={() => setActiveDropdown(activeDropdown === 'from' ? null : 'from')}
+                    className="bg-black hover:bg-neutral-900 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 text-white active:scale-95 transition"
                   >
-                    <span className="w-4 h-4 rounded-full bg-gradient-to-tr from-[#FF9900] to-[#FF5500] block" />
-                    {swapToken}
+                    <img 
+                      src={SWAP_TOKENS[swapFromToken].logo} 
+                      alt={swapFromToken} 
+                      className="w-4 h-4 rounded-full object-cover shrink-0" 
+                    />
+                    <span>{swapFromToken}</span>
+                    <span className="text-[8px] text-neutral-500">▼</span>
                   </button>
                 </div>
+
+                {/* Dropdown From */}
+                {activeDropdown === 'from' && (
+                  <div className="absolute right-4 top-14 z-50 bg-[#141416] border border-white/10 p-1.5 rounded-xl shadow-2xl space-y-1 w-36 animate-fade-in">
+                    {Object.keys(SWAP_TOKENS).map((sym) => {
+                      const t = SWAP_TOKENS[sym as keyof typeof SWAP_TOKENS];
+                      return (
+                        <button
+                          key={sym}
+                          onClick={() => handleSelectToken('from', sym as keyof typeof SWAP_TOKENS)}
+                          className="w-full flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg text-left text-xs font-bold transition text-white"
+                        >
+                          <img src={t.logo} alt={sym} className="w-4.5 h-4.5 rounded-full object-cover shrink-0" />
+                          <div className="flex flex-col">
+                            <span className="leading-tight">{sym}</span>
+                            <span className="text-[8px] text-neutral-500 leading-none">{t.name}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Swap Swap direction arrow */}
               <div className="flex justify-center -my-6 relative z-10">
                 <button 
                   onClick={() => {
-                    setSwapToken(prev => prev === 'TON' ? 'STON' : 'TON');
-                    setSwapFromAmount('');
-                    setSwapToAmount('');
+                    setSwapFromToken(swapToToken);
+                    setSwapToToken(swapFromToken);
+                    handleSwapAmountChange(swapFromAmount, swapToToken, swapFromToken);
                   }}
                   className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FF9900] to-[#FF5500] p-0.5 shadow-lg active:rotate-180 transition-all duration-300"
                 >
@@ -862,7 +954,7 @@ export default function Home() {
               <div className="bg-neutral-900/60 p-4 rounded-xl border border-white/5 relative mt-1">
                 <div className="flex justify-between items-center text-[10px] text-neutral-400 mb-2 font-medium">
                   <span>Вы получаете:</span>
-                  <span>Баланс: {swapToken === 'TON' ? '150.0' : '12.45'} {swapToken === 'TON' ? 'STON' : 'TON'}</span>
+                  <span>Баланс: {SWAP_TOKENS[swapToToken].balance} {swapToToken}</span>
                 </div>
                 <div className="flex justify-between items-center gap-3">
                   <input 
@@ -873,19 +965,49 @@ export default function Home() {
                     className="bg-transparent text-white/70 font-black text-lg outline-none w-1/2"
                   />
                   <button 
-                    className="bg-black border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 text-white"
+                    onClick={() => setActiveDropdown(activeDropdown === 'to' ? null : 'to')}
+                    className="bg-black hover:bg-neutral-900 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 text-white active:scale-95 transition"
                   >
-                    <span className="w-4 h-4 rounded-full bg-gradient-to-tr from-[#FF5500] to-white block" />
-                    {swapToken === 'TON' ? 'STON' : 'TON'}
+                    <img 
+                      src={SWAP_TOKENS[swapToToken].logo} 
+                      alt={swapToToken} 
+                      className="w-4 h-4 rounded-full object-cover shrink-0" 
+                    />
+                    <span>{swapToToken}</span>
+                    <span className="text-[8px] text-neutral-500">▼</span>
                   </button>
                 </div>
+
+                {/* Dropdown To */}
+                {activeDropdown === 'to' && (
+                  <div className="absolute right-4 top-14 z-50 bg-[#141416] border border-white/10 p-1.5 rounded-xl shadow-2xl space-y-1 w-36 animate-fade-in">
+                    {Object.keys(SWAP_TOKENS).map((sym) => {
+                      const t = SWAP_TOKENS[sym as keyof typeof SWAP_TOKENS];
+                      return (
+                        <button
+                          key={sym}
+                          onClick={() => handleSelectToken('to', sym as keyof typeof SWAP_TOKENS)}
+                          className="w-full flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg text-left text-xs font-bold transition text-white"
+                        >
+                          <img src={t.logo} alt={sym} className="w-4.5 h-4.5 rounded-full object-cover shrink-0" />
+                          <div className="flex flex-col">
+                            <span className="leading-tight">{sym}</span>
+                            <span className="text-[8px] text-neutral-500 leading-none">{t.name}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Swap details info card */}
               <div className="p-3 text-[11px] text-neutral-400 space-y-1 bg-black/40 rounded-xl border border-white/5">
                 <div className="flex justify-between">
                   <span>Курс обмена:</span>
-                  <span className="text-white font-semibold">1 TON = 1.58 STON</span>
+                  <span className="text-white font-semibold">
+                    1 {swapFromToken} = {(SWAP_TOKENS[swapFromToken].priceUsd / SWAP_TOKENS[swapToToken].priceUsd).toFixed(swapToToken === 'NOT' ? 4 : 3)} {swapToToken}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Вайб-Бонус за сделку:</span>
