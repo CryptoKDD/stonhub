@@ -336,13 +336,6 @@ const SWAP_TOKENS = {
     priceUsd: 0.014,
     balance: '35,000.0'
   },
-  GRAM: {
-    symbol: 'GRAM',
-    name: 'Gram',
-    logo: 'https://assets.ston.fi/web/meta/EQC47093oX5Xhb0xuk2lCr2RhS8rj-vul61u4W2UH5ORmG_O/logo.png',
-    priceUsd: 0.0085,
-    balance: '5,000.00'
-  },
   SCALE: {
     symbol: 'SCALE',
     name: 'DUST (Scale)',
