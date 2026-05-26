@@ -88,30 +88,142 @@ const SWAP_TOKENS = {
   TON: {
     symbol: 'TON',
     name: 'The Open Network',
-    logo: 'https://assets.coingecko.com/coins/images/17980/large/ton_token.png',
+    logo: 'https://assets.ston.fi/web/meta/ton/logo.png',
     priceUsd: 5.35,
     balance: '12.45'
   },
   STON: {
     symbol: 'STON',
     name: 'STON.fi',
-    logo: 'https://assets.coingecko.com/coins/images/32635/large/ston.png',
+    logo: 'https://assets.ston.fi/web/meta/EQA2kCVNwVsil2EM2mB0SkXytxCqQjS4mttjDpnXmwG9T6bO/logo.png',
     priceUsd: 3.38,
     balance: '150.00'
   },
   USDT: {
     symbol: 'USD₮',
-    name: 'Tether',
-    logo: 'https://assets.coingecko.com/coins/images/325/large/Tether.png',
+    name: 'Tether USD',
+    logo: 'https://assets.ston.fi/web/meta/EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs/logo.png',
     priceUsd: 1.00,
     balance: '42.10'
+  },
+  tsTON: {
+    symbol: 'tsTON',
+    name: 'Tonstakers Staked TON',
+    logo: 'https://assets.ston.fi/web/meta/EQC98_qAmNEptUtPc7W6xdHh_ZHrBUFpw5Ft_IzNU20QAJav/logo.png',
+    priceUsd: 5.42,
+    balance: '8.50'
   },
   NOT: {
     symbol: 'NOT',
     name: 'Notcoin',
-    logo: 'https://assets.coingecko.com/coins/images/37857/large/notcoin.png',
+    logo: 'https://assets.ston.fi/web/meta/EQAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM__NOT/logo.png',
     priceUsd: 0.0074,
     balance: '15,000.0'
+  },
+  DOGS: {
+    symbol: 'DOGS',
+    name: 'Dogs',
+    logo: 'https://assets.ston.fi/web/meta/EQCvxJy4eG8hyHBFsZ7eePxrRsUQSFE_jpptRAYBmcG_DOGS/logo.png',
+    priceUsd: 0.00062,
+    balance: '85,000.0'
+  },
+  REDO: {
+    symbol: 'REDO',
+    name: 'Resistance Dog',
+    logo: 'https://assets.ston.fi/web/meta/EQBZ_nnC3l1l1ZJdJ4s5Z8l_rZ-rV-t3Q9d8aX6M2-A3_s9L/logo.png',
+    priceUsd: 0.68,
+    balance: '120.00'
+  },
+  GEMSTON: {
+    symbol: 'GEMSTON',
+    name: 'Gemston',
+    logo: 'https://assets.ston.fi/web/meta/EQBX6K9aXVl3nXINCyPPL86C4ONVmQ8vK360u6dykFKXpHCa/logo.png',
+    priceUsd: 0.15,
+    balance: '450.00'
+  },
+  UTYA: {
+    symbol: 'UTYA',
+    name: 'Utya',
+    logo: 'https://assets.ston.fi/web/meta/EQBaCgUwOoc6gHCNln_oJzb0mVs79YG7wYoavh-o1ItaneLA/logo.png',
+    priceUsd: 0.0014,
+    balance: '12,500.0'
+  },
+  CATI: {
+    symbol: 'CATI',
+    name: 'Catizen',
+    logo: 'https://assets.ston.fi/web/meta/EQD-cvR0Nz6XAyRBvbhz-abTrRC6sI5tvHvvpeQraV9UAAD7/logo.png',
+    priceUsd: 0.38,
+    balance: '280.00'
+  },
+  HMSTR: {
+    symbol: 'HMSTR',
+    name: 'Hamster Kombat',
+    logo: 'https://assets.ston.fi/web/meta/EQAJ8uWd7EBqsmpSWaRdf_I-8R8-XHwh3gsNKhy-UrdrPcUo/logo.png',
+    priceUsd: 0.0035,
+    balance: '1,500.00'
+  },
+  DUREV: {
+    symbol: 'DUREV',
+    name: 'Povel Durev',
+    logo: 'https://assets.ston.fi/web/meta/EQB02DJ0cdUD4iQDRbBv4aYG3htePHBRK1tGeRtCnatescK0/logo.png',
+    priceUsd: 0.014,
+    balance: '35,000.0'
+  },
+  GRAM: {
+    symbol: 'GRAM',
+    name: 'Gram',
+    logo: 'https://assets.ston.fi/web/meta/EQC47093oX5Xhb0xuk2lCr2RhS8rj-vul61u4W2UH5ORmG_O/logo.png',
+    priceUsd: 0.0085,
+    balance: '5,000.00'
+  },
+  SCALE: {
+    symbol: 'SCALE',
+    name: 'DUST (Scale)',
+    logo: 'https://assets.ston.fi/web/meta/EQBlqsm144Dq6SjbPI4jjZvA1hqTIP3CvHovbIfW_t-SCALE/logo.png',
+    priceUsd: 0.22,
+    balance: '14.00'
+  },
+  PUNK: {
+    symbol: 'PUNK',
+    name: 'PunkCity',
+    logo: 'https://assets.ston.fi/web/meta/EQCdpz6QhJtDtm2s9-krV2ygl45Pwl-KJJCV1-XrP-Xuuxoq/logo.png',
+    priceUsd: 0.045,
+    balance: '2,200.00'
+  },
+  FISH: {
+    symbol: 'FISH',
+    name: 'TON Fish',
+    logo: 'https://assets.ston.fi/web/meta/EQATcUc69sGSCCMSadsVUKdGwM1BMKS-HKCWGPk60xZGgwsK/logo.png',
+    priceUsd: 0.000000045,
+    balance: '120,000,000'
+  },
+  BOLT: {
+    symbol: 'BOLT',
+    name: 'Huebel Bolt',
+    logo: 'https://assets.ston.fi/web/meta/EQBS7qLzxOsPIzVRj6hjA5NMvA11oj6qS3oWNqCKJ04tGTkc/logo.png',
+    priceUsd: 0.12,
+    balance: '500.00'
+  },
+  jUSDT: {
+    symbol: 'jUSDT',
+    name: 'TON Bridged USDT',
+    logo: 'https://assets.ston.fi/web/meta/EQBynBO23ywHy_CgarY9NK9FTz0yDsG82PtcbSTQgGoXwiuA/logo.png',
+    priceUsd: 1.00,
+    balance: '25.00'
+  },
+  jUSDC: {
+    symbol: 'jUSDC',
+    name: 'TON Bridged USDC',
+    logo: 'https://assets.ston.fi/web/meta/EQB-MPwrd1G6WKNkLz_VnV6WqBDd142KMQv-g1O-8QUA3728/logo.png',
+    priceUsd: 1.00,
+    balance: '15.00'
+  },
+  RAFF: {
+    symbol: 'RAFF',
+    name: 'TonRaffles',
+    logo: 'https://assets.ston.fi/web/meta/EQDMdC1zf-FquFgeN-wIvpkIclDLR3bXnDVaoOanpNpBVmm_/logo.png',
+    priceUsd: 0.095,
+    balance: '350.00'
   }
 } as const;
 
@@ -151,8 +263,8 @@ export default function Home() {
 
 
   // === Swap States ===
-  const [swapFromToken, setSwapFromToken] = useState<'TON' | 'STON' | 'USDT' | 'NOT'>('TON');
-  const [swapToToken, setSwapToToken] = useState<'TON' | 'STON' | 'USDT' | 'NOT'>('STON');
+  const [swapFromToken, setSwapFromToken] = useState<keyof typeof SWAP_TOKENS>('TON');
+  const [swapToToken, setSwapToToken] = useState<keyof typeof SWAP_TOKENS>('STON');
   const [swapFromAmount, setSwapFromAmount] = useState<string>('');
   const [swapToAmount, setSwapToAmount] = useState<string>('');
   const [isSwapping, setIsSwapping] = useState<boolean>(false);
@@ -598,8 +710,8 @@ export default function Home() {
 
   const handleSwapAmountChange = (
     val: string, 
-    fromTokenOverride?: 'TON' | 'STON' | 'USDT' | 'NOT', 
-    toTokenOverride?: 'TON' | 'STON' | 'USDT' | 'NOT'
+    fromTokenOverride?: keyof typeof SWAP_TOKENS, 
+    toTokenOverride?: keyof typeof SWAP_TOKENS
   ) => {
     setSwapFromAmount(val);
     if (!val || isNaN(Number(val))) {
@@ -619,7 +731,7 @@ export default function Home() {
     setSwapToAmount(output.toFixed(decimals));
   };
 
-  const handleSelectToken = (type: 'from' | 'to', token: 'TON' | 'STON' | 'USDT' | 'NOT') => {
+  const handleSelectToken = (type: 'from' | 'to', token: keyof typeof SWAP_TOKENS) => {
     if (type === 'from') {
       if (token === swapToToken) {
         setSwapToToken(swapFromToken);
@@ -913,7 +1025,7 @@ export default function Home() {
 
                 {/* Dropdown From */}
                 {activeDropdown === 'from' && (
-                  <div className="absolute right-4 top-14 z-50 bg-[#141416] border border-white/10 p-1.5 rounded-xl shadow-2xl space-y-1 w-36 animate-fade-in">
+                  <div className="absolute right-4 top-14 z-50 bg-[#141416] border border-white/10 p-1.5 rounded-xl shadow-2xl space-y-1 w-44 max-h-64 overflow-y-auto no-scrollbar animate-fade-in">
                     {Object.keys(SWAP_TOKENS).map((sym) => {
                       const t = SWAP_TOKENS[sym as keyof typeof SWAP_TOKENS];
                       return (
@@ -980,7 +1092,7 @@ export default function Home() {
 
                 {/* Dropdown To */}
                 {activeDropdown === 'to' && (
-                  <div className="absolute right-4 top-14 z-50 bg-[#141416] border border-white/10 p-1.5 rounded-xl shadow-2xl space-y-1 w-36 animate-fade-in">
+                  <div className="absolute right-4 top-14 z-50 bg-[#141416] border border-white/10 p-1.5 rounded-xl shadow-2xl space-y-1 w-44 max-h-64 overflow-y-auto no-scrollbar animate-fade-in">
                     {Object.keys(SWAP_TOKENS).map((sym) => {
                       const t = SWAP_TOKENS[sym as keyof typeof SWAP_TOKENS];
                       return (
