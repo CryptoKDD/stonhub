@@ -84,204 +84,39 @@ const SparkleParticles = () => {
   );
 };
 
-// === Dynamic Premium Inline Vector Logos (Zero Network Requests / Zero CORS / Always 100% Crisp) ===
+// === Dynamic Premium Token Logos (Proxied to bypass CORS/Hotlink restrictions and load exact official assets) ===
 const TokenLogo = ({ symbol, className = "w-4 h-4 rounded-full shrink-0" }: { symbol: string; className?: string }) => {
-  const sym = symbol.toUpperCase();
+  // Find token metadata matching symbol
+  const tokenKey = Object.keys(SWAP_TOKENS).find(
+    k => k.toLowerCase() === symbol.toLowerCase() || SWAP_TOKENS[k as keyof typeof SWAP_TOKENS].symbol.toLowerCase() === symbol.toLowerCase()
+  ) as keyof typeof SWAP_TOKENS | undefined;
   
-  const renderSvg = () => {
-    switch (sym) {
-      case 'TON':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#0088CC" />
-            <path d="M24 65 L50 21 L76 65 L58 65 L50 49 L42 65 Z" fill="white" />
-          </svg>
-        );
-      case 'USDT':
-      case 'USD₮':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#26A17B" />
-            <circle cx="50" cy="50" r="32" fill="none" stroke="white" strokeWidth="6" />
-            <path d="M34 38 H66 M50 38 V65 M42 48 H58" stroke="white" strokeWidth="6" strokeLinecap="round" />
-          </svg>
-        );
-      case 'STON':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#0F172A" stroke="#1F85EC" strokeWidth="4" />
-            <path d="M30 40 L50 25 L70 40 V60 L50 75 L30 60 Z" fill="none" stroke="#1F85EC" strokeWidth="5" />
-            <path d="M40 45 Q50 35 60 45 T40 60 Q50 70 60 60" fill="none" stroke="white" strokeWidth="7" strokeLinecap="round" />
-          </svg>
-        );
-      case 'TSTON':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#0057B7" />
-            <circle cx="50" cy="50" r="42" fill="none" stroke="#00C2FF" strokeWidth="4" />
-            <path d="M25 65 L50 22 L75 65 L58 65 L50 49 L42 65 Z" fill="white" />
-            <path d="M35 75 L50 50 L65 75 L54 75 L50 66 L46 75 Z" fill="#00C2FF" />
-          </svg>
-        );
-      case 'NOT':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <rect width="100" height="100" rx="20" fill="black" stroke="#F1B90C" strokeWidth="4" />
-            <path d="M35 25 V75 M35 35 L65 65 M65 25 V75" stroke="#F1B90C" strokeWidth="12" strokeLinecap="square" />
-          </svg>
-        );
-      case 'DOGS':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="white" stroke="black" strokeWidth="2" />
-            <path d="M30 45 Q35 40 40 45 T50 42 T60 45 T70 40" fill="none" stroke="black" strokeWidth="4" />
-            <path d="M45 42 Q50 25 55 42" fill="none" stroke="black" strokeWidth="4" />
-            <path d="M35 55 Q50 75 65 55" fill="none" stroke="black" strokeWidth="4" />
-            <circle cx="42" cy="48" r="3" fill="black" />
-            <circle cx="58" cy="48" r="3" fill="black" />
-            <path d="M50 53 L47 57 H53 Z" fill="black" />
-          </svg>
-        );
-      case 'REDO':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#111827" />
-            <path d="M30 65 C30 50 40 40 50 40 C60 40 70 50 70 65" fill="#1F2937" stroke="white" strokeWidth="3" />
-            <circle cx="50" cy="50" r="8" fill="white" />
-            <circle cx="48" cy="49" r="1.5" fill="black" />
-            <circle cx="52" cy="49" r="1.5" fill="black" />
-            <path d="M50 53 L49 55 H51 Z" fill="black" />
-          </svg>
-        );
-      case 'GEMSTON':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#FF9900" />
-            <path d="M50 15 L75 35 L60 85 L40 85 L25 35 Z" fill="none" stroke="white" strokeWidth="5" />
-            <path d="M50 15 L50 85 M25 35 H75" stroke="white" strokeWidth="3" />
-          </svg>
-        );
-      case 'UTYA':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#FBBF24" />
-            <circle cx="38" cy="42" r="3" fill="black" />
-            <circle cx="62" cy="42" r="3" fill="black" />
-            <path d="M30 52 Q50 68 70 52 Q50 58 30 52 Z" fill="#EF4444" />
-          </svg>
-        );
-      case 'CATI':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#8B5CF6" />
-            <path d="M25 40 L35 60 H65 L75 40 L65 52 H35 Z" fill="#A78BFA" />
-            <circle cx="40" cy="58" r="3.5" fill="white" />
-            <circle cx="60" cy="58" r="3.5" fill="white" />
-            <path d="M50 63 L47 67 H53 Z" fill="black" />
-          </svg>
-        );
-      case 'HMSTR':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#D97706" />
-            <ellipse cx="38" cy="50" rx="8" ry="12" fill="white" />
-            <ellipse cx="62" cy="50" rx="8" ry="12" fill="white" />
-            <circle cx="38" cy="48" r="3.5" fill="black" />
-            <circle cx="62" cy="48" r="3.5" fill="black" />
-            <path d="M47 58 L50 61 L53 58 Z" fill="#EF4444" />
-          </svg>
-        );
-      case 'DUREV':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#F43F5E" />
-            <path d="M32 45 Q50 25 68 45" fill="none" stroke="white" strokeWidth="4" />
-            <ellipse cx="40" cy="48" rx="4" ry="7" fill="white" />
-            <ellipse cx="60" cy="48" rx="4" ry="7" fill="white" />
-            <circle cx="40" cy="48" r="2.5" fill="black" />
-            <circle cx="60" cy="48" r="2.5" fill="black" />
-            <path d="M35 65 Q50 78 65 65" fill="none" stroke="white" strokeWidth="5" />
-          </svg>
-        );
-      case 'GRAM':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#374151" stroke="#E5E7EB" strokeWidth="3" />
-            <path d="M68 38 C63 28 47 28 38 38 C28 48 28 64 38 72 C48 80 62 76 68 65 H50" fill="none" stroke="white" strokeWidth="10" strokeLinecap="round" />
-          </svg>
-        );
-      case 'SCALE':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#1E293B" stroke="#F59E0B" strokeWidth="3" />
-            <path d="M50 20 C65 35 65 55 50 75 C35 55 35 35 50 20 Z" fill="#F59E0B" />
-          </svg>
-        );
-      case 'PUNK':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#4C1D95" />
-            <path d="M32 45 H68 V65 L50 78 L32 65 Z" fill="#EC4899" />
-            <circle cx="42" cy="54" r="5" fill="black" />
-            <circle cx="58" cy="54" r="5" fill="black" />
-            <path d="M45 68 H55" stroke="black" strokeWidth="3" />
-          </svg>
-        );
-      case 'FISH':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#0369A1" />
-            <path d="M25 50 C25 40 45 35 65 45 L75 35 V65 L65 55 C45 65 25 60 25 50 Z" fill="white" />
-            <circle cx="38" cy="47" r="2.5" fill="#0369A1" />
-          </svg>
-        );
-      case 'BOLT':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#D97706" />
-            <path d="M55 18 L32 50 H48 L45 82 L68 50 H52 Z" fill="#FBBF24" />
-          </svg>
-        );
-      case 'JUSDT':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#047857" stroke="#3B82F6" strokeWidth="4" />
-            <path d="M30 40 H55 M42 40 V65 C42 70 35 70 32 65" stroke="white" strokeWidth="6" strokeLinecap="round" /><circle cx="62" cy="52" r="14" fill="#10B981" /><path d="M53 52 H71 M62 44 V60" stroke="white" strokeWidth="3" />
-          </svg>
-        );
-      case 'JUSDC':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#1D4ED8" stroke="#3B82F6" strokeWidth="4" />
-            <path d="M30 40 H55 M42 40 V65 C42 70 35 70 32 65" stroke="white" strokeWidth="6" strokeLinecap="round" /><circle cx="62" cy="52" r="14" fill="#3B82F6" /><path d="M68 47 C65 44 59 44 56 47 C53 50 53 54 56 57 C59 60 65 60 68 57" fill="none" stroke="white" strokeWidth="3" />
-          </svg>
-        );
-      case 'RAFF':
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#991B1B" />
-            <rect x="25" y="32" width="50" height="36" rx="5" fill="none" stroke="white" strokeWidth="5" />
-            <circle cx="25" cy="50" r="6" fill="#991B1B" />
-            <circle cx="75" cy="50" r="6" fill="#991B1B" />
-            <path d="M42 45 H58 M42 55 H58" stroke="white" strokeWidth="3" />
-          </svg>
-        );
-      default:
-        return (
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="50" cy="50" r="50" fill="#FF9900" />
-            <text x="50" y="55" textAnchor="middle" fill="black" fontSize="24" fontWeight="bold">{sym.slice(0, 3)}</text>
-          </svg>
-        );
-    }
-  };
+  const token = tokenKey ? SWAP_TOKENS[tokenKey] : null;
+  const logoUrl = token ? token.logo : '';
+  
+  // Use images.weserv.nl proxy to bypass CORS/hotlinking restrictions in Telegram sandbox
+  // Using w=48&h=48&fit=cover converts high-resolution assets to fast-loading optimized thumbnails
+  const proxiedUrl = logoUrl 
+    ? `https://images.weserv.nl/?url=${encodeURIComponent(logoUrl)}&w=48&h=48&fit=cover`
+    : `https://images.weserv.nl/?url=https%3A%2F%2Fassets.ston.fi%2Fweb%2Fmeta%2Fton%2Flogo.png&w=48&h=48&fit=cover`;
 
   return (
-    <div className={`${className} flex items-center justify-center overflow-hidden shrink-0`}>
-      {renderSvg()}
+    <div className={`${className} flex items-center justify-center overflow-hidden shrink-0 bg-neutral-900/50 border border-white/5`}>
+      <img 
+        src={proxiedUrl} 
+        alt={symbol} 
+        className="w-full h-full object-cover rounded-full"
+        onError={(e) => {
+          // Fallback just in case the proxy encounters any issue
+          if (logoUrl) {
+            e.currentTarget.src = logoUrl;
+          }
+        }}
+      />
     </div>
   );
 };
+
 
 const SWAP_TOKENS = {
   TON: {
