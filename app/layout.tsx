@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "STON Vibe Studio",
-  description: "Gamified Ambassador OS & Academy Hub for the STON.fi Ecosystem",
+  title: "STON Hub — Ambassador OS & DeFi Academy",
+  description: "Premium Gamified Ambassador OS & DeFi Academy Hub for the STON.fi Ecosystem",
 };
 
 export default function RootLayout({

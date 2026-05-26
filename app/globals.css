@@ -48,34 +48,33 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Custom STON Vibe Studio Theme Variables */
-  --color-cyan-glow: #00D2FF;
-  --color-mint-glow: #00FFA3;
-  --color-purple-glow: #7A5CFF;
+  /* Custom STON Hub Pornhub-Style Theme Variables */
+  --color-orange-glow: #FF9900;
+  --color-orange-dark: #FF5500;
 }
 
 :root {
-  /* Premium Dark / Obsidian Theme by default */
-  --background: #050816;
+  /* Obsidian Dark & Premium Hot Orange theme */
+  --background: #0A0A0A;
   --foreground: #FFFFFF;
-  --card: #0B1120;
+  --card: #141416;
   --card-foreground: #FFFFFF;
-  --popover: #0B1120;
+  --popover: #141416;
   --popover-foreground: #FFFFFF;
-  --primary: #00D2FF;
-  --primary-foreground: #050816;
-  --secondary: #17213C;
+  --primary: #FF9900;
+  --primary-foreground: #000000;
+  --secondary: #1C1C1E;
   --secondary-foreground: #FFFFFF;
-  --muted: #17213C;
-  --muted-foreground: #A0AEC0;
-  --accent: rgba(0, 210, 255, 0.1);
-  --accent-foreground: #00D2FF;
-  --destructive: #FF4D4D;
+  --muted: #1C1C1E;
+  --muted-foreground: #8A8A8F;
+  --accent: rgba(255, 153, 0, 0.1);
+  --accent-foreground: #FF9900;
+  --destructive: #E63946;
   --destructive-foreground: #FFFFFF;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.05);
-  --ring: #00D2FF;
-  --radius: 1rem;
+  --border: rgba(255, 255, 255, 0.07);
+  --input: rgba(255, 255, 255, 0.04);
+  --ring: #FF9900;
+  --radius: 12px;
 }
 
 /* Base resets & customization */
@@ -86,53 +85,104 @@
   body {
     @apply bg-background text-foreground selection:bg-primary/30 selection:text-white antialiased overflow-x-hidden;
     background-image: 
-      radial-gradient(circle at 10% 20%, rgba(122, 92, 255, 0.08) 0%, transparent 40%),
-      radial-gradient(circle at 90% 80%, rgba(0, 210, 255, 0.08) 0%, transparent 40%);
+      radial-gradient(circle at 10% 20%, rgba(255, 153, 0, 0.04) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(255, 85, 0, 0.04) 0%, transparent 40%);
     background-attachment: fixed;
   }
 }
 
 /* Glassmorphism helpers */
 .glass-panel {
-  background: rgba(11, 17, 32, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  background: rgba(20, 20, 22, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.6);
 }
 
 .glass-panel-interactive {
-  background: rgba(11, 17, 32, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  background: rgba(20, 20, 22, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.6);
   transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-panel-interactive:hover {
-  border-color: rgba(0, 210, 255, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(0, 210, 255, 0.05);
+  border-color: rgba(255, 153, 0, 0.35);
+  box-shadow: 0 10px 40px 0 rgba(255, 153, 0, 0.04);
 }
 
 .glass-panel-interactive:active {
   transform: scale(0.98);
 }
 
-
-.cyan-glow {
-  box-shadow: 0 0 20px rgba(0, 210, 255, 0.15);
-  text-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
+/* Glow effects */
+.orange-glow {
+  box-shadow: 0 0 25px rgba(255, 153, 0, 0.2);
+  text-shadow: 0 0 8px rgba(255, 153, 0, 0.4);
 }
 
-.mint-glow {
-  box-shadow: 0 0 20px rgba(0, 255, 163, 0.15);
-  text-shadow: 0 0 8px rgba(0, 255, 163, 0.3);
+.orange-glow-sm {
+  box-shadow: 0 0 12px rgba(255, 153, 0, 0.15);
 }
 
-.purple-glow {
-  box-shadow: 0 0 20px rgba(122, 92, 255, 0.15);
-  text-shadow: 0 0 8px rgba(122, 92, 255, 0.3);
+.text-glow {
+  text-shadow: 0 0 10px rgba(255, 153, 0, 0.4);
+}
+
+/* Pornhub signature badge */
+.ph-badge {
+  background-color: #FF9900;
+  color: #000000;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans), sans-serif;
+  text-shadow: none;
+}
+
+/* Floating Sparks Animation */
+@keyframes float-sparkle {
+  0% {
+    transform: translateY(0) translateX(0) scale(1) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(var(--drift, 40px)) scale(0.2) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.sparkle-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sparkle-particle {
+  position: absolute;
+  bottom: -20px;
+  background: linear-gradient(135deg, #FF9900 0%, #FF5500 100%);
+  border-radius: 50%;
+  filter: blur(1.5px);
+  animation: float-sparkle infinite linear;
+  box-shadow: 0 0 8px #FF9900;
 }
 
 /* Hide scrollbar for TMA feel */
