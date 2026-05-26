@@ -56,6 +56,12 @@ export default function Home() {
   const [stonPrice, setStonPrice] = useState<number>(3.25);
   const [priceDirection, setPriceDirection] = useState<'up' | 'down'>('up');
   const [notification, setNotification] = useState<string | null>(null);
+  const [tgUser, setTgUser] = useState<{ 
+    firstName?: string; 
+    lastName?: string; 
+    username?: string; 
+    photoUrl?: string; 
+  } | null>(null);
 
   // === Academy States ===
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
@@ -209,6 +215,42 @@ export default function Home() {
     }, 15000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // === Fetch Telegram User Info ===
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const tg = (window as unknown as { 
+        Telegram?: { 
+          WebApp?: { 
+            initDataUnsafe?: { 
+              user?: { 
+                first_name?: string; 
+                last_name?: string; 
+                username?: string; 
+                photo_url?: string; 
+              } 
+            } 
+          } 
+        } 
+      }).Telegram?.WebApp;
+      
+      const user = tg?.initDataUnsafe?.user;
+      if (user) {
+        setTgUser({
+          firstName: user.first_name,
+          lastName: user.last_name,
+          username: user.username,
+          photoUrl: user.photo_url
+        });
+        
+        // Динамически обновляем имя в рейтинге лидеров
+        const userName = user.username ? `@${user.username} (Вы)` : `${user.first_name} (Вы)`;
+        setLeaders(prev => 
+          prev.map(l => l.isCurrentUser ? { ...l, name: userName } : l)
+        );
+      }
+    }
   }, []);
 
   // === Dynamic Rank Update ===
@@ -427,9 +469,21 @@ export default function Home() {
                 
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#7A5CFF] to-[#00D2FF] p-0.5 shadow-xl">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#7A5CFF] to-[#00D2FF] p-0.5 shadow-xl animate-pulse">
                       <div className="w-full h-full rounded-full bg-[#0B1120] flex items-center justify-center overflow-hidden">
-                        <User className="w-8 h-8 text-[#A0AEC0]" />
+                        {tgUser?.photoUrl ? (
+                          <img 
+                            src={tgUser.photoUrl} 
+                            alt="User Profile" 
+                            className="w-full h-full rounded-full object-cover" 
+                          />
+                        ) : tgUser?.firstName ? (
+                          <div className="w-full h-full rounded-full bg-gradient-to-tr from-[#7A5CFF] to-[#00D2FF] flex items-center justify-center font-bold text-lg text-white">
+                            {(tgUser.firstName).charAt(0).toUpperCase()}
+                          </div>
+                        ) : (
+                          <User className="w-8 h-8 text-[#A0AEC0]" />
+                        )}
                       </div>
                     </div>
                     <div className="absolute -bottom-1 -right-1 bg-[#00FFA3] text-black w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-[#0B1120] shadow-md">
@@ -439,8 +493,12 @@ export default function Home() {
 
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="font-bold text-lg">STON_Ambassador</h2>
-                      <span className="bg-[#00D2FF]/10 text-[#00D2FF] text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full uppercase border border-[#00D2FF]/20">Active</span>
+                      <h2 className="font-bold text-base tracking-tight text-white leading-tight">
+                        {tgUser 
+                          ? `Приветствую, ${tgUser.username ? `@${tgUser.username}` : tgUser.firstName} Амбассадор` 
+                          : 'Приветствую, STON Амбассадор'}
+                      </h2>
+                      <span className="bg-[#00D2FF]/10 text-[#00D2FF] text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full uppercase border border-[#00D2FF]/20 shrink-0">Active</span>
                     </div>
                     <p className="text-xs text-[#A0AEC0] flex items-center gap-1.5 mt-0.5">
                       <Award className="w-3.5 h-3.5 text-[#00FFA3]" />
