@@ -2058,9 +2058,9 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed sm:absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col justify-end p-4 font-sans select-none"
+              className="fixed sm:absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col justify-center items-center p-4 font-sans select-none"
             >
-              <div className="relative w-full flex flex-row items-end gap-2.5 pb-6">
+              <div className="relative w-full flex flex-row items-center gap-2.5">
                 
                 {/* Character Image (Left Column) */}
                 <motion.div 
@@ -2106,9 +2106,9 @@ export default function Home() {
                     </button>
                   </div>
                   
-                  {/* Speech bubble tail pointing left to the character */}
-                  <div className="absolute left-[-8px] bottom-6 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[8px] border-r-[#FF9900]/30" />
-                  <div className="absolute left-[-6px] bottom-6 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[8px] border-r-neutral-900" />
+                  {/* Speech bubble tail pointing left to the character, vertically centered */}
+                  <div className="absolute left-[-8px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[8px] border-r-[#FF9900]/30" />
+                  <div className="absolute left-[-6px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[8px] border-r-neutral-900" />
                 </motion.div>
 
               </div>
