@@ -355,19 +355,36 @@ const SWAP_TOKENS = {
 
 const TUTORIAL_STEPS = [
   {
-    text: "Привет! Я твой проводник в STON Hub — игровой метавселенной ведущей DEX-биржи STON.fi! Давай я быстро покажу тебе, как здесь всё устроено! 🗿🎮"
+    text: "Здорово, крипто-сталкер! 🗿👋 Я твой личный гид по STON Hub. Будем знакомы! Мы тут построили крутейший игровой портал для DEX-биржи STON.fi. Давай быстро покажу, как тут рубить XP и делать грязь!",
+    image: "/character_1.png"
   },
   {
-    text: "В Академии 🎓 тебя ждут обучающие гайды по DeFi. Читай их, проходи тесты без ошибок и зарабатывай ценные очки опыта XP!"
+    text: "Смотри сюда! В Академии 🎓 лежат такие сочные DeFi-гайды, что даже твоя бабушка разберется. Читай их внимательно, тут кладезь знаний!",
+    image: "/character_2.png"
   },
   {
-    text: "Каждый день заглядывай в раздел Миссии 🎯. Здесь ты найдешь квесты, за выполнение которых мгновенно получишь награды!"
+    text: "Но халявы не будет! Прочитал гайд — сдавай тест. Ответишь правильно — получишь гору опыта XP. Ошибся? Пойдешь пересдавать, пока не поумнеешь! 😂 Учи матчасть!",
+    image: "/character_3.png"
   },
   {
-    text: "В твоем Профиле 👤 хранится твоя статистика: баланс монет $STON, привязанный TON-кошелек, твои уникальные достижения и рейтинг игроков!"
+    text: "А в Миссиях 🎯 каждый день падают новые квесты. Подпишись, репостни, помолись богам блокчейна... Выполнил — лови мгновенный зачет и респект от хаба!",
+    image: "/character_4.png"
   },
   {
-    text: "Ну что, готов начать свое DeFi-приключение? Жми кнопку и погнали покорять вершины! 🪨🔥"
+    text: "В Профиле 👤 хранится вся твоя подпольная бухгалтерия: баланс токенов $STON, кошелек, твои уникальные достижения и глобальный рейтинг. Будь активным и ворвись в топ игроков!",
+    image: "/character_5.png"
+  },
+  {
+    text: "Кстати, о бабках. У нас тут прямо в игре встроен ультра-быстрый Своп 🔄! Меняй TON на STON быстрее, чем успеешь сказать 'камень'! И, конечно, получай за это XP! 💸",
+    image: "/character_6.png"
+  },
+  {
+    text: "А еще — хватай свою рефку и тащи друзей! За их пот, слезы и заработанный опыт ты будешь пожизненно (ну ладно, пока идет сезон) получать 15% бонусов! Пассивный доход, все дела. 😎",
+    image: "/character_7.png"
+  },
+  {
+    text: "Ну что, салага, готов стать DeFi-гигачадом и показать всем, кто тут батя? Хватай кошелек, жми кнопку и полетели покорять TON! 🪨🚀🔥",
+    image: "/character_8.png"
   }
 ];
 
@@ -2041,27 +2058,25 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed sm:absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 font-sans select-none"
+              className="fixed sm:absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col justify-end p-4 font-sans select-none"
             >
-              <div className="relative w-full max-w-xs flex flex-col items-center">
+              <div className="relative w-full pb-28 flex flex-col items-stretch">
                 
                 {/* Chat Bubble (Cloud) */}
                 <motion.div
-                  initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                  key={tutorialStep}
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: 0.15 }}
-                  className="bg-neutral-900/95 border-2 border-[#FF9900]/30 rounded-2xl p-5 shadow-[0_15px_40px_rgba(255,153,0,0.2)] relative w-full text-left mb-6"
+                  transition={{ duration: 0.2 }}
+                  className="bg-neutral-900/95 border-2 border-[#FF9900]/30 rounded-2xl p-5 shadow-[0_15px_40px_rgba(255,153,0,0.15)] relative w-full text-left mb-4"
                 >
-                  {/* Triangle tail for speech bubble */}
-                  <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-neutral-900 border-t-2 border-[#FF9900]/30" />
-                  
                   <h4 className="text-xs font-black text-[#FF9900] uppercase tracking-wider mb-1">Проводник STONHub 🗿</h4>
-                  <p className="text-xs text-white leading-relaxed font-semibold">
+                  <p className="text-[11px] text-white leading-relaxed font-semibold">
                     {TUTORIAL_STEPS[tutorialStep].text}
                   </p>
                   
                   {/* Navigation Controls */}
-                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-white/5">
+                  <div className="flex justify-between items-center mt-3.5 pt-2.5 border-t border-white/5">
                     <button 
                       onClick={handleSkipTutorial}
                       className="text-[10px] text-neutral-500 hover:text-white font-bold transition"
@@ -2075,17 +2090,20 @@ export default function Home() {
                       {tutorialStep === TUTORIAL_STEPS.length - 1 ? 'Погнали! 🚀' : 'Дальше →'}
                     </button>
                   </div>
+                  {/* Speech bubble tail pointing downwards to bottom-left */}
+                  <div className="absolute bottom-[-10px] left-12 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-neutral-900 border-t-2 border-[#FF9900]/30" />
                 </motion.div>
 
-                {/* Character Image positioned directly below, centered */}
+                {/* Character Image absolute positioned bottom-left */}
                 <motion.div 
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 100 }}
-                  className="w-24 h-24"
+                  key={TUTORIAL_STEPS[tutorialStep].image}
+                  initial={{ x: -60, opacity: 0, scale: 0.9 }}
+                  animate={{ x: 0, opacity: 1, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 120, damping: 15 }}
+                  className="absolute bottom-0 left-2 w-28 h-28 pointer-events-none z-10"
                 >
                   <img 
-                    src="/character.png" 
+                    src={TUTORIAL_STEPS[tutorialStep].image} 
                     alt="Intro Character" 
                     className="w-full h-full object-contain filter drop-shadow-[0_5px_15px_rgba(255,153,0,0.25)]" 
                   />
