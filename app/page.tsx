@@ -2055,18 +2055,19 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col justify-end p-4 font-sans select-none"
+              className="fixed sm:absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 font-sans select-none"
             >
-              <div className="relative w-full pb-32">
+              <div className="relative w-full max-w-xs flex flex-col items-center">
+                
                 {/* Chat Bubble (Cloud) */}
                 <motion.div
                   initial={{ opacity: 0, y: 15, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ delay: 0.15 }}
-                  className="bg-neutral-900/95 border-2 border-[#FF9900]/30 rounded-2xl p-4 shadow-[0_10px_30px_rgba(255,153,0,0.15)] relative mb-4 text-left"
+                  className="bg-neutral-900/95 border-2 border-[#FF9900]/30 rounded-2xl p-5 shadow-[0_15px_40px_rgba(255,153,0,0.2)] relative w-full text-left mb-6"
                 >
                   {/* Triangle tail for speech bubble */}
-                  <div className="absolute bottom-[-10px] left-8 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-neutral-900 border-t-2 border-[#FF9900]/30" />
+                  <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-neutral-900 border-t-2 border-[#FF9900]/30" />
                   
                   <h4 className="text-xs font-black text-[#FF9900] uppercase tracking-wider mb-1">Проводник STONHub 🗿</h4>
                   <p className="text-xs text-white leading-relaxed font-semibold">
@@ -2090,19 +2091,20 @@ export default function Home() {
                   </div>
                 </motion.div>
 
-                {/* Character Image sliding in from bottom left */}
+                {/* Character Image positioned directly below, centered */}
                 <motion.div 
-                  initial={{ x: -100, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
                   transition={{ type: 'spring', stiffness: 100 }}
-                  className="absolute bottom-0 left-2 w-28 h-28 pointer-events-none"
+                  className="w-24 h-24"
                 >
                   <img 
                     src="/character.png" 
                     alt="Intro Character" 
-                    className="w-full h-full object-contain filter drop-shadow-[0_5px_15px_rgba(255,153,0,0.2)]" 
+                    className="w-full h-full object-contain filter drop-shadow-[0_5px_15px_rgba(255,153,0,0.25)]" 
                   />
                 </motion.div>
+
               </div>
             </motion.div>
           )}
