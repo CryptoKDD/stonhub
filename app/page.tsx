@@ -2060,23 +2060,38 @@ export default function Home() {
               exit={{ opacity: 0 }}
               className="fixed sm:absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col justify-end p-4 font-sans select-none"
             >
-              <div className="relative w-full pb-28 flex flex-col items-stretch">
+              <div className="relative w-full flex flex-row items-end gap-2.5 pb-6">
                 
-                {/* Chat Bubble (Cloud) */}
+                {/* Character Image (Left Column) */}
+                <motion.div 
+                  key={TUTORIAL_STEPS[tutorialStep].image}
+                  initial={{ x: -30, opacity: 0, scale: 0.9 }}
+                  animate={{ x: 0, opacity: 1, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 120, damping: 15 }}
+                  className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 pointer-events-none z-10"
+                >
+                  <img 
+                    src={TUTORIAL_STEPS[tutorialStep].image} 
+                    alt="Intro Character" 
+                    className="w-full h-full object-contain filter drop-shadow-[0_5px_15px_rgba(255,153,0,0.25)]" 
+                  />
+                </motion.div>
+
+                {/* Chat Bubble / Cloud (Right Column) */}
                 <motion.div
                   key={tutorialStep}
-                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, x: 20, scale: 0.98 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
                   transition={{ duration: 0.2 }}
-                  className="bg-neutral-900/95 border-2 border-[#FF9900]/30 rounded-2xl p-5 shadow-[0_15px_40px_rgba(255,153,0,0.15)] relative w-full text-left mb-4"
+                  className="flex-1 bg-neutral-900/95 border-2 border-[#FF9900]/30 rounded-2xl p-4 shadow-[0_15px_40px_rgba(255,153,0,0.15)] relative text-left"
                 >
-                  <h4 className="text-xs font-black text-[#FF9900] uppercase tracking-wider mb-1">Проводник STONHub 🗿</h4>
+                  <h4 className="text-[10px] font-black text-[#FF9900] uppercase tracking-wider mb-1">Проводник STONHub 🗿</h4>
                   <p className="text-[11px] text-white leading-relaxed font-semibold">
                     {TUTORIAL_STEPS[tutorialStep].text}
                   </p>
                   
                   {/* Navigation Controls */}
-                  <div className="flex justify-between items-center mt-3.5 pt-2.5 border-t border-white/5">
+                  <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-white/5">
                     <button 
                       onClick={handleSkipTutorial}
                       className="text-[10px] text-neutral-500 hover:text-white font-bold transition"
@@ -2090,23 +2105,10 @@ export default function Home() {
                       {tutorialStep === TUTORIAL_STEPS.length - 1 ? 'Погнали! 🚀' : 'Дальше →'}
                     </button>
                   </div>
-                  {/* Speech bubble tail pointing downwards to bottom-left */}
-                  <div className="absolute bottom-[-10px] left-12 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-neutral-900 border-t-2 border-[#FF9900]/30" />
-                </motion.div>
-
-                {/* Character Image absolute positioned bottom-left */}
-                <motion.div 
-                  key={TUTORIAL_STEPS[tutorialStep].image}
-                  initial={{ x: -60, opacity: 0, scale: 0.9 }}
-                  animate={{ x: 0, opacity: 1, scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 120, damping: 15 }}
-                  className="absolute bottom-0 left-2 w-28 h-28 pointer-events-none z-10"
-                >
-                  <img 
-                    src={TUTORIAL_STEPS[tutorialStep].image} 
-                    alt="Intro Character" 
-                    className="w-full h-full object-contain filter drop-shadow-[0_5px_15px_rgba(255,153,0,0.25)]" 
-                  />
+                  
+                  {/* Speech bubble tail pointing left to the character */}
+                  <div className="absolute left-[-8px] bottom-6 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[8px] border-r-[#FF9900]/30" />
+                  <div className="absolute left-[-6px] bottom-6 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[8px] border-r-neutral-900" />
                 </motion.div>
 
               </div>
