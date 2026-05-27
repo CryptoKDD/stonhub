@@ -6,7 +6,7 @@ import {
   User, BookOpen, Target, ArrowLeftRight, Trophy, 
   Sparkles, CheckCircle2, AlertCircle, 
   ChevronRight, Flame, Award, HelpCircle,
-  TrendingUp, RefreshCw, Users, Play, Compass, Info
+  TrendingUp, RefreshCw, Users, Play, Compass
 } from 'lucide-react';
 import { useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
 
@@ -49,40 +49,6 @@ interface Leader {
   isCurrentUser?: boolean;
 }
 
-// === Particle sparks for desktop background ===
-const SparkleParticles = () => {
-  const [particles, setParticles] = useState<{ id: number; left: string; size: string; delay: string; duration: string; drift: string }[]>([]);
-  useEffect(() => {
-    const arr = Array.from({ length: 25 }).map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      size: `${Math.random() * 4 + 2}px`,
-      delay: `${Math.random() * 8}s`,
-      duration: `${Math.random() * 6 + 6}s`,
-      drift: `${(Math.random() - 0.5) * 80}px`
-    }));
-    setParticles(arr);
-  }, []);
-
-  return (
-    <div className="sparkle-particles">
-      {particles.map(p => (
-        <span
-          key={p.id}
-          className="sparkle-particle"
-          style={{
-            left: p.left,
-            width: p.size,
-            height: p.size,
-            animationDelay: p.delay,
-            animationDuration: p.duration,
-            '--drift': p.drift,
-          } as React.CSSProperties}
-        />
-      ))}
-    </div>
-  );
-};
 
 // === Dynamic Premium Token Logos (Proxied to bypass CORS/Hotlink restrictions and load exact official assets) ===
 const TokenLogo = ({ symbol, className = "w-4 h-4 rounded-full shrink-0" }: { symbol: string; className?: string }) => {
@@ -952,171 +918,19 @@ export default function Home() {
       {/* ========================================== */}
       {/* === DESKTOP WRAPPER (Responsive Frame) === */}
       {/* ========================================== */}
-      
-      {/* Sparks particles for desktop only background */}
-      <div className="hidden sm:block absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <SparkleParticles />
-      </div>
-
-      <div className="hidden sm:flex flex-col min-h-screen relative z-10 w-full max-w-6xl mx-auto px-6 py-4 justify-between">
-        
-        {/* Desktop Header */}
-        <header className="flex justify-between items-center pb-6 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="STON Hub Logo" className="w-14 h-14 rounded-full object-cover border border-[#FF9900]/25 orange-glow" />
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-2xl font-black tracking-tighter text-white">STON</span>
-                <span className="ph-badge text-lg">Hub</span>
-              </div>
-              <span className="text-[10px] tracking-widest text-[#FF9900] font-extrabold uppercase mt-0.5 block">STON IS LOVE. STON IS LIFE.</span>
-            </div>
+      <div className="hidden sm:flex min-h-screen w-full items-center justify-center bg-black py-8">
+        {/* Smartphone Simulator Frame */}
+        <div className="w-[380px] h-[780px] rounded-[48px] border-[10px] border-neutral-800 bg-black relative shadow-[0_20px_50px_rgba(255,153,0,0.15)] flex flex-col overflow-hidden">
+          {/* Speaker & camera notch decoration */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-neutral-800 rounded-b-2xl z-50 flex items-center justify-center">
+            <div className="w-12 h-1 bg-black rounded-full mb-1" />
           </div>
-          <div className="flex items-center gap-6">
-            <nav className="flex items-center gap-8 text-sm font-bold text-neutral-300">
-              <button onClick={() => { setActiveTab('videos'); setShowLeaderboard(false); }} className="hover:text-[#FF9900] transition flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-[#FF9900]" /> LEARN (Академия)
-              </button>
-              <button onClick={() => { setActiveTab('missions'); setShowLeaderboard(false); }} className="hover:text-[#FF9900] transition flex items-center gap-1.5">
-                <Target className="w-4 h-4 text-[#FF9900]" /> EARN (Миссии)
-              </button>
-              <button onClick={() => { setShowSwapModal(true); }} className="hover:text-[#FF9900] transition flex items-center gap-1.5">
-                <ArrowLeftRight className="w-4 h-4 text-[#FF9900]" /> TRADE (Своп)
-              </button>
-              <button onClick={() => { setActiveTab('profile'); setShowLeaderboard(true); }} className="hover:text-[#FF9900] transition flex items-center gap-1.5">
-                <Trophy className="w-4 h-4 text-[#FF9900]" /> GROW (Рейтинг)
-              </button>
-            </nav>
-
-            {/* Desktop Connect Wallet Button */}
-            {walletAddress ? (
-              <button 
-                onClick={() => tonConnectUI.disconnect()}
-                className="bg-neutral-900 hover:bg-neutral-850 border border-emerald-500/30 px-4 py-2 rounded-xl text-xs font-black text-emerald-400 flex items-center gap-2 shadow-sm transition active:scale-95"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>{walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}</span>
-              </button>
-            ) : (
-              <button 
-                onClick={() => tonConnectUI.openModal()}
-                className="bg-gradient-to-tr from-[#FF9900] to-[#FF5500] hover:from-[#FF5500] hover:to-[#FF9900] text-black px-4 py-2 rounded-xl text-xs font-black shadow-lg shadow-[#FF9900]/10 hover:shadow-[#FF9900]/25 transition active:scale-95"
-              >
-                Connect Wallet
-              </button>
-            )}
-          </div>
-        </header>
-
-        {/* Desktop Body Main Content (Flanked by decorations and showing mobile frame) */}
-        <div className="flex-1 my-8 grid grid-cols-12 gap-8 items-center">
           
-          {/* Left info column */}
-          <div className="col-span-4 space-y-6 text-left hidden lg:block">
-            <div className="space-y-2">
-              <div className="bg-[#FF9900]/10 border border-[#FF9900]/25 text-[#FF9900] text-[10px] font-black tracking-widest uppercase py-1 px-3.5 rounded-full inline-block">
-                ⚡ AMBASSADOR OS
-              </div>
-              <h2 className="text-3xl font-black leading-tight text-white">Разгони свой вайб в экосистеме STON.fi</h2>
-            </div>
-            <p className="text-sm text-neutral-400 leading-relaxed">
-              Выполняйте квесты, смотрите обучающие видеоролики в стиле любимого «Хаба» и проходите викторины, чтобы подниматься в рейтинге лидеров и зарабатывать ценный амбассадорский опыт.
-            </p>
-            <div className="p-4 rounded-xl bg-neutral-900/60 border border-white/5 space-y-2">
-              <h4 className="text-xs font-bold text-[#FF9900] flex items-center gap-1.5">
-                <Info className="w-4 h-4" /> Быстрая статистика
-              </h4>
-              <ul className="text-xs text-neutral-400 space-y-1">
-                <li>• Нативный токен управления: <strong className="text-white">$STON</strong></li>
-                <li>• Текущая цена: <strong className="text-[#FF9900]">${stonPrice}</strong></li>
-                <li>• Ликвидность и Стейкинг до <strong className="text-emerald-400">78.5% APY</strong></li>
-              </ul>
-            </div>
+          {/* Screen Content */}
+          <div className="flex-1 flex flex-col relative pt-4 overflow-y-auto no-scrollbar pb-20">
+            <MobileAppContent />
           </div>
-
-          {/* Center Column: Realistic Smartphone Simulator Frame */}
-          <div className="col-span-12 lg:col-span-4 flex justify-center items-center">
-            <div className="w-[380px] h-[780px] rounded-[48px] border-[10px] border-neutral-800 bg-black relative shadow-[0_20px_50px_rgba(255,153,0,0.1)] flex flex-col overflow-hidden">
-              {/* Speaker & camera notch decoration */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-neutral-800 rounded-b-2xl z-50 flex items-center justify-center">
-                <div className="w-12 h-1 bg-black rounded-full mb-1" />
-              </div>
-              
-              {/* Screen Content */}
-              <div className="flex-1 flex flex-col relative pt-4 overflow-y-auto no-scrollbar pb-20">
-                <MobileAppContent />
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Mini FAQ list */}
-          <div className="col-span-4 space-y-5 text-left hidden lg:block">
-            <h3 className="text-lg font-black text-white border-l-2 border-[#FF9900] pl-3">Часто задаваемые вопросы</h3>
-            
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <h5 className="text-xs font-bold text-white">Как получить опыт XP?</h5>
-                <p className="text-[11px] text-neutral-400 leading-relaxed">
-                  Смотрите обучающие материалы на вкладке «Видео», отвечайте правильно на тесты под ними и выполняйте миссии в хабе.
-                </p>
-              </div>
-              <div className="space-y-1">
-                <h5 className="text-xs font-bold text-white">Зачем нужен TON кошелек?</h5>
-                <p className="text-[11px] text-neutral-400 leading-relaxed">
-                  Подключение кошелька позволяет выполнять Web3-миссии, производить свапы на STON.fi и получать начисления напрямую.
-                </p>
-              </div>
-              <div className="space-y-1">
-                <h5 className="text-xs font-bold text-white">Как работают медали достижений?</h5>
-                <p className="text-[11px] text-neutral-400 leading-relaxed">
-                  Медали выдаются автоматически при достижении определенных порогов XP и успешном завершении ежедневных квестов.
-                </p>
-              </div>
-            </div>
-          </div>
-
         </div>
-
-        {/* Desktop Footer Banner */}
-        <footer className="p-5 bg-neutral-950 border border-white/5 rounded-2xl flex items-center justify-between text-left relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#FF9900]/5 to-transparent rounded-full blur-2xl" />
-          <div className="flex items-center gap-4 relative z-10">
-            <img src="/logo.png" alt="STON Hub Logo" className="w-12 h-12 rounded-xl object-cover border border-[#FF9900]/30" />
-            <div>
-              <h3 className="text-base font-black tracking-tight text-white flex items-center gap-1.5">
-                <span>STONHub</span>
-                <span className="text-neutral-500 font-normal">—</span>
-                <span className="text-neutral-400 text-xs font-medium">твой хаб в экосистеме STON.fi</span>
-              </h3>
-              <p className="text-[11px] text-neutral-500 mt-1 max-w-lg leading-snug">
-                Децентрализованный доступ к торговле, ликвидности и обучению. Прокачивай уровень своего профиля и зарабатывай вместе с TON.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-6 relative z-10 text-[10px] uppercase font-bold text-neutral-400">
-            <div className="space-y-1">
-              <span className="text-[#FF9900]">🎓 АКАДЕМИЯ</span>
-              <p className="text-[9px] font-normal text-neutral-500 lowercase">уроки, гайды и контент</p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-[#FF9900]">🎯 МИССИИ</span>
-              <p className="text-[9px] font-normal text-neutral-500 lowercase">задания каждый день</p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-[#FF9900]">🔄 СТЕЙКИНГ</span>
-              <p className="text-[9px] font-normal text-neutral-500 lowercase">заставляй STON работать</p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-[#FF9900]">👥 РЕФЕРАЛЫ</span>
-              <p className="text-[9px] font-normal text-neutral-500 lowercase">зарабатывай вместе</p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-[#FF9900]">🏆 НАГРАДЫ</span>
-              <p className="text-[9px] font-normal text-neutral-500 lowercase">эксклюзивные уровни</p>
-            </div>
-          </div>
-        </footer>
-
       </div>
 
       {/* ========================================================= */}
