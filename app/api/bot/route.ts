@@ -104,7 +104,7 @@ export async function POST(request: Request) {
         `Твоя база: баланс токенов $STON, TON-кошелек, уникальные ачивки и глобальный рейтинг игроков.\n\n` +
         `🎯 <b>Миссии (Quests & Bounties)</b>\n` +
         `Интерактивные квесты и ежедневные задания с мгновенным начислением очков опыта.\n\n` +
-        `<i>STON IS LOVE. STON IS LIFE. 🗿🔥</i>${refText}\n\n` +
+        `<i>STONE IS LOVE. STONE IS LIFE. 🪨🔥</i>${refText}\n\n` +
         `Нажми на кнопку ниже, чтобы войти в портал и активировать своего персонажа! 👇`;
 
       const inlineKeyboard = {
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
         `3. Зайдите в раздел <b>«Академия»</b>, читайте гайды и сдавайте тесты.\n` +
         `4. Выполняйте ежедневные квесты в разделе <b>«Миссии»</b>.\n` +
         `5. Получайте XP, прокачивайте игровой уровень и поднимайтесь в топ игроков в <b>«Профиле»</b>!\n\n` +
-        `<i>STON IS LOVE. STON IS LIFE. 🗿🔥</i>`;
+        `<i>STONE IS LOVE. STONE IS LIFE. 🪨🔥</i>`;
 
       const inlineKeyboard = {
         inline_keyboard: [

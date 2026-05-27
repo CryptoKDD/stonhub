@@ -103,7 +103,7 @@ async function handleMessage(message) {
       `Интерактивные квесты и ежедневные задания с мгновенным начислением очков опыта.\n\n` +
       `🔄 <b>Fast Swap & Стейкинг</b>\n` +
       `Моментальный обмен токенов прямо в игре и пассивный доход до 78.5% APY.\n\n` +
-      `<i>STON IS LOVE. STON IS LIFE. 🗿🔥</i>${refText}\n\n` +
+    `<i>STONE IS LOVE. STONE IS LIFE. 🪨🔥</i>${refText}\n\n` +
       `Нажми на кнопку ниже, чтобы войти в портал и активировать своего персонажа! 👇`;
 
     const inlineKeyboard = {
@@ -140,7 +140,7 @@ async function handleMessage(message) {
       `3. Зайдите в раздел <b>«Видео»</b>, посмотрите гайды и сдайте тесты.\n` +
       `4. Выполняйте ежедневные квесты в разделе <b>«Миссии»</b>.\n` +
       `5. Получайте XP, прокачивайте игровой уровень и поднимайтесь в топ игроков в <b>«Профиле»</b>!\n\n` +
-      `<i>STON IS LOVE. STON IS LIFE. 🗿🔥</i>`;
+      `<i>STONE IS LOVE. STONE IS LIFE. 🪨🔥</i>`;
 
     const inlineKeyboard = {
       inline_keyboard: [
