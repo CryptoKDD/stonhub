@@ -791,14 +791,9 @@ export default function Home() {
     }
   }, [walletAddress]);
 
-  // Onboarding trigger on first visit
+  // Onboarding trigger - always for testing
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const seen = localStorage.getItem('stonhub_tutorial_seen');
-      if (!seen) {
-        setTutorialStep(0);
-      }
-    }
+    setTutorialStep(0);
   }, []);
 
   const showNotificationMessage = (msg: string) => {
@@ -1960,19 +1955,10 @@ export default function Home() {
                     </div>
 
                     {/* Disconnect button mockup */}
-                    <div className="pt-2 grid grid-cols-2 gap-2">
-                      <button 
-                        onClick={() => {
-                          setTutorialStep(0);
-                          showNotificationMessage('Запуск игрового гида... 🗿');
-                        }}
-                        className="py-3 bg-neutral-900 hover:bg-neutral-850 border border-white/5 rounded-xl text-xs font-bold text-neutral-300 hover:text-white active:scale-95 transition flex items-center justify-center gap-1.5"
-                      >
-                        🎓 Обучение
-                      </button>
+                    <div className="pt-2">
                       <button 
                         onClick={() => showNotificationMessage("Трансформация выполнена в стиле Pornhub! 🚀")}
-                        className="py-3 bg-neutral-900 hover:bg-neutral-800 border border-white/5 rounded-xl text-xs font-bold text-neutral-400 hover:text-white active:scale-95 transition"
+                        className="w-full py-3 bg-neutral-900 hover:bg-neutral-800 border border-white/5 rounded-xl text-xs font-bold text-neutral-400 hover:text-white active:scale-95 transition"
                       >
                         STONHub OS v1.2
                       </button>
