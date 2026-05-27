@@ -352,43 +352,575 @@ const SWAP_TOKENS = {
     balance: '350.00'
   }
 } as const;
-
-const TUTORIAL_STEPS = [
+const getTutorialSteps = (lang: 'ru' | 'en') => [
   {
-    text: "Здорово, крипто-сталкер! 🗿👋 Я твой личный гид по STON Hub. Будем знакомы! Мы тут построили крутейший игровой портал для DEX-биржи STON.fi. Давай быстро покажу, как тут рубить XP и делать грязь!",
+    text: lang === 'ru' 
+      ? "Здорово, крипто-сталкер! 🗿👋 Я твой личный гид по STON Hub. Будем знакомы! Мы тут построили крутейший игровой портал для DEX-биржи STON.fi. Давай быстро покажу, как тут рубить XP и делать грязь!"
+      : "Yo, crypto stalker! 🗿👋 I'm your personal guide through STON Hub. Great to meet ya! We built the absolute coolest gaming portal for the STON.fi DEX here. Let me quickly show you how to grind XP and make some serious moves!",
     image: "/character_1.png"
   },
   {
-    text: "Смотри сюда! В Академии 🎓 лежат такие сочные DeFi-гайды, что даже твоя бабушка разберется. Читай их внимательно, тут кладезь знаний!",
+    text: lang === 'ru'
+      ? "Смотри сюда! В Академии 🎓 лежат такие сочные DeFi-гайды, что даже твоя бабушка разберется. Читай их внимательно, тут кладезь знаний!"
+      : "Look here! The Academy 🎓 is packed with DeFi guides so juicy, even your grandma could master them. Read them closely, they're a goldmine!",
     image: "/character_2.png"
   },
   {
-    text: "Но халявы не будет! Прочитал гайд — сдавай тест. Ответишь правильно — получишь гору опыта XP. Ошибся? Пойдешь пересдавать, пока не поумнеешь! 😂 Учи матчасть!",
+    text: lang === 'ru'
+      ? "Но халявы не будет! Прочитал гайд — сдавай тест. Ответишь правильно — получишь гору опыта XP. Ошибся? Пойдешь пересдавать, пока не поумнеешь! 😂 Учи матчасть!"
+      : "But no free rides here! Once you read a guide, you gotta pass the quiz. Answer right, and you get a mountain of XP. Messed up? Back to studying until you get smarter! 😂 Do your homework!",
     image: "/character_3.png"
   },
   {
-    text: "А в Миссиях 🎯 каждый день падают новые квесты. Подпишись, репостни, помолись богам блокчейна... Выполнил — лови мгновенный зачет и респект от хаба!",
+    text: lang === 'ru'
+      ? "А в Миссиях 🎯 каждый день падают новые квесты. Подпишись, репостни, помолись богам блокчейна... Выполнил — лови мгновенный зачет и респект от хаба!"
+      : "And in Missions 🎯, fresh quests drop daily. Subscribe, retweet, pray to the blockchain gods... Complete them and get instant XP and respect from the hub!",
     image: "/character_4.png"
   },
   {
-    text: "В Профиле 👤 хранится вся твоя подпольная бухгалтерия: баланс токенов $STON, кошелек, твои уникальные достижения и глобальный рейтинг. Будь активным и ворвись в топ игроков!",
+    text: lang === 'ru'
+      ? "В Профиле 👤 хранится вся твоя подпольная бухгалтерия: баланс токенов $STON, кошелек, твои уникальные достижения и глобальный рейтинг. Будь активным и ворвись в топ игроков!"
+      : "Your Profile 👤 holds all your under-the-table accounting: $STON token balance, active wallet address, your unique achievements, and global rankings. Stay active and storm the leaderboard!",
     image: "/character_5.png"
   },
   {
-    text: "Кстати, о бабках. У нас тут прямо в игре встроен ультра-быстрый Своп 🔄! Меняй TON на STON быстрее, чем успеешь сказать 'камень'! И, конечно, получай за это XP! 💸",
+    text: lang === 'ru'
+      ? "Кстати, о бабках. У нас тут прямо в игре встроен ультра-быстрый Своп 🔄! Меняй TON на STON быстрее, чем успеешь сказать 'камень'! И, конечно, получай за это XP! 💸"
+      : "By the way, let's talk cash. We've got an ultra-fast Swap 🔄 built right into the app! Exchange TON to STON faster than you can say 'rock'! And of course, earn XP for it! 💸",
     image: "/character_6.png"
   },
   {
-    text: "А еще — хватай свою рефку и тащи друзей! За их пот, слезы и заработанный опыт ты будешь пожизненно (ну ладно, пока идет сезон) получать 15% бонусов! Пассивный доход, все дела. 😎",
+    text: lang === 'ru'
+      ? "А еще — хватай свою рефку и тащи друзей! За их пот, слезы и заработанный опыт ты будешь пожизненно (ну ладно, пока идет сезон) получать 15% бонусов! Пассивный доход, все дела. 😎"
+      : "Also—grab your ref link and drag your friends in! For all their sweat, tears, and XP earned, you'll get a lifetime (well, while the season lasts) 15% bonus! Passive income baby, that's how we roll. 😎",
     image: "/character_7.png"
   },
   {
-    text: "Ну что, салага, готов стать DeFi-гигачадом и показать всем, кто тут батя? Хватай кошелек, жми кнопку и полетели покорять TON! 🪨🚀🔥",
+    text: lang === 'ru'
+      ? "Ну что, салага, готов стать DeFi-гигачадом и показать всем, кто тут батя? Хватай кошелек, жми кнопку и полетели покорять TON! 🪨🚀🔥"
+      : "Alright, rookie, ready to become a DeFi GigaChad and show everyone who's boss? Grab your wallet, hit the button, and let's conquer TON! 🪨🚀🔥",
     image: "/character_8.png"
   }
 ];
 
+const DICTIONARY = {
+  ru: {
+    walletConnectSuccess: 'Добро пожаловать в игру! 🪨🔥',
+    connectWalletBtn: 'Подключить кошелек',
+    dailyClaimSuccess: 'Бонус собран! Получено +25 XP ⚡',
+    hiUser: 'Привет, ',
+    hiAmbassador: 'Привет, Амбассадор!',
+    active: 'АКТИВЕН',
+    rankLabel: 'Ранг: ',
+    progressLabel: 'Твой прогресс:',
+    nextRankText: 'до ранга Diamond Vibe 💎',
+    balanceLabel: 'Баланс $STON',
+    sevenDaysText: 'за 7д',
+    quickActions: 'Быстрые действия',
+    swapActionBtn: 'Своп',
+    dailyClaimBtn: 'Бонусы',
+    welcomeTitle: 'Добро пожаловать в STON Hub!',
+    welcomeDesc: 'Это твой интерактивный путеводитель по блокчейну TON и экосистеме STON.fi. Смотри обучающие видео, сдавай тесты, выполняй квесты и докажи, что ты лучший амбассадор!',
+    goToAcademy: 'Перейти к обучению',
+    completedQuests: 'Выполнено квестов',
+    completedLessons: 'Пройдено уроков',
+    savingApy: 'Сейвинг APY',
+    guideName: 'Проводник STONHub 🗿',
+    skip: 'Пропустить',
+    next: 'Дальше →',
+    finish: 'Погнали! 🚀',
+    readTime: 'Время чтения:',
+    views: 'просмотров',
+    quizPrompt: 'Пройдите тест для получения +',
+    quizSuccess: 'Задание успешно выполнено! Награда начислена.',
+    backToList: '← К списку гайдов',
+    studyMaterial: 'Учебный материал',
+    academyTitle: 'Академия STONHub 🎓',
+    academyDesc: 'Читай гайды, отвечай на тесты и прокачивайся',
+    totalGuides: 'Всего гайдов:',
+    completed: 'Сдано',
+    readGuide: 'Читать гайд',
+    videoAcademyTitle: 'Видеокурсы — Скоро будет 🎬',
+    videoAcademyDesc: 'Мы готовим для вас серию эксклюзивных видеоматериалов по трейдингу, ликвидности и стейкингу в экосистеме STON.fi.',
+    missionsTitle: 'Доступные квесты 🎯',
+    missionsDesc: 'Выполняйте задания каждый день и получайте амбассадорские награды',
+    done: 'Выполнено',
+    pending: 'Проверка',
+    start: 'Начать',
+    connectWalletAlert: 'Пожалуйста, кликните кнопку кошелька в шапке! 🔌',
+    referralTitle: 'Реферальная программа',
+    referralDesc: 'Приглашай друзей в STON Hub и получай 15% от их накопленного XP в экосистеме.',
+    referralCopied: 'Реферальная ссылка скопирована! 📋',
+    leaderboardTitle: 'Лидерборд',
+    leaderboardDesc: 'Глобальный рейтинг амбассадоров',
+    backToProfile: '← Профиль',
+    tableAmbassador: 'Амбассадор',
+    tableXp: 'Очки XP',
+    inRank: 'В рейтинге: #4',
+    yourLevel: 'Твой уровень',
+    officialAmbassador: 'ОФИЦИАЛЬНЫЙ АМБАССАДОР STON.fi',
+    statsTitle: 'Статистика',
+    statsQuests: 'Миссии выполнено',
+    statsFriends: 'Друзей приглашено',
+    statsEarnings: 'Общий заработок',
+    statsRanking: 'В рейтинге',
+    achievementsTitle: 'Достижения',
+    achievementsAlert: 'Ачивки обновляются автоматически!',
+    viewAll: 'Смотреть все',
+    badgeStreak: 'Стрик 7д',
+    badgeGuru: 'DeFi Гуру',
+    badgeSwaper: 'Топ Свапер',
+    badgeKing: 'Крипто-Царь',
+    funnyAlert: 'Трансформация выполнена в стиле Pornhub! 🚀',
+    swapSend: 'Вы отправляете:',
+    swapBalance: 'Баланс:',
+    swapReceive: 'Вы получаете:',
+    swapRate: 'Курс обмена:',
+    swapBonus: 'Вайб-Бонус за сделку:',
+    swappingProgress: 'Выполняется обмен на STON.fi...',
+    swapButtonActive: 'Обменять токены',
+    swapButtonInactive: 'Сначала подключите кошелек',
+    swapAmountAlert: 'Введите сумму для обмена! ⚠️',
+    swapSuccess: 'Обмен выполнен! Получено +100 XP 🚀',
+    close: 'Закрыть',
+    walletAlert: 'Пожалуйста, подключите TON кошелек! 🔌',
+    missionPendingAlert: 'Задание отправлено на проверку! ⏳',
+    missionCompletedAlert: 'Задание проверено! Получено +'
+  },
+  en: {
+    walletConnectSuccess: 'Welcome to the game! 🪨🔥',
+    connectWalletBtn: 'Connect Wallet',
+    dailyClaimSuccess: 'Bonus claimed! Received +25 XP ⚡',
+    hiUser: 'Hello, ',
+    hiAmbassador: 'Hello, Ambassador!',
+    active: 'ACTIVE',
+    rankLabel: 'Rank: ',
+    progressLabel: 'Your progress:',
+    nextRankText: 'to Diamond Vibe rank 💎',
+    balanceLabel: '$STON Balance',
+    sevenDaysText: 'over 7d',
+    quickActions: 'Quick Actions',
+    swapActionBtn: 'Swap',
+    dailyClaimBtn: 'Daily',
+    welcomeTitle: 'Welcome to STON Hub!',
+    welcomeDesc: 'This is your interactive guide to the TON blockchain and the STON.fi ecosystem. Read guides, pass quizzes, complete missions, and prove you are the best ambassador!',
+    goToAcademy: 'Go to Academy',
+    completedQuests: 'Missions completed',
+    completedLessons: 'Lessons completed',
+    savingApy: 'Saving APY',
+    guideName: 'STONHub Guide 🗿',
+    skip: 'Skip',
+    next: 'Next →',
+    finish: 'Let\'s go! 🚀',
+    readTime: 'Read time:',
+    views: 'views',
+    quizPrompt: 'Take the quiz to receive +',
+    quizSuccess: 'Quiz completed successfully! Reward credited.',
+    backToList: '← Back to guides',
+    studyMaterial: 'Study Material',
+    academyTitle: 'STONHub Academy 🎓',
+    academyDesc: 'Read guides, pass quizzes, and level up',
+    totalGuides: 'Total guides:',
+    completed: 'Completed',
+    readGuide: 'Read Guide',
+    videoAcademyTitle: 'Video Courses — Coming Soon 🎬',
+    videoAcademyDesc: 'We are preparing a series of exclusive video materials on trading, liquidity, and staking in the STON.fi ecosystem.',
+    missionsTitle: 'Available Quests 🎯',
+    missionsDesc: 'Complete tasks daily and earn ambassador rewards',
+    done: 'Done',
+    pending: 'Checking',
+    start: 'Start',
+    connectWalletAlert: 'Please click the connect button in the header! 🔌',
+    referralTitle: 'Referral Program',
+    referralDesc: 'Invite friends to STON Hub and get 15% of their accumulated XP in the ecosystem.',
+    referralCopied: 'Referral link copied! 📋',
+    leaderboardTitle: 'Leaderboard',
+    leaderboardDesc: 'Global rankings of ambassadors',
+    backToProfile: '← Profile',
+    tableAmbassador: 'Ambassador',
+    tableXp: 'XP Points',
+    inRank: 'Ranked: #4',
+    yourLevel: 'Your level',
+    officialAmbassador: 'OFFICIAL STON.fi AMBASSADOR',
+    statsTitle: 'Statistics',
+    statsQuests: 'Missions completed',
+    statsFriends: 'Friends invited',
+    statsEarnings: 'Total earnings',
+    statsRanking: 'Leaderboard Rank',
+    achievementsTitle: 'Achievements',
+    achievementsAlert: 'Achievements are updated automatically!',
+    viewAll: 'View all',
+    badgeStreak: '7d Streak',
+    badgeGuru: 'DeFi Guru',
+    badgeSwaper: 'Top Swapper',
+    badgeKing: 'Crypto King',
+    funnyAlert: 'Transformation completed in Pornhub style! 🚀',
+    swapSend: 'You send:',
+    swapBalance: 'Balance:',
+    swapReceive: 'You receive:',
+    swapRate: 'Exchange rate:',
+    swapBonus: 'Vibe-Bonus for deal:',
+    swappingProgress: 'Swapping on STON.fi...',
+    swapButtonActive: 'Swap tokens',
+    swapButtonInactive: 'Connect wallet first',
+    swapAmountAlert: 'Enter amount to swap! ⚠️',
+    swapSuccess: 'Swap completed! Received +100 XP 🚀',
+    close: 'Close',
+    walletAlert: 'Please connect TON wallet! 🔌',
+    missionPendingAlert: 'Task submitted for verification! ⏳',
+    missionCompletedAlert: 'Task verified! Received +'
+  }
+};
+
+const getLessons = (lang: 'ru' | 'en'): Lesson[] => [
+  {
+    id: 'guide-stonbassadors-intro',
+    title: lang === 'ru' ? 'Кто такой STONbassador и как им стать?' : 'Who is a STONbassador and how to become one?',
+    category: lang === 'ru' ? 'Гайды' : 'Guides',
+    description: lang === 'ru' 
+      ? 'Полное руководство по участию в амбассадорской программе STON.fi без сложных проверок и верификаций.' 
+      : 'A complete guide to participating in the STON.fi ambassador program without complex checks or verifications.',
+    xpReward: 80,
+    readTime: lang === 'ru' ? '3 мин' : '3 min',
+    completed: false,
+    duration: lang === 'ru' ? '3 мин' : '3 min',
+    views: lang === 'ru' ? '12.4K просмотров' : '12.4K views',
+    uploadedAt: lang === 'ru' ? 'Сегодня' : 'Today',
+    imageUrl: 'bg-gradient-to-br from-amber-950/40 via-neutral-900 to-black',
+    content: lang === 'ru' ? [
+      'STONbassadors — это официальные амбассадоры экосистемы STON.fi, которые помогают развивать бренд и сообщество. Это творческие люди, авторы контента, переводчики, инфлюенсеры и технические специалисты, разделяющие ценности децентрализации.',
+      'Главная прелесть программы — отсутствие сложного отбора. Вам не нужно ждать одобрения заявки или проходить жесткую верификацию личности (KYC). Вы можете начать в любой момент!',
+      'Чтобы присоединиться, достаточно выполнять полезные задания: создавать качественный контент (статьи, видео, инфографику), помогать новичкам в чатах сообщества или организовывать локальные мероприятия. В конце месяца вы отправляете отчет о проделанной работе через специальную форму.'
+    ] : [
+      'STONbassadors are the official ambassadors of the STON.fi ecosystem who help grow the brand and community. They are creative minds, content creators, translators, influencers, and technical experts who share the values of decentralization.',
+      'The main beauty of the program is the lack of complex selection. You don\'t need to wait for application approval or undergo strict KYC identity verification. You can start at any moment!',
+      'To join, all you need to do is perform helpful tasks: create quality content (articles, videos, infographics), help beginners in community chats, or organize local events. At the end of the month, you submit a report on your work via a special form.'
+    ],
+    quiz: {
+      question: lang === 'ru' 
+        ? 'Нужно ли проходить сложную верификацию или заполнять заявку, чтобы стать STONbassador?' 
+        : 'Do you need to undergo complex verification or fill out an application to become a STONbassador?',
+      options: lang === 'ru' ? [
+        'Да, требуется верификация личности (KYC) и одобрение анкеты',
+        'Нет, можно сразу начать выполнять задания и отправлять отчеты',
+        'Да, нужен специальный инвайт-код от администрации'
+      ] : [
+        'Yes, KYC identity verification and application approval are required',
+        'No, you can start doing tasks and sending reports right away',
+        'Yes, you need a special invite code from the administration'
+      ],
+      answerIndex: 1
+    }
+  },
+  {
+    id: 'guide-stonbassadors-rewards',
+    title: lang === 'ru' ? 'Система наград и правила отправки отчетов' : 'Rewards System and Report Submission Rules',
+    category: lang === 'ru' ? 'Гайды' : 'Guides',
+    description: lang === 'ru' 
+      ? 'Как распределяется ежемесячный пул наград до 10,000 STON и как правильно отправлять свои работы на проверку.' 
+      : 'How the monthly reward pool of up to 10,000 STON is distributed and how to properly submit your work for review.',
+    xpReward: 90,
+    readTime: lang === 'ru' ? '4 мин' : '4 min',
+    completed: false,
+    duration: lang === 'ru' ? '4 мин' : '4 min',
+    views: lang === 'ru' ? '9.8K просмотров' : '9.8K views',
+    uploadedAt: lang === 'ru' ? 'Вчера' : 'Yesterday',
+    imageUrl: 'bg-gradient-to-br from-zinc-900 via-stone-900 to-orange-950/20',
+    content: lang === 'ru' ? [
+      'Каждый месяц команда STON.fi выделяет крупный призовой пул — до 10,000 токенов STON — для вознаграждения лучших участников программы STONbassadors.',
+      'Награды распределяются на основе качества, охвата аудитории и разнообразия вашего вклада. Все отправленные работы оцениваются модераторами вручную по нескольким критериям.',
+      'Чтобы получить награду, необходимо в конце каждого месяца заполнить специальную форму отправки отчета в Telegram-боте. Убедитесь, что все ваши ссылки активны, а работы оформлены аккуратно. Плагиат и накрутка просмотров строго запрещены и ведут к дисквалификации.'
+    ] : [
+      'Every month, the STON.fi team allocates a large prize pool—up to 10,000 STON tokens—to reward the best participants in the STONbassadors program.',
+      'Rewards are distributed based on quality, audience reach, and the variety of your contribution. All submitted works are manually evaluated by moderators based on several criteria.',
+      'To receive a reward, you must fill out a special report submission form in the Telegram bot at the end of each month. Make sure all your links are active and your work is neatly presented. Plagiarism and fake views are strictly prohibited and will lead to disqualification.'
+    ],
+    quiz: {
+      question: lang === 'ru' 
+        ? 'Какой максимальный ежемесячный пул наград выделяется для лучших STONbassadors?' 
+        : 'What is the maximum monthly reward pool allocated for the best STONbassadors?',
+      options: ['1,000 STON', '5,000 STON', '10,000 STON'],
+      answerIndex: 2
+    }
+  },
+  {
+    id: 'guide-stonbassadors-content',
+    title: lang === 'ru' ? 'Создание контента: Советы и лучшие практики' : 'Content Creation: Tips and Best Practices',
+    category: lang === 'ru' ? 'Гайды' : 'Guides',
+    description: lang === 'ru' 
+      ? 'Как создавать вовлекающий, качественный контент о STON.fi, который получит максимальные оценки от команды.' 
+      : 'How to create engaging, high-quality content about STON.fi that will get maximum scores from the team.',
+    xpReward: 100,
+    readTime: lang === 'ru' ? '5 мин' : '5 min',
+    completed: false,
+    duration: lang === 'ru' ? '5 мин' : '5 min',
+    views: lang === 'ru' ? '7.5K просмотров' : '7.5K views',
+    uploadedAt: lang === 'ru' ? '2 дня назад' : '2 days ago',
+    imageUrl: 'bg-gradient-to-br from-neutral-900 via-orange-900/10 to-stone-950',
+    content: lang === 'ru' ? [
+      'Качественный контент — залог высокой оценки вашей работы. Команда STON.fi ценит уникальные материалы, которые действительно помогают пользователям разобраться в продукте.',
+      'При написании статей или гайдов используйте понятную структуру: четкое введение, разделы с подзаголовками, пошаговые инструкции и качественные скриншоты. Если вы описываете сложные DeFi-механики, добавьте наглядные примеры.',
+      'Продвигайте свои материалы на популярных платформах (Teletype, Medium, X, Telegram). Высокий органический охват и активные комментарии читателей существенно увеличат ваши шансы на получение повышенной награды.'
+    ] : [
+      'High-quality content is key to getting a high score for your work. The STON.fi team values unique materials that actually help users understand the product.',
+      'When writing articles or guides, use a clear structure: a solid introduction, sections with subheadings, step-by-step instructions, and high-quality screenshots. If you describe complex DeFi mechanics, add illustrative examples.',
+      'Promote your materials on popular platforms (Teletype, Medium, X, Telegram). High organic reach and active reader comments will significantly increase your chances of getting an upgraded reward.'
+    ],
+    quiz: {
+      question: lang === 'ru' 
+        ? 'Что из перечисленного является важным при создании качественного гайда по мнению команды STON.fi?' 
+        : 'What is considered important when creating a high-quality guide, according to the STON.fi team?',
+      options: lang === 'ru' ? [
+        'Использование сложных терминов без объяснений',
+        'Понятная структура, качественные скриншоты и пошаговые инструкции',
+        'Простое копирование чужих материалов с других сайтов'
+      ] : [
+        'Using complex terms without explanations',
+        'Clear structure, quality screenshots, and step-by-step instructions',
+        'Simply copying someone else\'s material from other websites'
+      ],
+      answerIndex: 1
+    }
+  },
+  {
+    id: 'guide-stonbassadors-referrals',
+    title: lang === 'ru' ? 'Реферальная программа для амбассадоров' : 'Referral Program for Ambassadors',
+    category: lang === 'ru' ? 'Гайды' : 'Guides',
+    description: lang === 'ru' 
+      ? 'Узнайте, как приглашать друзей в программу и получать 10% от их наград в течение 6 месяцев.' 
+      : 'Learn how to invite friends to the program and receive 10% of their rewards for 6 months.',
+    xpReward: 70,
+    readTime: lang === 'ru' ? '3 мин' : '3 min',
+    completed: false,
+    duration: lang === 'ru' ? '3 мин' : '3 min',
+    views: lang === 'ru' ? '5.2K просмотров' : '5.2K views',
+    uploadedAt: lang === 'ru' ? '3 дня назад' : '3 days ago',
+    imageUrl: 'bg-gradient-to-br from-amber-950/40 via-neutral-900 to-black',
+    content: lang === 'ru' ? [
+      'Программа STONbassadors включает в себя выгодную реферальную систему, которая позволяет получать пассивный доход за приглашение новых амбассадоров.',
+      'Вы можете поделиться своей уникальной реферальной ссылкой с друзьями. Если приглашенный пользователь регистрируется в программе и начинает зарабатывать награды, вы будете получать бонус в размере 10% от его ежемесячных начислений.',
+      'Этот реферальный бонус выплачивается из специального фонда команды STON.fi в течение 6 месяцев с момента регистрации реферала. При этом награда самого реферала никак не уменьшается.'
+    ] : [
+      'The STONbassadors program includes a lucrative referral system that allows you to earn passive income by inviting new ambassadors.',
+      'You can share your unique referral link with friends. If the invited user registers in the program and starts earning rewards, you will receive a bonus equal to 10% of their monthly payouts.',
+      'This referral bonus is paid from a special fund allocated by the STON.fi team for 6 months from the moment of the referral\'s registration. Meanwhile, the referral\'s own reward is not reduced in any way.'
+    ],
+    quiz: {
+      question: lang === 'ru' 
+        ? 'Какой процент от наград ваших рефералов вы будете получать в течение 6 месяцев?' 
+        : 'What percentage of your referrals\' rewards will you receive for 6 months?',
+      options: ['5%', '10%', '15%'],
+      answerIndex: 1
+    }
+  },
+  {
+    id: 'lesson-1',
+    title: lang === 'ru' ? 'Что такое STON.fi? Полный гайд для новичков' : 'What is STON.fi? Complete Guide for Beginners',
+    category: lang === 'ru' ? 'Академия' : 'Academy',
+    description: lang === 'ru' 
+      ? 'Узнайте о ведущем децентрализованном маркетмейкере (AMM DEX) на блокчейне TON, его преимуществах и возможностях.' 
+      : 'Learn about the leading decentralized automated market maker (AMM DEX) on the TON blockchain, its advantages, and opportunities.',
+    xpReward: 75,
+    readTime: lang === 'ru' ? '3 мин' : '3 min',
+    completed: false,
+    duration: lang === 'ru' ? '3 мин' : '3 min',
+    views: lang === 'ru' ? '8.4K просмотров' : '8.4K views',
+    uploadedAt: lang === 'ru' ? '2 дня назад' : '2 days ago',
+    imageUrl: 'bg-gradient-to-br from-amber-950/40 via-neutral-900 to-black',
+    content: lang === 'ru' ? [
+      'STON.fi — это ведущий децентрализованный автоматический маркетмейкер (AMM DEX) на блокчейне TON, предлагающий пользователям сверхнизкие комиссии, минимальное проскальзывание и удобный интерфейс.',
+      'В отличие от традиционных централизованных бирж, на STON.fi вам не нужно проходить регистрацию или доверять свои средства третьим лицам. Все обмены происходят напрямую между кошельками пользователей через безопасные смарт-контракты.',
+      'Благодаря архитектуре блокчейна TON, транзакции на STON.fi проходят практически мгновенно, делая торговлю криптовалютой доступной и быстрой для каждого.'
+    ] : [
+      'STON.fi is the leading decentralized automatic market maker (AMM DEX) on the TON blockchain, offering users ultra-low fees, minimal slippage, and an intuitive user interface.',
+      'Unlike traditional centralized exchanges, on STON.fi you do not need to register or trust your funds to third parties. All exchanges happen directly between users\' wallets through secure smart contracts.',
+      'Thanks to the architecture of the TON blockchain, transactions on STON.fi occur almost instantly, making cryptocurrency trading accessible and fast for everyone.'
+    ],
+    quiz: {
+      question: lang === 'ru' 
+        ? 'Какую архитектуру использует STON.fi DEX?' 
+        : 'Which architecture does the STON.fi DEX use?',
+      options: lang === 'ru' ? [
+        'Order Book (Книга ордеров)',
+        'AMM (Автоматический маркетмейкер)',
+        'Централизованный оракул'
+      ] : [
+        'Order Book',
+        'AMM (Automated Market Maker)',
+        'Centralized Oracle'
+      ],
+      answerIndex: 1
+    }
+  },
+  {
+    id: 'lesson-2',
+    title: lang === 'ru' ? 'Как фармить STON на пулах ликвидности' : 'How to Farm STON on Liquidity Pools',
+    category: lang === 'ru' ? 'Гайды' : 'Guides',
+    description: lang === 'ru' 
+      ? 'Поймите, как работают пулы ликвидности, как вносить средства и получать комиссионные с каждой сделки в экосистеме.' 
+      : 'Understand how liquidity pools work, how to deposit funds, and earn commission fees on every trade in the ecosystem.',
+    xpReward: 100,
+    readTime: lang === 'ru' ? '5 мин' : '5 min',
+    completed: false,
+    duration: lang === 'ru' ? '5 мин' : '5 min',
+    views: lang === 'ru' ? '6.1K просмотров' : '6.1K views',
+    uploadedAt: lang === 'ru' ? '4 дня назад' : '4 days ago',
+    imageUrl: 'bg-gradient-to-br from-zinc-900 via-stone-900 to-orange-950/20',
+    content: lang === 'ru' ? [
+      'Фарминг и предоставление ликвидности — один из самых популярных способов пассивного заработка в децентрализованных финансах (DeFi) на платформе STON.fi.',
+      'Когда вы вносите пару токенов (например, TON и STON) в пул ликвидности, вы получаете LP-токены, подтверждающие вашу долю в пуле. Провайдеры ликвидности получают часть торговых комиссий с каждого обмена в этой паре.',
+      'Дополнительно вы можете отправлять свои LP-токены в стейкинг в разделе фарминга, чтобы зарабатывать бонусные токены управления STON с высокой процентной ставкой APY.'
+    ] : [
+      'Farming and providing liquidity is one of the most popular ways to earn passive income in decentralized finance (DeFi) on the STON.fi platform.',
+      'When you deposit a pair of tokens (e.g., TON and STON) into a liquidity pool, you receive LP tokens that confirm your share in the pool. Liquidity providers receive a portion of the trading fees from each swap in that pair.',
+      'Additionally, you can stake your LP tokens in the farming section to earn bonus STON governance tokens with a high APY interest rate.'
+    ],
+    quiz: {
+      question: lang === 'ru' 
+        ? 'Что получает провайдер ликвидности взамен внесенных токенов?' 
+        : 'What does a liquidity provider receive in return for deposited tokens?',
+      options: lang === 'ru' ? [
+        'LP токены',
+        'NFT ваучеры',
+        'Только устную благодарность'
+      ] : [
+        'LP tokens',
+        'NFT vouchers',
+        'Only verbal appreciation'
+      ],
+      answerIndex: 0
+    }
+  },
+  {
+    id: 'lesson-3',
+    title: lang === 'ru' ? 'Управление и стейкинг токена $STON' : 'Governance and Staking of the $STON Token',
+    category: lang === 'ru' ? 'Академия' : 'Academy',
+    description: lang === 'ru' 
+      ? 'Роль нативного токена управления $STON, протоколы стейкинга и как участвовать в голосованиях за будущее платформы.' 
+      : 'The role of the native governance token $STON, staking protocols, and how to participate in voting on the platform\'s future.',
+    xpReward: 120,
+    readTime: lang === 'ru' ? '4 мин' : '4 min',
+    completed: false,
+    duration: lang === 'ru' ? '4 мин' : '4 min',
+    views: lang === 'ru' ? '3.2K просмотров' : '3.2K views',
+    uploadedAt: lang === 'ru' ? '1 неделю назад' : '1 week ago',
+    imageUrl: 'bg-gradient-to-br from-neutral-900 via-orange-900/10 to-stone-950',
+    content: lang === 'ru' ? [
+      'Токен $STON является ключевым элементом управления и стимуляции всей экосистемы децентрализованной биржи STON.fi.',
+      'Стейкинг токенов STON позволяет пользователям блокировать свои средства на определенный период в обмен на получение специальных токенов AR-STON. Эти токены дают право участвовать в голосованиях за ключевые изменения платформы.',
+      'Кроме того, стейкеры получают долю от доходов протокола, что делает долгосрочное удержание токена STON еще более выгодным и стратегически важным для участников.'
+    ] : [
+      'The $STON token is a key element of governance and incentivization for the entire STON.fi decentralized exchange ecosystem.',
+      'Staking STON tokens allows users to lock their funds for a specific period in exchange for receiving special AR-STON tokens. These tokens grant the right to vote on key changes to the platform.',
+      'In addition, stakers receive a share of the protocol\'s revenue, making holding STON tokens long-term even more lucrative and strategically important for participants.'
+    ],
+    quiz: {
+      question: lang === 'ru' 
+        ? 'Какое ключевое преимущество стейкинга $STON на платформе STON.fi?' 
+        : 'What is the key benefit of staking $STON on the STON.fi platform?',
+      options: lang === 'ru' ? [
+        'Снижение лимитов обмена',
+        'Получение AR-STON и доли в доходах протокола',
+        'Автоматическая покупка TON'
+      ] : [
+        'Lower swap limits',
+        'Receiving AR-STON and a share of the protocol\'s revenue',
+        'Automatic purchase of TON'
+      ],
+      answerIndex: 1
+    }
+  }
+];
+
+const getMissions = (lang: 'ru' | 'en'): Mission[] => [
+  {
+    id: 'm-1',
+    title: lang === 'ru' ? 'Подключи кошелек' : 'Connect Wallet',
+    description: lang === 'ru' 
+      ? 'Подключите ваш TON кошелек (Tonkeeper, MyTonWallet и др.) к нашей системе.' 
+      : 'Connect your TON wallet (Tonkeeper, MyTonWallet, etc.) to our system.',
+    xpReward: 50,
+    type: 'web3',
+    status: 'available',
+    link: '#connect'
+  },
+  {
+    id: 'm-2',
+    title: lang === 'ru' ? 'Подпишись на STON.fi в X' : 'Follow STON.fi on X',
+    description: lang === 'ru' 
+      ? 'Присоединяйтесь к официальному каналу X (Twitter) экосистемы STON.fi.' 
+      : 'Join the official X (Twitter) channel of the STON.fi ecosystem.',
+    xpReward: 25,
+    type: 'social',
+    status: 'available',
+    link: 'https://x.com/ston_fi'
+  },
+  {
+    id: 'm-3',
+    title: lang === 'ru' ? 'Пройди урок в Академии' : 'Complete an Academy Lesson',
+    description: lang === 'ru' 
+      ? 'Изучите любой гайд в разделе «Академия» и решите тест без ошибок.' 
+      : 'Study any guide in the Academy and pass the test without errors.',
+    xpReward: 75,
+    type: 'daily',
+    status: 'available',
+    link: '#videos'
+  },
+  {
+    id: 'm-4',
+    title: lang === 'ru' ? 'Свопни любой токен' : 'Swap Any Token',
+    description: lang === 'ru' 
+      ? 'Совершите быстрый обмен TON/STON внутри нашего Mini App.' 
+      : 'Perform a quick TON/STON exchange inside our Mini App.',
+    xpReward: 100,
+    type: 'web3',
+    status: 'available',
+    link: '#swap'
+  },
+  {
+    id: 'm-5',
+    title: lang === 'ru' ? 'Пригласи 3 друзей' : 'Invite 3 Friends',
+    description: lang === 'ru' 
+      ? 'Поделитесь своей реферальной ссылкой и приведите 3 активных амбассадоров.' 
+      : 'Share your referral link and invite 3 active ambassadors.',
+    xpReward: 200,
+    type: 'social',
+    status: 'available',
+    link: 'https://t.me/share/url?url=https://t.me/ston_vibe_studio_bot/app'
+  }
+];
+
+const getLeaders = (lang: 'ru' | 'en'): Leader[] => [
+  { rank: 1, name: 'tonlegend 👑', xp: 5420, badge: lang === 'ru' ? 'Алмазный Вайб' : 'Diamond Vibe' },
+  { rank: 2, name: 'cryptoboss', xp: 2890, badge: lang === 'ru' ? 'Алмазный Вайб' : 'Diamond Vibe' },
+  { rank: 3, name: 'stonmaster', xp: 2450, badge: lang === 'ru' ? 'Платиновый Вайб' : 'Platinum Vibe' },
+  { rank: 4, name: 'stonplayer', xp: 1980, badge: lang === 'ru' ? 'Платиновый Вайб' : 'Platinum Vibe' },
+  { rank: 5, name: 'stonlover', xp: 1760, badge: lang === 'ru' ? 'Золотой Вайб' : 'Gold Vibe' },
+  { rank: 6, name: 'stonaddict', xp: 1230, badge: lang === 'ru' ? 'Золотой Вайб' : 'Gold Vibe' },
+  { rank: 7, name: lang === 'ru' ? 'Твой рейтинг (Вы)' : 'Your rank (You)', xp: 4250, badge: lang === 'ru' ? 'Золотой Вайб' : 'Gold Vibe', isCurrentUser: true }
+];
+
+
 export default function Home() {
+  // === Language States ===
+  const [lang, setLang] = useState<'ru' | 'en'>('ru');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('stonhub_lang');
+    if (saved === 'ru' || saved === 'en') {
+      setLang(saved);
+    }
+  }, []);
+
+  const toggleLang = () => {
+    const nextLang = lang === 'ru' ? 'en' : 'ru';
+    setLang(nextLang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('stonhub_lang', nextLang);
+    }
+  };
+
+  const TUTORIAL_STEPS = getTutorialSteps(lang);
   // === Onboarding Tutorial States ===
   const [tutorialStep, setTutorialStep] = useState<number | null>(null);
 
@@ -404,7 +936,7 @@ export default function Home() {
   const handleSkipTutorial = () => {
     setTutorialStep(null);
     localStorage.setItem('stonhub_tutorial_seen', 'true');
-    showNotificationMessage('Добро пожаловать в игру! 🪨🔥');
+    showNotificationMessage(DICTIONARY[lang].walletConnectSuccess);
   };
   // === Web3 states ===
   const walletAddress = useTonAddress();
@@ -436,7 +968,7 @@ export default function Home() {
   const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
   const [quizResult, setQuizResult] = useState<'correct' | 'wrong' | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
-  const [videoFilter, setVideoFilter] = useState<string>('Гайды');
+  const [videoFilter, setVideoFilter] = useState<string>('guides');
 
 
 
@@ -448,256 +980,50 @@ export default function Home() {
   const [isSwapping, setIsSwapping] = useState<boolean>(false);
   const [activeDropdown, setActiveDropdown] = useState<'from' | 'to' | null>(null);
 
-  // === Mock Data ===
-  const [lessons] = useState<Lesson[]>([
-    {
-      id: 'guide-stonbassadors-intro',
-      title: 'Кто такой STONbassador и как им стать?',
-      category: 'Гайды',
-      description: 'Полное руководство по участию в амбассадорской программе STON.fi без сложных проверок и верификаций.',
-      xpReward: 80,
-      readTime: '3 мин',
-      completed: false,
-      duration: '3 мин',
-      views: '12.4K просмотров',
-      uploadedAt: 'Сегодня',
-      imageUrl: 'bg-gradient-to-br from-amber-950/40 via-neutral-900 to-black',
-      content: [
-        'STONbassadors — это официальные амбассадоры экосистемы STON.fi, которые помогают развивать бренд и сообщество. Это творческие люди, авторы контента, переводчики, инфлюенсеры и технические специалисты, разделяющие ценности децентрализации.',
-        'Главная прелесть программы — отсутствие сложного отбора. Вам не нужно ждать одобрения заявки или проходить жесткую верификацию личности (KYC). Вы можете начать в любой момент!',
-        'Чтобы присоединиться, достаточно выполнять полезные задания: создавать качественный контент (статьи, видео, инфографику), помогать новичкам в чатах сообщества или организовывать локальные мероприятия. В конце месяца вы отправляете отчет о проделанной работе через специальную форму.'
-      ],
-      quiz: {
-        question: 'Нужно ли проходить сложную верификацию или заполнять заявку, чтобы стать STONbassador?',
-        options: [
-          'Да, требуется верификация личности (KYC) и одобрение анкеты',
-          'Нет, можно сразу начать выполнять задания и отправлять отчеты',
-          'Да, нужен специальный инвайт-код от администрации'
-        ],
-        answerIndex: 1
-      }
-    },
-    {
-      id: 'guide-stonbassadors-rewards',
-      title: 'Система наград и правила отправки отчетов',
-      category: 'Гайды',
-      description: 'Как распределяется ежемесячный пул наград до 10,000 STON и как правильно отправлять свои работы на проверку.',
-      xpReward: 90,
-      readTime: '4 мин',
-      completed: false,
-      duration: '4 мин',
-      views: '9.8K просмотров',
-      uploadedAt: 'Вчера',
-      imageUrl: 'bg-gradient-to-br from-zinc-900 via-stone-900 to-orange-950/20',
-      content: [
-        'Каждый месяц команда STON.fi выделяет крупный призовой пул — до 10,000 токенов STON — для вознаграждения лучших участников программы STONbassadors.',
-        'Награды распределяются на основе качества, охвата аудитории и разнообразия вашего вклада. Все отправленные работы оцениваются модераторами вручную по нескольким критериям.',
-        'Чтобы получить награду, необходимо в конце каждого месяца заполнить специальную форму отправки отчета в Telegram-боте. Убедитесь, что все ваши ссылки активны, а работы оформлены аккуратно. Плагиат и накрутка просмотров строго запрещены и ведут к дисквалификации.'
-      ],
-      quiz: {
-        question: 'Какой максимальный ежемесячный пул наград выделяется для лучших STONbassadors?',
-        options: [
-          '1,000 STON',
-          '5,000 STON',
-          '10,000 STON'
-        ],
-        answerIndex: 2
-      }
-    },
-    {
-      id: 'guide-stonbassadors-content',
-      title: 'Создание контента: Советы и лучшие практики',
-      category: 'Гайды',
-      description: 'Как создавать вовлекающий, качественный контент о STON.fi, который получит максимальные оценки от команды.',
-      xpReward: 100,
-      readTime: '5 мин',
-      completed: false,
-      duration: '5 мин',
-      views: '7.5K просмотров',
-      uploadedAt: '2 дня назад',
-      imageUrl: 'bg-gradient-to-br from-neutral-900 via-orange-900/10 to-stone-950',
-      content: [
-        'Качественный контент — залог высокой оценки вашей работы. Команда STON.fi ценит уникальные материалы, которые действительно помогают пользователям разобраться в продукте.',
-        'При написании статей или гайдов используйте понятную структуру: четкое введение, разделы с подзаголовками, пошаговые инструкции и качественные скриншоты. Если вы описываете сложные DeFi-механики, добавьте наглядные примеры.',
-        'Продвигайте свои материалы на популярных платформах (Teletype, Medium, X, Telegram). Высокий органический охват и активные комментарии читателей существенно увеличат ваши шансы на получение повышенной награды.'
-      ],
-      quiz: {
-        question: 'Что из перечисленного является важным при создании качественного гайда по мнению команды STON.fi?',
-        options: [
-          'Использование сложных терминов без объяснений',
-          'Понятная структура, качественные скриншоты и пошаговые инструкции',
-          'Простое копирование чужих материалов с других сайтов'
-        ],
-        answerIndex: 1
-      }
-    },
-    {
-      id: 'guide-stonbassadors-referrals',
-      title: 'Реферальная программа для амбассадоров',
-      category: 'Гайды',
-      description: 'Узнайте, как приглашать друзей в программу и получать 10% от их наград в течение 6 месяцев.',
-      xpReward: 70,
-      readTime: '3 мин',
-      completed: false,
-      duration: '3 мин',
-      views: '5.2K просмотров',
-      uploadedAt: '3 дня назад',
-      imageUrl: 'bg-gradient-to-br from-amber-950/40 via-neutral-900 to-black',
-      content: [
-        'Программа STONbassadors включает в себя выгодную реферальную систему, которая позволяет получать пассивный доход за приглашение новых амбассадоров.',
-        'Вы можете поделиться своей уникальной реферальной ссылкой с друзьями. Если приглашенный пользователь регистрируется в программе и начинает зарабатывать награды, вы будете получать бонус в размере 10% от его ежемесячных начислений.',
-        'Этот реферальный бонус выплачивается из специального фонда команды STON.fi в течение 6 месяцев с момента регистрации реферала. При этом награда самого реферала никак не уменьшается.'
-      ],
-      quiz: {
-        question: 'Какой процент от наград ваших рефералов вы будете получать в течение 6 месяцев?',
-        options: [
-          '5%',
-          '10%',
-          '15%'
-        ],
-        answerIndex: 1
-      }
-    },
-    {
-      id: 'lesson-1',
-      title: 'Что такое STON.fi? Полный гайд для новичков',
-      category: 'Академия',
-      description: 'Узнайте о ведущем децентрализованном маркетмейкере (AMM DEX) на блокчейне TON, его преимуществах и возможностях.',
-      xpReward: 75,
-      readTime: '3 мин',
-      completed: false,
-      duration: '3 мин',
-      views: '8.4K просмотров',
-      uploadedAt: '2 дня назад',
-      imageUrl: 'bg-gradient-to-br from-amber-950/40 via-neutral-900 to-black',
-      content: [
-        'STON.fi — это ведущий децентрализованный автоматический маркетмейкер (AMM DEX) на блокчейне TON, предлагающий пользователям сверхнизкие комиссии, минимальное проскальзывание и удобный интерфейс.',
-        'В отличие от традиционных централизованных бирж, на STON.fi вам не нужно проходить регистрацию или доверять свои средства третьим лицам. Все обмены происходят напрямую между кошельками пользователей через безопасные смарт-контракты.',
-        'Благодаря архитектуре блокчейна TON, транзакции на STON.fi проходят практически мгновенно, делая торговлю криптовалютой доступной и быстрой для каждого.'
-      ],
-      quiz: {
-        question: 'Какую архитектуру использует STON.fi DEX?',
-        options: [
-          'Order Book (Книга ордеров)',
-          'AMM (Автоматический маркетмейкер)',
-          'Централизованный оракул'
-        ],
-        answerIndex: 1
-      }
-    },
-    {
-      id: 'lesson-2',
-      title: 'Как фармить STON на пулах ликвидности',
-      category: 'Гайды',
-      description: 'Поймите, как работают пулы ликвидности, как вносить средства и получать комиссионные с каждой сделки в экосистеме.',
-      xpReward: 100,
-      readTime: '5 мин',
-      completed: false,
-      duration: '5 мин',
-      views: '6.1K просмотров',
-      uploadedAt: '4 дня назад',
-      imageUrl: 'bg-gradient-to-br from-zinc-900 via-stone-900 to-orange-950/20',
-      content: [
-        'Фарминг и предоставление ликвидности — один из самых популярных способов пассивного заработка в децентрализованных финансах (DeFi) на платформе STON.fi.',
-        'Когда вы вносите пару токенов (например, TON и STON) в пул ликвидности, вы получаете LP-токены, подтверждающие вашу долю в пуле. Провайдеры ликвидности получают часть торговых комиссий с каждого обмена в этой паре.',
-        'Дополнительно вы можете отправлять свои LP-токены в стейкинг в разделе фарминга, чтобы зарабатывать бонусные токены управления STON с высокой процентной ставкой APY.'
-      ],
-      quiz: {
-        question: 'Что получает провайдер ликвидности взамен внесенных токенов?',
-        options: [
-          'LP токены',
-          'NFT ваучеры',
-          'Только устную благодарность'
-        ],
-        answerIndex: 0
-      }
-    },
-    {
-      id: 'lesson-3',
-      title: 'Управление и стейкинг токена $STON',
-      category: 'Академия',
-      description: 'Роль нативного токена управления $STON, протоколы стейкинга и как участвовать в голосованиях за будущее платформы.',
-      xpReward: 120,
-      readTime: '4 мин',
-      completed: false,
-      duration: '4 мин',
-      views: '3.2K просмотров',
-      uploadedAt: '1 неделю назад',
-      imageUrl: 'bg-gradient-to-br from-neutral-900 via-orange-900/10 to-stone-950',
-      content: [
-        'Токен $STON является ключевым элементом управления и стимуляции всей экосистемы децентрализованной биржи STON.fi.',
-        'Стейкинг токенов STON позволяет пользователям блокировать свои средства на определенный период в обмен на получение специальных токенов AR-STON. Эти токены дают право участвовать в голосованиях за ключевые изменения платформы.',
-        'Кроме того, стейкеры получают долю от доходов протокола, что делает долгосрочное удержание токена STON еще более выгодным и стратегически важным для участников.'
-      ],
-      quiz: {
-        question: 'Какое ключевое преимущество стейкинга $STON на платформе STON.fi?',
-        options: [
-          'Снижение лимитов обмена',
-          'Получение AR-STON и доли в доходах протокола',
-          'Автоматическая покупка TON'
-        ],
-        answerIndex: 1
-      }
-    }
-  ]);
+  // === Mock Data with multi-language synchronization ===
+  const [lessons, setLessons] = useState<Lesson[]>(() => getLessons('ru'));
+  const [missions, setMissions] = useState<Mission[]>(() => getMissions('ru'));
+  const [leaders, setLeaders] = useState<Leader[]>(() => getLeaders('ru'));
 
-  const [missions, setMissions] = useState<Mission[]>([
-    {
-      id: 'm-1',
-      title: 'Подключи кошелек',
-      description: 'Подключите ваш TON кошелек (Tonkeeper, MyTonWallet и др.) к нашей системе.',
-      xpReward: 50,
-      type: 'web3',
-      status: 'available',
-      link: '#connect'
-    },
-    {
-      id: 'm-2',
-      title: 'Подпишись на STON.fi в X',
-      description: 'Присоединяйтесь к официальному каналу X (Twitter) экосистемы STON.fi.',
-      xpReward: 25,
-      type: 'social',
-      status: 'available',
-      link: 'https://x.com/ston_fi'
-    },
-    {
-      id: 'm-3',
-      title: 'Пройди урок в Академии',
-      description: 'Изучите любой гайд в разделе «Академия» и решите тест без ошибок.',
-      xpReward: 75,
-      type: 'daily',
-      status: 'available',
-      link: '#videos'
-    },
-    {
-      id: 'm-4',
-      title: 'Свопни любой токен',
-      description: 'Совершите быстрый обмен TON/STON внутри нашего Mini App.',
-      xpReward: 100,
-      type: 'web3',
-      status: 'available',
-      link: '#swap'
-    },
-    {
-      id: 'm-5',
-      title: 'Пригласи 3 друзей',
-      description: 'Поделитесь своей реферальной ссылкой и приведите 3 активных амбассадоров.',
-      xpReward: 200,
-      type: 'social',
-      status: 'available',
-      link: 'https://t.me/share/url?url=https://t.me/ston_vibe_studio_bot/app'
-    }
-  ]);
+  // Synchronize dynamic localized lists when lang updates
+  useEffect(() => {
+    // 1. Lessons
+    const freshLessons = getLessons(lang);
+    setLessons(freshLessons);
 
-  const [leaders, setLeaders] = useState<Leader[]>([
-    { rank: 1, name: 'tonlegend 👑', xp: 5420, badge: 'Diamond Vibe' },
-    { rank: 2, name: 'cryptoboss', xp: 2890, badge: 'Diamond Vibe' },
-    { rank: 3, name: 'stonmaster', xp: 2450, badge: 'Platinum Vibe' },
-    { rank: 4, name: 'stonplayer', xp: 1980, badge: 'Platinum Vibe' },
-    { rank: 5, name: 'stonlover', xp: 1760, badge: 'Gold Vibe' },
-    { rank: 6, name: 'stonaddict', xp: 1230, badge: 'Gold Vibe' },
-    { rank: 7, name: 'Твой рейтинг (Вы)', xp: 4250, badge: 'Gold Vibe', isCurrentUser: true }
-  ]);
+    // 2. Missions
+    const freshMissions = getMissions(lang);
+    setMissions(prev => {
+      return freshMissions.map(fresh => {
+        const existing = prev.find(m => m.id === fresh.id);
+        return {
+          ...fresh,
+          status: existing ? existing.status : fresh.status
+        };
+      });
+    });
+
+    // 3. Leaders
+    const freshLeaders = getLeaders(lang);
+    setLeaders(prev => {
+      return freshLeaders.map(fresh => {
+        const existing = prev.find(l => l.rank === fresh.rank || l.isCurrentUser === fresh.isCurrentUser);
+        if (fresh.isCurrentUser && existing) {
+          let currentName = fresh.name;
+          if (tgUser) {
+            currentName = tgUser.username ? `@${tgUser.username} (${lang === 'ru' ? 'Вы' : 'You'})` : `${tgUser.firstName} (${lang === 'ru' ? 'Вы' : 'You'})`;
+          }
+          return {
+            ...fresh,
+            name: currentName,
+            xp: userXp,
+            badge: userRank
+          };
+        }
+        return fresh;
+      });
+    });
+  }, [lang, tgUser, userXp, userRank]);
 
 
 
@@ -825,7 +1151,7 @@ export default function Home() {
     if (dailyClaimed) return;
     setUserXp(prev => prev + 25);
     setDailyClaimed(true);
-    showNotificationMessage('Бонус собран! Получено +25 XP ⚡');
+    showNotificationMessage(DICTIONARY[lang].dailyClaimSuccess);
     
     if (typeof window !== 'undefined') {
       const tg = (window as unknown as { 
@@ -880,14 +1206,14 @@ export default function Home() {
     setMissions(prev => 
       prev.map(m => m.id === missionId ? { ...m, status: 'pending' } : m)
     );
-    showNotificationMessage('Задание отправлено на проверку! ⏳');
+    showNotificationMessage(DICTIONARY[lang].missionPendingAlert);
 
     setTimeout(() => {
       setMissions(prev => 
         prev.map(m => m.id === missionId ? { ...m, status: 'completed' } : m)
       );
       setUserXp(prev => prev + mission.xpReward);
-      showNotificationMessage(`Задание проверено! Получено +${mission.xpReward} XP 🎉`);
+      showNotificationMessage(`${DICTIONARY[lang].missionCompletedAlert}${mission.xpReward} XP 🎉`);
     }, 3500);
   };
 
@@ -939,11 +1265,11 @@ export default function Home() {
 
   const executeSwap = () => {
     if (!walletAddress) {
-      showNotificationMessage('Пожалуйста, подключите TON кошелек! 🔌');
+      showNotificationMessage(DICTIONARY[lang].walletAlert);
       return;
     }
     if (!swapFromAmount || Number(swapFromAmount) <= 0) {
-      showNotificationMessage('Введите сумму для обмена! ⚠️');
+      showNotificationMessage(DICTIONARY[lang].swapAmountAlert);
       return;
     }
 
@@ -951,7 +1277,7 @@ export default function Home() {
     setTimeout(() => {
       setIsSwapping(false);
       setUserXp(prev => prev + 100);
-      showNotificationMessage(`Обмен выполнен! Получено +100 XP 🚀`);
+      showNotificationMessage(DICTIONARY[lang].swapSuccess);
       setSwapFromAmount('');
       setSwapToAmount('');
       setShowSwapModal(false);
@@ -966,7 +1292,7 @@ export default function Home() {
 
 
   // Filter lessons
-  const filteredLessons = videoFilter === 'Гайды' ? lessons : [];
+  const filteredLessons = videoFilter === 'guides' ? lessons : [];
 
 
   return (
@@ -1022,15 +1348,15 @@ export default function Home() {
                   }}
                   className="text-xs text-neutral-500 hover:text-white"
                 >
-                  Закрыть
+                  {DICTIONARY[lang].close}
                 </button>
               </div>
 
               {/* Swap Input From */}
               <div className="bg-neutral-900/60 p-4 rounded-xl border border-white/5 relative">
                 <div className="flex justify-between items-center text-[10px] text-neutral-400 mb-2 font-medium">
-                  <span>Вы отправляете:</span>
-                  <span>Баланс: {SWAP_TOKENS[swapFromToken].balance} {swapFromToken}</span>
+                  <span>{DICTIONARY[lang].swapSend}</span>
+                  <span>{DICTIONARY[lang].swapBalance} {SWAP_TOKENS[swapFromToken].balance} {swapFromToken}</span>
                 </div>
                 <div className="flex justify-between items-center gap-3">
                   <input 
@@ -1092,8 +1418,8 @@ export default function Home() {
               {/* Swap Input To */}
               <div className="bg-neutral-900/60 p-4 rounded-xl border border-white/5 relative mt-1">
                 <div className="flex justify-between items-center text-[10px] text-neutral-400 mb-2 font-medium">
-                  <span>Вы получаете:</span>
-                  <span>Баланс: {SWAP_TOKENS[swapToToken].balance} {swapToToken}</span>
+                  <span>{DICTIONARY[lang].swapReceive}</span>
+                  <span>{DICTIONARY[lang].swapBalance} {SWAP_TOKENS[swapToToken].balance} {swapToToken}</span>
                 </div>
                 <div className="flex justify-between items-center gap-3">
                   <input 
@@ -1139,13 +1465,13 @@ export default function Home() {
               {/* Swap details info card */}
               <div className="p-3 text-[11px] text-neutral-400 space-y-1 bg-black/40 rounded-xl border border-white/5">
                 <div className="flex justify-between">
-                  <span>Курс обмена:</span>
+                  <span>{DICTIONARY[lang].swapRate}</span>
                   <span className="text-white font-semibold">
                     1 {swapFromToken} = {(SWAP_TOKENS[swapFromToken].priceUsd / SWAP_TOKENS[swapToToken].priceUsd).toFixed(swapToToken === 'NOT' ? 4 : 3)} {swapToToken}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Вайб-Бонус за сделку:</span>
+                  <span>{DICTIONARY[lang].swapBonus}</span>
                   <span className="text-[#FF9900] font-semibold flex items-center gap-1">⚡ +100 XP</span>
                 </div>
               </div>
@@ -1159,12 +1485,12 @@ export default function Home() {
                 {isSwapping ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Выполняется обмен на STON.fi...</span>
+                    <span>{DICTIONARY[lang].swappingProgress}</span>
                   </>
                 ) : (
                   <>
                     <ArrowLeftRight className="w-4 h-4" />
-                    <span>{walletAddress ? 'Обменять токены' : 'Сначала подключите кошелек'}</span>
+                    <span>{walletAddress ? DICTIONARY[lang].swapButtonActive : DICTIONARY[lang].swapButtonInactive}</span>
                   </>
                 )}
               </button>
@@ -1199,23 +1525,50 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="scale-[0.9] origin-right">
-            {walletAddress ? (
+          <div className="flex items-center gap-2.5">
+            {/* Premium segmented language toggle */}
+            <div className="flex items-center p-0.5 bg-neutral-900/60 backdrop-blur border border-white/10 rounded-xl relative overflow-hidden h-[30px] w-[70px]">
+              <div 
+                className={`absolute top-0.5 bottom-0.5 w-[31px] rounded-lg bg-[#FF9900] shadow-md shadow-[#FF9900]/20 transition-all duration-300 ${
+                  lang === 'en' ? 'left-[36px]' : 'left-0.5'
+                }`}
+              />
               <button 
-                onClick={() => tonConnectUI.disconnect()}
-                className="bg-neutral-900 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-[10px] font-black text-emerald-400 flex items-center gap-1.5 shadow-sm active:scale-95 transition"
+                onClick={() => lang !== 'ru' && toggleLang()}
+                className={`flex-1 text-[10px] font-black z-10 text-center transition-colors duration-200 ${
+                  lang === 'ru' ? 'text-black' : 'text-neutral-400 hover:text-white'
+                }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>{walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}</span>
+                RU
               </button>
-            ) : (
               <button 
-                onClick={() => tonConnectUI.openModal()}
-                className="bg-gradient-to-tr from-[#FF9900] to-[#FF5500] hover:from-[#FF5500] hover:to-[#FF9900] text-black px-3.5 py-1.5 rounded-xl text-[10px] font-black shadow-lg shadow-[#FF9900]/10 hover:shadow-[#FF9900]/25 active:scale-95 transition whitespace-nowrap"
+                onClick={() => lang !== 'en' && toggleLang()}
+                className={`flex-1 text-[10px] font-black z-10 text-center transition-colors duration-200 ${
+                  lang === 'en' ? 'text-black' : 'text-neutral-400 hover:text-white'
+                }`}
               >
-                Connect Wallet
+                EN
               </button>
-            )}
+            </div>
+
+            <div className="scale-[0.9] origin-right">
+              {walletAddress ? (
+                <button 
+                  onClick={() => tonConnectUI.disconnect()}
+                  className="bg-neutral-900 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-[10px] font-black text-emerald-400 flex items-center gap-1.5 shadow-sm active:scale-95 transition whitespace-nowrap"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>{walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}</span>
+                </button>
+              ) : (
+                <button 
+                  onClick={() => tonConnectUI.openModal()}
+                  className="bg-gradient-to-tr from-[#FF9900] to-[#FF5500] hover:from-[#FF5500] hover:to-[#FF9900] text-black px-3.5 py-1.5 rounded-xl text-[10px] font-black shadow-lg shadow-[#FF9900]/10 hover:shadow-[#FF9900]/25 active:scale-95 transition whitespace-nowrap"
+                >
+                  {DICTIONARY[lang].connectWalletBtn}
+                </button>
+              )}
+            </div>
           </div>
         </header>
 
@@ -1223,7 +1576,7 @@ export default function Home() {
         <div className="px-4 py-2 bg-neutral-950 border-b border-white/5 flex items-center justify-between text-[11px] font-sans">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF9900] animate-ping" />
-            <span className="text-neutral-400 font-medium">Цена STON.fi:</span>
+            <span className="text-neutral-400 font-medium">{lang === 'ru' ? 'Цена STON.fi:' : 'STON.fi Price:'}</span>
             <motion.span 
               key={stonPrice}
               initial={{ opacity: 0.5, y: -2 }}
@@ -1301,14 +1654,14 @@ export default function Home() {
                       <div className="flex items-center gap-2">
                         <h2 className="font-bold text-sm text-white leading-tight">
                           {tgUser 
-                            ? `Привет, ${tgUser.username ? `@${tgUser.username}` : tgUser.firstName}` 
-                            : 'Привет, Амбассадор!'}
+                            ? `${DICTIONARY[lang].hiUser}${tgUser.username ? `@${tgUser.username}` : tgUser.firstName}` 
+                            : DICTIONARY[lang].hiAmbassador}
                         </h2>
                         <span className="bg-[#FF9900]/10 text-[#FF9900] text-[8px] font-black tracking-wider px-2 py-0.5 rounded-full uppercase border border-[#FF9900]/20 shrink-0">ACTIVE</span>
                       </div>
                       <p className="text-[11px] text-neutral-400 flex items-center gap-1">
                         <Award className="w-3.5 h-3.5 text-[#FF9900]" />
-                        Ранг: <span className="text-white font-semibold">{userRank}</span>
+                        <span className="text-neutral-400 font-medium">{DICTIONARY[lang].rankLabel}</span><span className="text-white font-semibold">{userRank}</span>
                       </p>
                     </div>
                   </div>
@@ -1316,7 +1669,7 @@ export default function Home() {
                   {/* Progress bar to next rank */}
                   <div className="mt-5 space-y-2">
                     <div className="flex justify-between text-[11px]">
-                      <span className="text-neutral-400 font-medium">Твой прогресс:</span>
+                      <span className="text-neutral-400 font-medium">{DICTIONARY[lang].progressLabel}</span>
                       <span className="text-[#FF9900] font-black">{userXp} / 5000 XP</span>
                     </div>
                     <div className="h-2 w-full bg-neutral-900 rounded-full overflow-hidden p-0.5 border border-white/5">
@@ -1329,7 +1682,7 @@ export default function Home() {
                     </div>
                     <div className="flex justify-between text-[9px] text-neutral-500">
                       <span>Уровень 12</span>
-                      <span className="italic font-medium">+{5000 - userXp} XP до ранга Diamond Vibe 💎</span>
+                      <span className="italic font-medium">+{5000 - userXp} XP {DICTIONARY[lang].nextRankText}</span>
                     </div>
                   </div>
                 </div>
@@ -1340,7 +1693,7 @@ export default function Home() {
                   
                   <div className="flex justify-between items-start">
                     <div className="space-y-0.5">
-                      <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider">Баланс $STON</span>
+                      <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider">{DICTIONARY[lang].balanceLabel}</span>
                       <h3 className="text-2xl font-black text-white flex items-center gap-1">
                         <span>1,250.75</span>
                         <span className="text-xs text-[#FF9900] font-black bg-[#FF9900]/10 py-0.5 px-2 rounded-full ml-1">STON</span>
@@ -1349,7 +1702,7 @@ export default function Home() {
                     <div className="text-right">
                       <span className="text-xs text-neutral-400 font-medium">~${(1250.75 * stonPrice).toLocaleString('en-US', {maximumFractionDigits: 2})}</span>
                       <p className="text-[10px] text-emerald-400 font-bold flex items-center justify-end gap-0.5 mt-0.5">
-                        <TrendingUp className="w-3 h-3" /> +12.5% за 7д
+                        <TrendingUp className="w-3 h-3" /> +12.5% {DICTIONARY[lang].sevenDaysText}
                       </p>
                     </div>
                   </div>
@@ -1380,28 +1733,28 @@ export default function Home() {
 
                 {/* Quick Actions Grid */}
                 <div>
-                  <h4 className="text-[10px] text-neutral-500 uppercase font-black tracking-widest pl-1 mb-2">Быстрые действия</h4>
+                  <h4 className="text-[10px] text-neutral-500 uppercase font-black tracking-widest pl-1 mb-2">{DICTIONARY[lang].quickActions}</h4>
                   <div className="grid grid-cols-4 gap-2.5">
                     <button 
                       onClick={() => setActiveTab('missions')}
                       className="p-3 bg-neutral-900 border border-white/5 rounded-xl hover:border-[#FF9900]/30 transition-all flex flex-col items-center justify-center gap-1.5 active:scale-95"
                     >
                       <Target className="w-5 h-5 text-[#FF9900]" />
-                      <span className="text-[9px] font-bold text-white uppercase">Миссии</span>
+                      <span className="text-[9px] font-bold text-white uppercase">{lang === 'ru' ? 'Миссии' : 'Missions'}</span>
                     </button>
                     <button 
                       onClick={() => setActiveTab('videos')}
                       className="p-3 bg-neutral-900 border border-white/5 rounded-xl hover:border-[#FF9900]/30 transition-all flex flex-col items-center justify-center gap-1.5 active:scale-95"
                     >
                       <BookOpen className="w-5 h-5 text-[#FF9900]" />
-                      <span className="text-[9px] font-bold text-white uppercase">Академия</span>
+                      <span className="text-[9px] font-bold text-white uppercase">{lang === 'ru' ? 'Академия' : 'Academy'}</span>
                     </button>
                     <button 
                       onClick={() => setShowSwapModal(true)}
                       className="p-3 bg-neutral-900 border border-white/5 rounded-xl hover:border-[#FF9900]/30 transition-all flex flex-col items-center justify-center gap-1.5 active:scale-95"
                     >
                       <ArrowLeftRight className="w-5 h-5 text-[#FF9900]" />
-                      <span className="text-[9px] font-bold text-white uppercase">Своп</span>
+                      <span className="text-[9px] font-bold text-white uppercase">{DICTIONARY[lang].swapActionBtn}</span>
                     </button>
                     <button 
                       onClick={handleDailyClaim}
@@ -1413,7 +1766,7 @@ export default function Home() {
                       }`}
                     >
                       <Flame className={`w-5 h-5 ${dailyClaimed ? 'text-neutral-600' : 'animate-pulse'}`} />
-                      <span className="text-[9px] font-bold text-white uppercase">Бонусы</span>
+                      <span className="text-[9px] font-bold text-white uppercase">{DICTIONARY[lang].dailyClaimBtn}</span>
                     </button>
                   </div>
                 </div>
@@ -1422,13 +1775,13 @@ export default function Home() {
                 <div className="glass-panel rounded-xl p-4 space-y-3 relative overflow-hidden">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[#FF9900]" />
-                    <h3 className="font-bold text-xs text-white">Добро пожаловать в STON Hub!</h3>
+                    <h3 className="font-bold text-xs text-white">{DICTIONARY[lang].welcomeTitle}</h3>
                   </div>
                   <p className="text-[11px] text-neutral-400 leading-relaxed">
-                    Это твой интерактивный путеводитель по блокчейну TON и экосистеме STON.fi. Смотри обучающие видео, сдавай тесты, выполняй квесты и докажи, что ты лучший амбассадор!
+                    {DICTIONARY[lang].welcomeDesc}
                   </p>
                   <div className="pt-1 flex items-center justify-between text-xs text-[#FF9900] font-bold cursor-pointer" onClick={() => setActiveTab('videos')}>
-                    <span>Перейти к обучению</span>
+                    <span>{DICTIONARY[lang].goToAcademy}</span>
                     <ChevronRight className="w-4 h-4" />
                   </div>
                 </div>
@@ -1436,15 +1789,15 @@ export default function Home() {
                 {/* Ecosystem Quick Stats */}
                 <div className="grid grid-cols-3 gap-2">
                   <div className="p-3 bg-[#141416]/50 border border-white/5 rounded-xl text-center">
-                    <p className="text-[8px] text-neutral-500 uppercase font-black">Выполнено квестов</p>
+                    <p className="text-[8px] text-neutral-500 uppercase font-black">{DICTIONARY[lang].completedQuests}</p>
                     <p className="text-xs font-black mt-1 text-white">4 / 5</p>
                   </div>
                   <div className="p-3 bg-[#141416]/50 border border-white/5 rounded-xl text-center">
-                    <p className="text-[8px] text-neutral-500 uppercase font-black">Пройдено уроков</p>
+                    <p className="text-[8px] text-neutral-500 uppercase font-black">{DICTIONARY[lang].completedLessons}</p>
                     <p className="text-xs font-black mt-1 text-white">2 / 3</p>
                   </div>
                   <div className="p-3 bg-[#141416]/50 border border-white/5 rounded-xl text-center">
-                    <p className="text-[8px] text-neutral-500 uppercase font-black">Сейвинг APY</p>
+                    <p className="text-[8px] text-neutral-500 uppercase font-black">{DICTIONARY[lang].savingApy}</p>
                     <p className="text-xs font-black mt-1 text-emerald-400">78.5%</p>
                   </div>
                 </div>
@@ -1483,7 +1836,7 @@ export default function Home() {
                         onClick={() => setSelectedLesson(null)}
                         className="text-xs text-neutral-400 hover:text-white flex items-center gap-0.5 font-bold"
                       >
-                        ← К списку гайдов
+                        {DICTIONARY[lang].backToList}
                       </button>
                     </div>
 
@@ -1492,7 +1845,7 @@ export default function Home() {
                       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#FF9900]/5 to-transparent rounded-full blur-2xl pointer-events-none" />
                       <div className="flex items-center gap-2 text-[10px] text-[#FF9900] font-bold uppercase tracking-wider mb-2">
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>Учебный материал</span>
+                        <span>{DICTIONARY[lang].studyMaterial}</span>
                       </div>
                       <h2 className="text-sm font-black text-white leading-snug mb-3">
                         {selectedLesson.title}
@@ -1500,7 +1853,7 @@ export default function Home() {
                       <div className="flex gap-4 text-[10px] text-neutral-400">
                         <span className="flex items-center gap-1 font-semibold">
                           <BookOpen className="w-3.5 h-3.5 text-[#FF9900]" />
-                          Время чтения: {selectedLesson.readTime}
+                          {DICTIONARY[lang].readTime} {selectedLesson.readTime}
                         </span>
                         <span>•</span>
                         <span>{selectedLesson.views}</span>
@@ -1526,7 +1879,7 @@ export default function Home() {
                     <div className="space-y-4">
                       <div className="flex items-center gap-2 text-xs font-black text-white">
                         <HelpCircle className="w-4 h-4 text-[#FF9900]" />
-                        <span>Пройдите тест для получения +{selectedLesson.xpReward} XP:</span>
+                        <span>{DICTIONARY[lang].quizPrompt}{selectedLesson.xpReward} XP:</span>
                       </div>
                       
                       <p className="text-xs text-white font-bold bg-neutral-900/60 p-4 rounded-xl border border-white/5 leading-snug">
@@ -1560,7 +1913,7 @@ export default function Home() {
                       {quizResult === 'correct' && (
                         <div className="bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-xl flex items-center gap-2 text-xs text-emerald-400 font-bold">
                           <CheckCircle2 className="w-4 h-4 shrink-0" />
-                          <span>Задание успешно выполнено! Награда начислена.</span>
+                          <span>{DICTIONARY[lang].quizSuccess}</span>
                         </div>
                       )}
                     </div>
@@ -1571,32 +1924,35 @@ export default function Home() {
                     {/* Header titles */}
                     <div className="flex justify-between items-end">
                       <div>
-                        <h2 className="text-base font-black text-white">Академия STONHub 🎓</h2>
-                        <p className="text-[11px] text-neutral-400">Читай гайды, отвечай на тесты и прокачивайся</p>
+                        <h2 className="text-base font-black text-white">{DICTIONARY[lang].academyTitle}</h2>
+                        <p className="text-[11px] text-neutral-400">{DICTIONARY[lang].academyDesc}</p>
                       </div>
                       <span className="text-[10px] text-neutral-500 font-bold">
-                        {videoFilter === 'Гайды' ? `Всего гайдов: ${filteredLessons.length}` : 'Скоро'}
+                        {videoFilter === 'guides' ? `${DICTIONARY[lang].totalGuides} ${filteredLessons.length}` : (lang === 'ru' ? 'Скоро' : 'Soon')}
                       </span>
                     </div>
 
                     {/* Horizontal Categories Scroll */}
                     <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar select-none">
-                      {['Гайды', 'Видео'].map(cat => (
+                      {[
+                        { key: 'guides', label: lang === 'ru' ? 'Гайды' : 'Guides' },
+                        { key: 'videos', label: lang === 'ru' ? 'Видео' : 'Videos' }
+                      ].map(cat => (
                         <button
-                          key={cat}
-                          onClick={() => setVideoFilter(cat)}
+                          key={cat.key}
+                          onClick={() => setVideoFilter(cat.key)}
                           className={`text-[10px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full border shrink-0 transition-all ${
-                            videoFilter === cat
+                            videoFilter === cat.key
                               ? 'bg-[#FF9900] text-black border-[#FF9900] shadow-sm'
                               : 'bg-neutral-900 text-neutral-400 border-white/5 hover:border-white/10'
                           }`}
                         >
-                          {cat}
+                          {cat.label}
                         </button>
                       ))}
                     </div>
 
-                    {videoFilter === 'Видео' ? (
+                    {videoFilter === 'videos' ? (
                       /* Coming Soon Video Empty State */
                       <div className="glass-panel rounded-2xl p-8 text-center space-y-4 border-white/5 my-4">
                         <div className="w-16 h-16 rounded-full bg-neutral-900 border border-[#FF9900]/30 flex items-center justify-center mx-auto shadow-lg relative">
@@ -1653,11 +2009,11 @@ export default function Home() {
                                 <div className="flex items-center gap-1.5 font-bold text-[#FF9900] group-hover:translate-x-0.5 transition-transform duration-200">
                                   {isCompleted ? (
                                     <span className="text-emerald-400 flex items-center gap-0.5 text-[9px] font-black uppercase">
-                                      <CheckCircle2 className="w-3.5 h-3.5" /> Сдано
+                                      <CheckCircle2 className="w-3.5 h-3.5" /> {DICTIONARY[lang].completed}
                                     </span>
                                   ) : (
                                     <>
-                                      <span>Читать гайд</span>
+                                      <span>{DICTIONARY[lang].readGuide}</span>
                                       <ChevronRight className="w-3.5 h-3.5" />
                                     </>
                                   )}
@@ -1689,8 +2045,8 @@ export default function Home() {
                 className="space-y-4 text-left"
               >
                 <div>
-                  <h2 className="text-base font-black text-white">Доступные квесты 🎯</h2>
-                  <p className="text-[11px] text-neutral-400">Выполняйте задания каждый день и получайте амбассадорские награды</p>
+                  <h2 className="text-base font-black text-white">{DICTIONARY[lang].missionsTitle}</h2>
+                  <p className="text-[11px] text-neutral-400">{DICTIONARY[lang].missionsDesc}</p>
                 </div>
 
                 {/* Quests Lists */}
@@ -1724,18 +2080,18 @@ export default function Home() {
                         <div className="shrink-0 pt-0.5">
                           {mission.status === 'completed' ? (
                             <div className="bg-emerald-500/10 text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center gap-1 border border-emerald-500/20">
-                              <CheckCircle2 className="w-3 h-3" /> Выполнено
+                              <CheckCircle2 className="w-3 h-3" /> {DICTIONARY[lang].done}
                             </div>
                           ) : mission.status === 'pending' ? (
                             <div className="bg-[#FF9900]/10 text-[#FF9900] text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center gap-1 border border-[#FF9900]/20 animate-pulse">
-                              <RefreshCw className="w-3 h-3 animate-spin" /> Проверка
+                              <RefreshCw className="w-3 h-3 animate-spin" /> {DICTIONARY[lang].pending}
                             </div>
                           ) : (
                             <button
                               onClick={() => {
                                 if (mission.id === 'm-1') {
                                   // Trigger wallet connect button (custom text alert helper)
-                                  showNotificationMessage('Пожалуйста, кликните кнопку кошелька в шапке! 🔌');
+                                  showNotificationMessage(DICTIONARY[lang].connectWalletAlert);
                                 } else if (mission.id === 'm-3') {
                                   setActiveTab('videos');
                                 } else if (mission.id === 'm-4') {
@@ -1746,7 +2102,7 @@ export default function Home() {
                               }}
                               className="bg-[#FF9900] hover:bg-[#FF9900]/80 text-black text-[10px] font-black px-3 py-1.5 rounded-lg transition-all active:scale-95 shadow-sm"
                             >
-                              Начать
+                              {DICTIONARY[lang].start}
                             </button>
                           )}
                         </div>
@@ -1760,10 +2116,10 @@ export default function Home() {
                   <div className="absolute top-0 right-0 w-16 h-16 bg-[#FF9900]/5 rounded-full blur-xl pointer-events-none" />
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-[#FF9900]" />
-                    <h3 className="font-bold text-xs text-white">Реферальная программа</h3>
+                    <h3 className="font-bold text-xs text-white">{DICTIONARY[lang].referralTitle}</h3>
                   </div>
                   <p className="text-[10px] text-neutral-400 leading-snug">
-                    Приглашай друзей в STON Hub и получай <strong className="text-white">15%</strong> от их накопленного XP в экосистеме.
+                    {DICTIONARY[lang].referralDesc}
                   </p>
                   <div className="flex items-center gap-2 pt-1">
                     <input 
@@ -1811,16 +2167,14 @@ export default function Home() {
                   >
                     <div className="flex justify-between items-end border-b border-white/5 pb-2">
                       <div>
-                        <h2 className="text-base font-black text-white flex items-center gap-1.5">
-                          <Trophy className="w-5 h-5 text-[#FF9900]" /> Лидерборд
-                        </h2>
+                        <h2 className="text-base font-black text-white flex items-center gap-1.5"><Trophy className="w-5 h-5 text-[#FF9900]" /> {DICTIONARY[lang].leaderboardTitle}</h2>
                         <p className="text-[10px] text-neutral-400">Глобальный рейтинг амбассадоров</p>
                       </div>
                       <button 
                         onClick={() => setShowLeaderboard(false)}
                         className="text-xs text-[#FF9900] font-bold hover:underline"
                       >
-                        ← Профиль
+                        {DICTIONARY[lang].backToProfile}
                       </button>
                     </div>
 
@@ -1852,8 +2206,8 @@ export default function Home() {
                     {/* Table lists */}
                     <div className="glass-panel rounded-xl overflow-hidden border border-white/5">
                       <div className="p-3 border-b border-white/5 text-[9px] font-black uppercase tracking-wider text-neutral-400 flex justify-between">
-                        <span>Амбассадор</span>
-                        <span>Очки XP</span>
+                        <span>{DICTIONARY[lang].tableAmbassador}</span>
+                        <span>{DICTIONARY[lang].tableXp}</span>
                       </div>
                       
                       <div className="divide-y divide-white/5">
@@ -1886,13 +2240,13 @@ export default function Home() {
                           <img src="/logo.png" className="w-full h-full object-cover" />
                         </div>
                         <div className="text-left">
-                          <p className="text-xs font-black text-white">Твой рейтинг (Вы)</p>
+                          <p className="text-xs font-black text-white">{lang === 'ru' ? 'Твой рейтинг (Вы)' : 'Your rank (You)'}</p>
                           <p className="text-[9px] text-neutral-400">{userRank}</p>
                         </div>
                       </div>
                       <div className="text-right">
                         <span className="text-xs font-black text-[#FF9900] block">{userXp.toLocaleString()} XP</span>
-                        <span className="text-[9px] font-bold text-neutral-500">В рейтинге: #4</span>
+                        <span className="text-[9px] font-bold text-neutral-500">{lang === 'ru' ? 'В рейтинге: #4' : 'Ranked: #4'}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -1907,28 +2261,28 @@ export default function Home() {
                       </div>
                       <div>
                         <h3 className="font-black text-sm text-white flex items-center justify-center gap-1">
-                          <span>Твой уровень</span>
+                          <span>{DICTIONARY[lang].yourLevel}</span>
                           <span className="text-[#FF9900] font-black">Lv. 12</span>
                         </h3>
-                        <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mt-1">ОФИЦИАЛЬНЫЙ АМБАССАДОР STON.fi</p>
+                        <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mt-1">{DICTIONARY[lang].officialAmbassador}</p>
                       </div>
                     </div>
 
                     {/* Stats box list */}
                     <div className="space-y-2">
-                      <h4 className="text-[10px] text-neutral-500 uppercase font-black tracking-widest pl-1">Статистика</h4>
+                      <h4 className="text-[10px] text-neutral-500 uppercase font-black tracking-widest pl-1">{DICTIONARY[lang].statsTitle}</h4>
                       
                       <div className="grid grid-cols-2 gap-2">
                         <div className="p-3 bg-neutral-900 border border-white/5 rounded-xl">
-                          <span className="text-[8px] text-neutral-500 uppercase font-black block">Миссии выполнено</span>
+                          <span className="text-[8px] text-neutral-500 uppercase font-black block">{DICTIONARY[lang].statsQuests}</span>
                           <span className="text-base font-black text-white mt-1 block">32</span>
                         </div>
                         <div className="p-3 bg-neutral-900 border border-white/5 rounded-xl">
-                          <span className="text-[8px] text-neutral-500 uppercase font-black block">Друзей приглашено</span>
+                          <span className="text-[8px] text-neutral-500 uppercase font-black block">{DICTIONARY[lang].statsFriends}</span>
                           <span className="text-base font-black text-white mt-1 block">18</span>
                         </div>
                         <div className="p-3 bg-neutral-900 border border-white/5 rounded-xl">
-                          <span className="text-[8px] text-neutral-500 uppercase font-black block">Общий заработок</span>
+                          <span className="text-[8px] text-neutral-500 uppercase font-black block">{DICTIONARY[lang].statsEarnings}</span>
                           <span className="text-base font-black text-[#FF9900] mt-1 block">2,350 $STON</span>
                         </div>
                         <div 
@@ -1936,7 +2290,7 @@ export default function Home() {
                           className="p-3 bg-neutral-900 border border-white/10 hover:border-[#FF9900]/30 rounded-xl cursor-pointer transition active:scale-95"
                         >
                           <span className="text-[8px] text-[#FF9900] uppercase font-black flex items-center justify-between">
-                            <span>В рейтинге</span>
+                            <span>{DICTIONARY[lang].statsRanking}</span>
                             <ChevronRight className="w-3.5 h-3.5" />
                           </span>
                           <span className="text-base font-black text-white mt-1 block">#4</span>
@@ -1947,26 +2301,26 @@ export default function Home() {
                     {/* Achievements row */}
                     <div className="space-y-2">
                       <div className="flex justify-between items-center pl-1 pr-1">
-                        <h4 className="text-[10px] text-neutral-500 uppercase font-black tracking-widest">Достижения</h4>
-                        <button onClick={() => showNotificationMessage("Ачивки обновляются автоматически!")} className="text-[9px] text-neutral-400 hover:text-white">Смотреть все</button>
+                        <h4 className="text-[10px] text-neutral-500 uppercase font-black tracking-widest">{DICTIONARY[lang].achievementsTitle}</h4>
+                        <button onClick={() => showNotificationMessage("Ачивки обновляются автоматически!")} className="text-[9px] text-neutral-400 hover:text-white">{DICTIONARY[lang].viewAll}</button>
                       </div>
                       
                       <div className="flex gap-2 justify-around bg-neutral-900/60 p-4 border border-white/5 rounded-xl">
                         <div className="flex flex-col items-center gap-1 group relative cursor-help">
                           <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500 flex items-center justify-center text-sm shadow">🔥</div>
-                          <span className="text-[8px] font-black text-neutral-400">Стрик 7д</span>
+                          <span className="text-[8px] font-black text-neutral-400">{DICTIONARY[lang].badgeStreak}</span>
                         </div>
                         <div className="flex flex-col items-center gap-1 group relative cursor-help">
                           <div className="w-10 h-10 rounded-full bg-slate-300/10 border border-slate-300 flex items-center justify-center text-sm shadow">💎</div>
-                          <span className="text-[8px] font-black text-neutral-400">DeFi Гуру</span>
+                          <span className="text-[8px] font-black text-neutral-400">{DICTIONARY[lang].badgeGuru}</span>
                         </div>
                         <div className="flex flex-col items-center gap-1 group relative cursor-help">
                           <div className="w-10 h-10 rounded-full bg-amber-600/10 border border-amber-600 flex items-center justify-center text-sm shadow">👑</div>
-                          <span className="text-[8px] font-black text-neutral-400">Топ Свапер</span>
+                          <span className="text-[8px] font-black text-neutral-400">{DICTIONARY[lang].badgeSwaper}</span>
                         </div>
                         <div className="flex flex-col items-center gap-1 group relative cursor-help">
                           <div className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-sm shadow opacity-40">⭐</div>
-                          <span className="text-[8px] font-black text-neutral-500">Крипто-Царь</span>
+                          <span className="text-[8px] font-black text-neutral-500">{DICTIONARY[lang].badgeKing}</span>
                         </div>
                       </div>
                     </div>
@@ -1999,7 +2353,7 @@ export default function Home() {
             }`}
           >
             <Compass className="w-5 h-5" />
-            <span className="text-[9px] font-black uppercase">Главная</span>
+            <span className="text-[9px] font-black uppercase">{lang === 'ru' ? 'Главная' : 'Home'}</span>
             {activeTab === 'home' && (
               <motion.div layoutId="nav-glow" className="absolute -bottom-3 w-8 h-1 bg-[#FF9900] rounded-t-full shadow-lg shadow-[#FF9900]/50" />
             )}
@@ -2013,7 +2367,7 @@ export default function Home() {
             }`}
           >
             <BookOpen className="w-5 h-5" />
-            <span className="text-[9px] font-black uppercase">Академия</span>
+            <span className="text-[9px] font-black uppercase">{lang === 'ru' ? 'Академия' : 'Academy'}</span>
             {activeTab === 'videos' && (
               <motion.div layoutId="nav-glow" className="absolute -bottom-3 w-8 h-1 bg-[#FF9900] rounded-t-full shadow-lg shadow-[#FF9900]/50" />
             )}
@@ -2027,7 +2381,7 @@ export default function Home() {
             }`}
           >
             <Target className="w-5 h-5" />
-            <span className="text-[9px] font-black uppercase">Миссии</span>
+            <span className="text-[9px] font-black uppercase">{lang === 'ru' ? 'Миссии' : 'Missions'}</span>
             {activeTab === 'missions' && (
               <motion.div layoutId="nav-glow" className="absolute -bottom-3 w-8 h-1 bg-[#FF9900] rounded-t-full shadow-lg shadow-[#FF9900]/50" />
             )}
@@ -2041,7 +2395,7 @@ export default function Home() {
             }`}
           >
             <User className="w-5 h-5" />
-            <span className="text-[9px] font-black uppercase">Профиль</span>
+            <span className="text-[9px] font-black uppercase">{lang === 'ru' ? 'Профиль' : 'Profile'}</span>
             {activeTab === 'profile' && (
               <motion.div layoutId="nav-glow" className="absolute -bottom-3 w-8 h-1 bg-[#FF9900] rounded-t-full shadow-lg shadow-[#FF9900]/50" />
             )}
@@ -2085,7 +2439,7 @@ export default function Home() {
                   transition={{ duration: 0.2 }}
                   className="flex-1 bg-neutral-900/95 border-2 border-[#FF9900]/30 rounded-2xl p-4 shadow-[0_15px_40px_rgba(255,153,0,0.15)] relative text-left"
                 >
-                  <h4 className="text-[10px] font-black text-[#FF9900] uppercase tracking-wider mb-1">Проводник STONHub 🗿</h4>
+                  <h4 className="text-[10px] font-black text-[#FF9900] uppercase tracking-wider mb-1">{DICTIONARY[lang].guideName}</h4>
                   <p className="text-[11px] text-white leading-relaxed font-semibold">
                     {TUTORIAL_STEPS[tutorialStep].text}
                   </p>
@@ -2096,13 +2450,13 @@ export default function Home() {
                       onClick={handleSkipTutorial}
                       className="text-[10px] text-neutral-500 hover:text-white font-bold transition"
                     >
-                      Пропустить
+                      {DICTIONARY[lang].skip}
                     </button>
                     <button 
                       onClick={handleNextTutorial}
                       className="bg-[#FF9900] hover:bg-[#FF9900]/80 text-black text-[10px] font-black py-1.5 px-4 rounded-lg active:scale-95 transition"
                     >
-                      {tutorialStep === TUTORIAL_STEPS.length - 1 ? 'Погнали! 🚀' : 'Дальше →'}
+                      {tutorialStep === TUTORIAL_STEPS.length - 1 ? DICTIONARY[lang].finish : DICTIONARY[lang].next}
                     </button>
                   </div>
                   
