@@ -353,7 +353,42 @@ const SWAP_TOKENS = {
   }
 } as const;
 
+const TUTORIAL_STEPS = [
+  {
+    text: "Привет! Я твой проводник в STON Hub — игровой метавселенной ведущей DEX-биржи STON.fi! Давай я быстро покажу тебе, как здесь всё устроено! 🗿🎮"
+  },
+  {
+    text: "В Академии 🎓 тебя ждут обучающие гайды по DeFi. Читай их, проходи тесты без ошибок и зарабатывай ценные очки опыта XP!"
+  },
+  {
+    text: "Каждый день заглядывай в раздел Миссии 🎯. Здесь ты найдешь квесты, за выполнение которых мгновенно получишь награды!"
+  },
+  {
+    text: "В твоем Профиле 👤 хранится твоя статистика: баланс монет $STON, привязанный TON-кошелек, твои уникальные достижения и рейтинг игроков!"
+  },
+  {
+    text: "Ну что, готов начать свое DeFi-приключение? Жми кнопку и погнали покорять вершины! 🪨🔥"
+  }
+];
+
 export default function Home() {
+  // === Onboarding Tutorial States ===
+  const [tutorialStep, setTutorialStep] = useState<number | null>(null);
+
+  const handleNextTutorial = () => {
+    if (tutorialStep === null) return;
+    if (tutorialStep < TUTORIAL_STEPS.length - 1) {
+      setTutorialStep(tutorialStep + 1);
+    } else {
+      handleSkipTutorial();
+    }
+  };
+
+  const handleSkipTutorial = () => {
+    setTutorialStep(null);
+    localStorage.setItem('stonhub_tutorial_seen', 'true');
+    showNotificationMessage('Добро пожаловать в игру! 🪨🔥');
+  };
   // === Web3 states ===
   const walletAddress = useTonAddress();
   const [tonConnectUI] = useTonConnectUI();
@@ -755,6 +790,16 @@ export default function Home() {
       );
     }
   }, [walletAddress]);
+
+  // Onboarding trigger on first visit
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const seen = localStorage.getItem('stonhub_tutorial_seen');
+      if (!seen) {
+        setTutorialStep(0);
+      }
+    }
+  }, []);
 
   const showNotificationMessage = (msg: string) => {
     setNotification(msg);
@@ -1915,12 +1960,21 @@ export default function Home() {
                     </div>
 
                     {/* Disconnect button mockup */}
-                    <div className="pt-2">
+                    <div className="pt-2 grid grid-cols-2 gap-2">
+                      <button 
+                        onClick={() => {
+                          setTutorialStep(0);
+                          showNotificationMessage('Запуск игрового гида... 🗿');
+                        }}
+                        className="py-3 bg-neutral-900 hover:bg-neutral-850 border border-white/5 rounded-xl text-xs font-bold text-neutral-300 hover:text-white active:scale-95 transition flex items-center justify-center gap-1.5"
+                      >
+                        🎓 Обучение
+                      </button>
                       <button 
                         onClick={() => showNotificationMessage("Трансформация выполнена в стиле Pornhub! 🚀")}
-                        className="w-full py-3 bg-neutral-900 hover:bg-neutral-800 border border-white/5 rounded-xl text-xs font-bold text-neutral-400 hover:text-white active:scale-95 transition"
+                        className="py-3 bg-neutral-900 hover:bg-neutral-800 border border-white/5 rounded-xl text-xs font-bold text-neutral-400 hover:text-white active:scale-95 transition"
                       >
-                        STONHub Ambassador OS v1.2
+                        STONHub OS v1.2
                       </button>
                     </div>
                   </div>
@@ -1991,6 +2045,68 @@ export default function Home() {
           </button>
 
         </nav>
+
+        {/* ========================================== */}
+        {/* === INTERACTIVE TUTORIAL CHARACTER GUIDE === */}
+        {/* ========================================== */}
+        <AnimatePresence>
+          {tutorialStep !== null && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col justify-end p-4 font-sans select-none"
+            >
+              <div className="relative w-full pb-32">
+                {/* Chat Bubble (Cloud) */}
+                <motion.div
+                  initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 0.15 }}
+                  className="bg-neutral-900/95 border-2 border-[#FF9900]/30 rounded-2xl p-4 shadow-[0_10px_30px_rgba(255,153,0,0.15)] relative mb-4 text-left"
+                >
+                  {/* Triangle tail for speech bubble */}
+                  <div className="absolute bottom-[-10px] left-8 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-neutral-900 border-t-2 border-[#FF9900]/30" />
+                  
+                  <h4 className="text-xs font-black text-[#FF9900] uppercase tracking-wider mb-1">Проводник STONHub 🗿</h4>
+                  <p className="text-xs text-white leading-relaxed font-semibold">
+                    {TUTORIAL_STEPS[tutorialStep].text}
+                  </p>
+                  
+                  {/* Navigation Controls */}
+                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-white/5">
+                    <button 
+                      onClick={handleSkipTutorial}
+                      className="text-[10px] text-neutral-500 hover:text-white font-bold transition"
+                    >
+                      Пропустить
+                    </button>
+                    <button 
+                      onClick={handleNextTutorial}
+                      className="bg-[#FF9900] hover:bg-[#FF9900]/80 text-black text-[10px] font-black py-1.5 px-4 rounded-lg active:scale-95 transition"
+                    >
+                      {tutorialStep === TUTORIAL_STEPS.length - 1 ? 'Погнали! 🚀' : 'Дальше →'}
+                    </button>
+                  </div>
+                </motion.div>
+
+                {/* Character Image sliding in from bottom left */}
+                <motion.div 
+                  initial={{ x: -100, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 100 }}
+                  className="absolute bottom-0 left-2 w-28 h-28 pointer-events-none"
+                >
+                  <img 
+                    src="/character.png" 
+                    alt="Intro Character" 
+                    className="w-full h-full object-contain filter drop-shadow-[0_5px_15px_rgba(255,153,0,0.2)]" 
+                  />
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
     );
