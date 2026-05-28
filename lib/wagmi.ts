@@ -1,3 +1,12 @@
+if (typeof window !== 'undefined') {
+  if (typeof (window as any).global === 'undefined') {
+    (window as any).global = window;
+  }
+  if (typeof (window as any).process === 'undefined') {
+    (window as any).process = { env: {} };
+  }
+}
+
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { base, polygon } from 'wagmi/chains';
 

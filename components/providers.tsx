@@ -1,5 +1,14 @@
 'use client';
 
+if (typeof window !== 'undefined') {
+  if (typeof (window as any).global === 'undefined') {
+    (window as any).global = window;
+  }
+  if (typeof (window as any).process === 'undefined') {
+    (window as any).process = { env: {} };
+  }
+}
+
 import React, { useEffect, useState } from 'react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
