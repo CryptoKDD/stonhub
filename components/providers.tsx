@@ -11,6 +11,7 @@ interface TelegramWebApp {
 export function Providers({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [manifestUrl, setManifestUrl] = useState('https://stonhub.vercel.app/tonconnect-manifest.json');
+  const [lang, setLang] = useState<'ru' | 'en'>('ru');
 
   useEffect(() => {
     setMounted(true);
@@ -18,6 +19,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // Инициализируем стандартный Telegram WebApp API на клиенте
     if (typeof window !== 'undefined') {
       setManifestUrl(`${window.location.origin}/tonconnect-manifest.json`);
+      
+      // Load saved language preference
+      const saved = localStorage.getItem('stonhub_lang');
+      if (saved === 'ru' || saved === 'en') {
+        setLang(saved as 'ru' | 'en');
+      } else {
+        const isBrowserRu = window.navigator.language.startsWith('ru');
+        setLang(isBrowserRu ? 'ru' : 'en');
+      }
+
       const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
       if (tg) {
         try {
@@ -55,7 +66,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <span className="text-xl font-black tracking-tighter text-white">STON</span>
             <span className="bg-[#FF9900] text-black text-xs font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm">HUB</span>
           </div>
-          <p className="text-[9px] tracking-wider text-neutral-500 uppercase font-black animate-pulse">твой хаб в экосистеме STON.fi</p>
+          <p className="text-[9px] tracking-wider text-neutral-500 uppercase font-black animate-pulse">
+            {lang === 'ru' ? 'твой хаб в экосистеме STON.fi' : 'your hub in the STON.fi ecosystem'}
+          </p>
         </div>
       </div>
     );

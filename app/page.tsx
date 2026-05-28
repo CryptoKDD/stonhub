@@ -1681,7 +1681,7 @@ export default function Home() {
                       />
                     </div>
                     <div className="flex justify-between text-[9px] text-neutral-500">
-                      <span>Уровень 12</span>
+                      <span>{lang === 'ru' ? 'Уровень 12' : 'Level 12'}</span>
                       <span className="italic font-medium">+{5000 - userXp} XP {DICTIONARY[lang].nextRankText}</span>
                     </div>
                   </div>
@@ -1960,9 +1960,9 @@ export default function Home() {
                           <div className="absolute inset-0 rounded-full border border-[#FF9900]/20 animate-ping opacity-70" />
                         </div>
                         <div className="space-y-1">
-                          <h3 className="text-sm font-black text-white">Видеокурсы — Скоро будет 🎬</h3>
+                          <h3 className="text-sm font-black text-white">{DICTIONARY[lang].videoAcademyTitle}</h3>
                           <p className="text-[11px] text-neutral-400 leading-relaxed max-w-xs mx-auto">
-                            Мы готовим для вас серию эксклюзивных видеоматериалов по трейдингу, ликвидности и стейкингу в экосистеме STON.fi. 
+                            {DICTIONARY[lang].videoAcademyDesc}
                           </p>
                         </div>
                         <span className="inline-block bg-[#FF9900]/10 text-[#FF9900] text-[8px] font-black tracking-widest px-3 py-1 rounded-full uppercase border border-[#FF9900]/20">
@@ -2131,7 +2131,7 @@ export default function Home() {
                     <button 
                       onClick={() => {
                         navigator.clipboard.writeText("https://t.me/ston_hub_bot/app?startapp=ref_328");
-                        showNotificationMessage("Реферальная ссылка скопирована! 📋");
+                        showNotificationMessage(DICTIONARY[lang].referralCopied);
                       }}
                       className="bg-neutral-800 hover:bg-neutral-700 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg"
                     >
@@ -2168,7 +2168,7 @@ export default function Home() {
                     <div className="flex justify-between items-end border-b border-white/5 pb-2">
                       <div>
                         <h2 className="text-base font-black text-white flex items-center gap-1.5"><Trophy className="w-5 h-5 text-[#FF9900]" /> {DICTIONARY[lang].leaderboardTitle}</h2>
-                        <p className="text-[10px] text-neutral-400">Глобальный рейтинг амбассадоров</p>
+                        <p className="text-[10px] text-neutral-400">{DICTIONARY[lang].leaderboardDesc}</p>
                       </div>
                       <button 
                         onClick={() => setShowLeaderboard(false)}
@@ -2302,7 +2302,7 @@ export default function Home() {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center pl-1 pr-1">
                         <h4 className="text-[10px] text-neutral-500 uppercase font-black tracking-widest">{DICTIONARY[lang].achievementsTitle}</h4>
-                        <button onClick={() => showNotificationMessage("Ачивки обновляются автоматически!")} className="text-[9px] text-neutral-400 hover:text-white">{DICTIONARY[lang].viewAll}</button>
+                        <button onClick={() => showNotificationMessage(DICTIONARY[lang].achievementsAlert)} className="text-[9px] text-neutral-400 hover:text-white">{DICTIONARY[lang].viewAll}</button>
                       </div>
                       
                       <div className="flex gap-2 justify-around bg-neutral-900/60 p-4 border border-white/5 rounded-xl">
@@ -2328,7 +2328,7 @@ export default function Home() {
                     {/* Disconnect button mockup */}
                     <div className="pt-2">
                       <button 
-                        onClick={() => showNotificationMessage("Трансформация выполнена в стиле Pornhub! 🚀")}
+                        onClick={() => showNotificationMessage(DICTIONARY[lang].funnyAlert)}
                         className="w-full py-3 bg-neutral-900 hover:bg-neutral-800 border border-white/5 rounded-xl text-xs font-bold text-neutral-400 hover:text-white active:scale-95 transition"
                       >
                         STONHub OS v1.2
