@@ -11,7 +11,7 @@ import {
   History, Star, Info, Shield, Plus, Copy, Check, ExternalLink, Activity, ArrowUpRight, ArrowDownRight, 
   Zap, Clock, LogOut, X
 } from 'lucide-react';
-import { TonConnectButton, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
+import { TonConnectButton, useTonConnectUI, useTonWallet, useTonAddress } from '@tonconnect/ui-react';
 import {
   useRfq,
   useOmniston,
