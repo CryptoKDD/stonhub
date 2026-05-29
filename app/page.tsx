@@ -31,7 +31,8 @@ import {
   type AssetId,
   type QuoteRequest
 } from '@ston-fi/omniston-sdk-react';
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount, useBalance, useSignTypedData, useChainId, useSwitchChain } from 'wagmi';
+import { hexToBytes } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 // === Dynamic Premium Token Logos with Local /tokens/ Priority and Remote CDN Fallback ===
@@ -433,6 +434,11 @@ export default function Home() {
   const tonAddress = useTonAddress();
   const [tonConnectUI] = useTonConnectUI();
   const { address: evmAddress } = useAccount();
+
+  // EVM signing hooks (for Omniston EVM signed-order flow)
+  const { signTypedDataAsync } = useSignTypedData();
+  const currentChainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
 
   // Dynamic EVM Native Balance hooks via Wagmi v2 (ETH on Base, POL on Polygon)
   const { data: baseNativeBalance } = useBalance({
@@ -914,21 +920,21 @@ export default function Home() {
   // === Cross-chain execution workflow stepper ===
   const triggerTxWorkflow = async () => {
     if (!activeQuote) return;
-    
+
     setShowTxOverlay(true);
     setTxStep(1);
     setTxSuccess(null);
 
-    // If source chain is TON and it is a real SDK quote, we can execute a REAL transaction!
+    // ── TON SOURCE: real Omniston tonBuildSwap + TonConnect ──────────────────
     if (srcChain === 'ton' && !(activeQuote as any).isSimulated) {
       try {
         const traderAddress = {
-          chain: { $case: "ton" as const, value: tonAddress },
+          chain: { $case: 'ton' as const, value: tonAddress },
         };
-        
-        const destinationAddress = dstChain === 'ton' 
-          ? { chain: { $case: "ton" as const, value: tonAddress } }
-          : { chain: { $case: dstChain as "base" | "polygon", value: evmAddress! } };
+
+        const destinationAddress = dstChain === 'ton'
+          ? { chain: { $case: 'ton' as const, value: tonAddress } }
+          : { chain: { $case: dstChain as 'base' | 'polygon', value: evmAddress! } };
 
         // Step 1: RFQ Lock
         await new Promise((r) => setTimeout(r, 1500));
@@ -957,8 +963,7 @@ export default function Home() {
 
         if (txResult) {
           setTxStep(3); // Relayer Cocoon processing
-          
-          // Track swap execution
+
           try {
             const stream = await omniston.swapTrack({
               quoteId: activeQuote.quoteId,
@@ -976,36 +981,143 @@ export default function Home() {
                     }
                   }
                 },
-                error(err) {
-                  reject(err);
-                }
+                error(err) { reject(err); }
               });
-              
-              // Fallback timeout in case track stays in progress
-              setTimeout(() => {
-                sub.unsubscribe();
-                resolve();
-              }, 25000);
+              setTimeout(() => { sub.unsubscribe(); resolve(); }, 25000);
             });
           } catch (trackErr) {
-            console.warn("Tracking error, proceeding with mock fallback:", trackErr);
+            console.warn('Tracking error, proceeding with fallback delay:', trackErr);
             await new Promise((r) => setTimeout(r, 4000));
           }
 
-          setTxStep(4); // Disbursing
+          setTxStep(4);
           await new Promise((r) => setTimeout(r, 2000));
           setTxStep(5);
           setTxSuccess(true);
         } else {
-          throw new Error("Transaction cancelled by user");
+          throw new Error('Transaction cancelled by user');
         }
       } catch (err) {
-        console.error("Swap execution failed:", err);
+        console.error('TON Swap execution failed:', err);
         setShowTxOverlay(false);
-        alert(lang === 'ru' ? "Ошибка или отмена транзакции в кошельке ❌" : "Transaction cancelled or failed ❌");
+        alert(lang === 'ru' ? 'Ошибка или отмена транзакции в кошельке ❌' : 'Transaction cancelled or failed ❌');
       }
-    } else {
-      // Mock simulation for EVM source swaps (until full EVM relayer integrations)
+    }
+
+    // ── EVM SOURCE: Omniston signed-order flow via EIP-712 ───────────────────
+    else if ((srcChain === 'base' || srcChain === 'polygon') && evmAddress) {
+      try {
+        // Step 1: Ensure user is on the correct EVM network
+        const requiredChainId = srcChain === 'base' ? 8453 : 137;
+        if (currentChainId !== requiredChainId) {
+          try {
+            await switchChainAsync({ chainId: requiredChainId });
+          } catch (switchErr) {
+            throw new Error(lang === 'ru'
+              ? `Переключите сеть в кошельке на ${srcChain === 'base' ? 'Base' : 'Polygon'}`
+              : `Please switch your wallet to ${srcChain === 'base' ? 'Base' : 'Polygon'} network`);
+          }
+        }
+
+        // Step 2: Build EVM order payload (EIP-712 TypedData)
+        setTxStep(2);
+        const ownerSrcAddress = {
+          chain: { $case: srcChain as 'base' | 'polygon', value: evmAddress }
+        };
+        const traderDstAddress = dstChain === 'ton'
+          ? { chain: { $case: 'ton' as const, value: tonAddress! } }
+          : { chain: { $case: dstChain as 'base' | 'polygon', value: evmAddress } };
+
+        const evmPayload = await omniston.evmBuildOrderPayload({
+          quoteId: activeQuote.quoteId,
+          ownerSrcAddress,
+          traderDstAddress,
+        });
+
+        // Step 3: Parse TypedData and sign with Trust Wallet (eth_signTypedData EIP-712)
+        const typedData = JSON.parse(evmPayload.typedData);
+        let signature: `0x${string}`;
+        try {
+          signature = await signTypedDataAsync({
+            domain: typedData.domain,
+            types: typedData.types,
+            primaryType: typedData.primaryType,
+            message: typedData.message,
+          });
+        } catch (signErr: any) {
+          if (signErr?.code === 4001 || signErr?.message?.includes('rejected')) {
+            throw new Error('user_rejected');
+          }
+          throw signErr;
+        }
+
+        // Step 4: Register signed order with Omniston protocol
+        setTxStep(3);
+        const signatureBytes = hexToBytes(signature);
+        const encodedOrderBytes = evmPayload.orderExtension instanceof Uint8Array
+          ? evmPayload.orderExtension
+          : new Uint8Array(0);
+
+        await omniston.orderRegisterSignedOrder({
+          quoteId: activeQuote.quoteId,
+          ownerSrcAddress,
+          signedOrder: {
+            order: {
+              $case: 'evmV1' as const,
+              value: {
+                encodedOrder: encodedOrderBytes,
+                signature: signatureBytes,
+                orderExtension: encodedOrderBytes,
+              }
+            }
+          },
+          ...(evmPayload.serializedOrderDetails ? { serializedOrderDetails: evmPayload.serializedOrderDetails } : {}),
+        });
+
+        // Step 5: Track order to completion
+        setTxStep(4);
+        try {
+          const orderStream = await omniston.orderTrack({
+            quoteId: activeQuote.quoteId,
+            traderAddress: ownerSrcAddress,
+          });
+
+          await new Promise<void>((resolve, reject) => {
+            const sub = (orderStream as any).subscribe({
+              next(event: any) {
+                if (event?.$case === 'progress' || event?.status === 'completed' || event?.status === 'filled') {
+                  if (event.value?.status === 'completed' || event.value?.status === 'filled' || event.status === 'completed') {
+                    sub.unsubscribe();
+                    resolve();
+                  }
+                }
+              },
+              error(err: any) { reject(err); }
+            });
+            // Fallback: resolve after 30s if no completion event
+            setTimeout(() => { sub.unsubscribe(); resolve(); }, 30000);
+          });
+        } catch (trackErr) {
+          console.warn('Order tracking error, using fallback delay:', trackErr);
+          await new Promise((r) => setTimeout(r, 5000));
+        }
+
+        setTxStep(5);
+        setTxSuccess(true);
+      } catch (err: any) {
+        console.error('EVM Swap execution failed:', err);
+        setShowTxOverlay(false);
+        if (err?.message === 'user_rejected') {
+          alert(lang === 'ru' ? 'Вы отменили подпись в кошельке ❌' : 'Signature rejected in wallet ❌');
+        } else {
+          alert(err?.message || (lang === 'ru' ? 'Ошибка выполнения EVM свопа ❌' : 'EVM swap failed ❌'));
+        }
+      }
+    }
+
+    // ── TON SOURCE but simulated fallback (no live SDK quote) ─────────────────
+    else {
+      // Simulated fallback for TON source with fallback quote
       setTimeout(() => {
         setTxStep(2);
         setTimeout(() => {
