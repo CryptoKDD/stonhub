@@ -482,6 +482,23 @@ export default function Home() {
     };
   }, [tonAddress]);
 
+  // === App Navigation States ===
+  const [activeTab, setActiveTab] = useState<'copilot' | 'pro' | 'info' | 'support'>('copilot');
+
+  // === Main Swap Parameter States ===
+  const [srcChain, setSrcChain] = useState<'ton' | 'base' | 'polygon'>('ton');
+  const [srcToken, setSrcToken] = useState<string>('TON');
+  const [dstChain, setDstChain] = useState<'ton' | 'base' | 'polygon'>('base');
+  const [dstToken, setDstToken] = useState<string>('USDC');
+  const [srcAmount, setSrcAmount] = useState<string>('');
+  const [dstAmount, setDstAmount] = useState<string>('');
+
+  // Dropdowns
+  const [showSrcChainDrop, setShowSrcChainDrop] = useState<boolean>(false);
+  const [showSrcTokenDrop, setShowSrcTokenDrop] = useState<boolean>(false);
+  const [showDstChainDrop, setShowDstChainDrop] = useState<boolean>(false);
+  const [showDstTokenDrop, setShowDstTokenDrop] = useState<boolean>(false);
+
   // Format balances for display
   const evmBalanceFormatted = evmBalanceData ? Number(evmBalanceData.formatted).toFixed(4) : '0.00';
 
@@ -500,23 +517,6 @@ export default function Home() {
       return evmAddress ? evmBalanceFormatted : '0.00';
     }
   }, [dstChain, tonAddress, tonBalance, evmAddress, evmBalanceFormatted]);
-
-  // === App Navigation States ===
-  const [activeTab, setActiveTab] = useState<'copilot' | 'pro' | 'info' | 'support'>('copilot');
-
-  // === Main Swap Parameter States ===
-  const [srcChain, setSrcChain] = useState<'ton' | 'base' | 'polygon'>('ton');
-  const [srcToken, setSrcToken] = useState<string>('TON');
-  const [dstChain, setDstChain] = useState<'ton' | 'base' | 'polygon'>('base');
-  const [dstToken, setDstToken] = useState<string>('USDC');
-  const [srcAmount, setSrcAmount] = useState<string>('');
-  const [dstAmount, setDstAmount] = useState<string>('');
-
-  // Dropdowns
-  const [showSrcChainDrop, setShowSrcChainDrop] = useState<boolean>(false);
-  const [showSrcTokenDrop, setShowSrcTokenDrop] = useState<boolean>(false);
-  const [showDstChainDrop, setShowDstChainDrop] = useState<boolean>(false);
-  const [showDstTokenDrop, setShowDstTokenDrop] = useState<boolean>(false);
 
   // === Co-Pilot Chat States ===
   const [chatInput, setChatInput] = useState<string>('');
