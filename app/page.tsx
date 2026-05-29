@@ -152,6 +152,23 @@ const getAssetId = (chain: string, token: string): AssetId | null => {
   return null;
 };
 
+const getTokenDecimals = (chain: string, token: string): number => {
+  const t = token.toUpperCase();
+  if (chain === 'ton') {
+    if (t === 'TON') return 9;
+    if (t === 'STON') return 9;
+    if (t === 'USDT') return 6;
+  } else if (chain === 'base') {
+    if (t === 'ETH') return 18;
+    if (t === 'USDC') return 6;
+  } else if (chain === 'polygon') {
+    if (t === 'POL') return 18;
+    if (t === 'USDC') return 6;
+  }
+  return 9;
+};
+
+
 // === DICTIONARY ===
 const DICTIONARY = {
   ru: {
@@ -677,12 +694,13 @@ export default function Home() {
 
   const quoteRequest: QuoteRequest | undefined = useMemo(() => {
     if (!inputAsset || !outputAsset || !srcAmount || Number(srcAmount) <= 0) return undefined;
+    const decimals = getTokenDecimals(srcChain, srcToken);
     return {
       inputAsset,
       outputAsset,
       amount: {
         $case: "inputUnits",
-        value: (Number(srcAmount) * 1e9).toFixed(0),
+        value: (Number(srcAmount) * Math.pow(10, decimals)).toFixed(0),
       },
       settlementParams: [
         {
@@ -699,7 +717,7 @@ export default function Home() {
         }
       ]
     } as QuoteRequest;
-  }, [inputAsset, outputAsset, srcAmount]);
+  }, [inputAsset, outputAsset, srcAmount, srcChain, srcToken]);
 
   const { data: quoteEvent } = useRfq(quoteRequest as any);
 
@@ -728,10 +746,13 @@ export default function Home() {
     const amountNum = Number(srcAmount);
     const expectedOutputNum = (amountNum * srcPrice) / dstPrice;
 
+    const srcDecimals = getTokenDecimals(srcChain, srcToken);
+    const dstDecimals = getTokenDecimals(dstChain, dstToken);
+
     return {
       quoteId: "simulated-quote-id",
-      expectedInput: (amountNum * 1e9).toString(),
-      expectedOutput: (expectedOutputNum * 1e9).toFixed(0),
+      expectedInput: (amountNum * Math.pow(10, srcDecimals)).toString(),
+      expectedOutput: (expectedOutputNum * Math.pow(10, dstDecimals)).toFixed(0),
       settlementData: {
         $case: "swap" as const,
       },
@@ -747,13 +768,14 @@ export default function Home() {
 
   useEffect(() => {
     if (activeQuote && !showTxOverlay) {
-      setDstAmount((Number((activeQuote as any).expectedOutput) / 1e9).toFixed(4));
+      const decimals = getTokenDecimals(dstChain, dstToken);
+      setDstAmount((Number((activeQuote as any).expectedOutput) / Math.pow(10, decimals)).toFixed(4));
     } else if (!srcAmount || Number(srcAmount) <= 0) {
       setDstAmount('');
     } else if (quoteEvent?.$case === 'noQuote' && !fallbackQuote) {
       setDstAmount('—');
     }
-  }, [activeQuote, quoteEvent, showTxOverlay, fallbackQuote, srcAmount]);
+  }, [activeQuote, quoteEvent, showTxOverlay, fallbackQuote, srcAmount, dstChain, dstToken]);
 
   // Dynamic wallet requirement and connection logic
   const isTonRequired = useMemo(() => {
@@ -1117,6 +1139,16 @@ export default function Home() {
 
     // ── TON SOURCE but simulated fallback (no live SDK quote) ─────────────────
     else {
+      const confirmDemo = window.confirm(
+        lang === 'ru'
+          ? "Живой курс от Omniston сейчас недоступен (сумма слишком мала или нет связи). Хотите запустить интерактивную демо-симуляцию кросс-чейн обмена?"
+          : "Live Omniston rate is currently unavailable (amount might be too small or network issues). Would you like to run an interactive demo simulation of the cross-chain swap?"
+      );
+      if (!confirmDemo) {
+        setShowTxOverlay(false);
+        return;
+      }
+
       // Simulated fallback for TON source with fallback quote
       setTimeout(() => {
         setTxStep(2);
@@ -1781,6 +1813,20 @@ export default function Home() {
                       <Zap className="w-3 h-3" />
                       Omniston Multi-Bridge
                     </span>
+                  </div>
+                  <div className="flex justify-between border-t border-white/5 pt-2">
+                    <span className="text-neutral-500">{lang === 'ru' ? 'Статус курса:' : 'Rate status:'}</span>
+                    {(activeQuote as any).isSimulated ? (
+                      <span className="text-yellow-500 font-bold flex items-center gap-1">
+                        <Info className="w-3.5 h-3.5 animate-pulse" />
+                        {lang === 'ru' ? '⚠️ Демо-режим (симуляция)' : '⚠️ Demo Mode (simulation)'}
+                      </span>
+                    ) : (
+                      <span className="text-green-400 font-bold flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" />
+                        {lang === 'ru' ? '🟢 Живой курс (Omniston)' : '🟢 Live Rate (Omniston)'}
+                      </span>
+                    )}
                   </div>
                 </div>
               )}
