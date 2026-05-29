@@ -434,21 +434,29 @@ export default function Home() {
   const [tonConnectUI] = useTonConnectUI();
   const { address: evmAddress } = useAccount();
 
-  // Dynamic EVM Native Balance hook via Wagmi v2 (ETH/POL)
-  const { data: evmBalanceData } = useBalance({
+  // Dynamic EVM Native Balance hooks via Wagmi v2 (ETH on Base, POL on Polygon)
+  const { data: baseNativeBalance } = useBalance({
     address: evmAddress,
+    chainId: 8453,
+  });
+
+  const { data: polygonNativeBalance } = useBalance({
+    address: evmAddress,
+    chainId: 137,
   });
 
   // Base USDC balance
   const { data: baseUsdcBalance } = useBalance({
     address: evmAddress,
     token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    chainId: 8453,
   });
 
   // Polygon USDC balance
   const { data: polygonUsdcBalance } = useBalance({
     address: evmAddress,
     token: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+    chainId: 137,
   });
 
   const [tonBalance, setTonBalance] = useState<string>('0.00');
@@ -535,7 +543,8 @@ export default function Home() {
   const [showDstTokenDrop, setShowDstTokenDrop] = useState<boolean>(false);
 
   // Format balances for display
-  const evmBalanceFormatted = evmBalanceData ? Number(evmBalanceData.formatted).toFixed(4) : '0.00';
+  const baseNativeFormatted = baseNativeBalance ? Number(baseNativeBalance.formatted).toFixed(4) : '0.00';
+  const polygonNativeFormatted = polygonNativeBalance ? Number(polygonNativeBalance.formatted).toFixed(4) : '0.00';
   const baseUsdcFormatted = baseUsdcBalance ? Number(baseUsdcBalance.formatted).toFixed(4) : '0.00';
   const polygonUsdcFormatted = polygonUsdcBalance ? Number(polygonUsdcBalance.formatted).toFixed(4) : '0.00';
 
@@ -546,17 +555,17 @@ export default function Home() {
       return jettonBalances[srcToken.toUpperCase()] || '0.00';
     } else if (srcChain === 'base') {
       if (!evmAddress) return '0.00';
-      if (srcToken === 'ETH') return evmBalanceFormatted;
+      if (srcToken === 'ETH') return baseNativeFormatted;
       if (srcToken === 'USDC') return baseUsdcFormatted;
       return '0.00';
     } else if (srcChain === 'polygon') {
       if (!evmAddress) return '0.00';
-      if (srcToken === 'POL') return evmBalanceFormatted;
+      if (srcToken === 'POL') return polygonNativeFormatted;
       if (srcToken === 'USDC') return polygonUsdcFormatted;
       return '0.00';
     }
     return '0.00';
-  }, [srcChain, srcToken, tonAddress, tonBalance, jettonBalances, evmAddress, evmBalanceFormatted, baseUsdcFormatted, polygonUsdcFormatted]);
+  }, [srcChain, srcToken, tonAddress, tonBalance, jettonBalances, evmAddress, baseNativeFormatted, polygonNativeFormatted, baseUsdcFormatted, polygonUsdcFormatted]);
 
   const displayedDstBalance = useMemo(() => {
     if (dstChain === 'ton') {
@@ -565,17 +574,17 @@ export default function Home() {
       return jettonBalances[dstToken.toUpperCase()] || '0.00';
     } else if (dstChain === 'base') {
       if (!evmAddress) return '0.00';
-      if (dstToken === 'ETH') return evmBalanceFormatted;
+      if (dstToken === 'ETH') return baseNativeFormatted;
       if (dstToken === 'USDC') return baseUsdcFormatted;
       return '0.00';
     } else if (dstChain === 'polygon') {
       if (!evmAddress) return '0.00';
-      if (dstToken === 'POL') return evmBalanceFormatted;
+      if (dstToken === 'POL') return polygonNativeFormatted;
       if (dstToken === 'USDC') return polygonUsdcFormatted;
       return '0.00';
     }
     return '0.00';
-  }, [dstChain, dstToken, tonAddress, tonBalance, jettonBalances, evmAddress, evmBalanceFormatted, baseUsdcFormatted, polygonUsdcFormatted]);
+  }, [dstChain, dstToken, tonAddress, tonBalance, jettonBalances, evmAddress, baseNativeFormatted, polygonNativeFormatted, baseUsdcFormatted, polygonUsdcFormatted]);
 
   // === Co-Pilot Chat States ===
   const [chatInput, setChatInput] = useState<string>('');
