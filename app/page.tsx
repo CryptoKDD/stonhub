@@ -34,20 +34,48 @@ import {
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
-// === Dynamic Premium Token Logos with Local /tokens/ Priority ===
+// === Dynamic Premium Token Logos with Local /tokens/ Priority and Remote CDN Fallback ===
 const TokenLogo = ({ symbol, className = "w-5 h-5 rounded-full shrink-0" }: { symbol: string; className?: string }) => {
-  const [hasError, setHasError] = useState(false);
+  const [imgUrl, setImgUrl] = useState<string>('');
+  const [loadStage, setLoadStage] = useState<'local' | 'remote' | 'fallback'>('local');
   const symbolUpper = symbol.toUpperCase();
   
-  // Format to match public/tokens/*.png filenames
   let tokenKey = symbol.toLowerCase();
-  if (symbolUpper === 'USD₮') tokenKey = 'usdt';
+  if (symbolUpper === 'USD\u20AE' || symbolUpper === 'USDT') tokenKey = 'usdt';
   if (symbolUpper === 'JUSDC') tokenKey = 'jusdc';
   if (symbolUpper === 'JUSDT') tokenKey = 'jusdt';
 
-  const localUrl = `/tokens/${tokenKey}.png`;
+  useEffect(() => {
+    setImgUrl(`/tokens/${tokenKey}.png`);
+    setLoadStage('local');
+  }, [tokenKey]);
 
-  if (hasError) {
+  const handleLoadError = () => {
+    if (loadStage === 'local') {
+      let cdnUrl = '';
+      if (symbolUpper === 'TON') {
+        cdnUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/TON/logo.png';
+      } else if (symbolUpper === 'STON') {
+        cdnUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/STON/logo.png';
+      } else if (symbolUpper === 'USDT' || symbolUpper === 'USD\u20AE') {
+        cdnUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/USD%E2%82%AE/logo.png';
+      } else if (symbolUpper === 'ETH') {
+        cdnUrl = 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F279%2Flarge%2Fethereum.png&w=48&h=48';
+      } else if (symbolUpper === 'USDC') {
+        cdnUrl = 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F6319%2Flarge%2FUSD_Coin_icon.png&w=48&h=48';
+      } else if (symbolUpper === 'POL' || symbolUpper === 'POLYGON') {
+        cdnUrl = 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F31448%2Flarge%2Fpol.png&w=48&h=48';
+      } else {
+        cdnUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/branding/tonkeeper/logo_128x128.png';
+      }
+      setImgUrl(cdnUrl);
+      setLoadStage('remote');
+    } else if (loadStage === 'remote') {
+      setLoadStage('fallback');
+    }
+  };
+
+  if (loadStage === 'fallback') {
     return (
       <div className={`${className} flex items-center justify-center bg-neutral-900 border border-white/10 rounded-full text-[9px] font-black text-[#FF9900]`}>
         {symbol.charAt(0).toUpperCase()}
@@ -58,10 +86,10 @@ const TokenLogo = ({ symbol, className = "w-5 h-5 rounded-full shrink-0" }: { sy
   return (
     <div className={`${className} flex items-center justify-center overflow-hidden shrink-0 bg-neutral-950 border border-white/10 rounded-full`}>
       <img 
-        src={localUrl} 
+        src={imgUrl} 
         alt={symbol} 
         className="w-full h-full object-cover rounded-full"
-        onError={() => setHasError(true)}
+        onError={handleLoadError}
       />
     </div>
   );
