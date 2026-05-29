@@ -6,71 +6,62 @@ import {
   ArrowLeftRight as SwapIcon, 
   Send as SendIcon, 
   Wallet as WalletIcon, 
-  Settings, 
   ChevronDown, 
   Info, 
   Shield, 
-  Copy, 
   Check, 
-  ExternalLink, 
-  Activity, 
   Zap, 
   Clock, 
-  User, 
   X, 
   CheckCircle2, 
-  AlertCircle, 
   HelpCircle, 
   MessageSquare,
-  Globe, 
   Languages, 
-  RefreshCw,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  BookOpen,
+  Wrench,
+  Search,
+  MessageCircle
 } from 'lucide-react';
 import { TonConnectButton, useTonConnectUI, useTonWallet, useTonAddress } from '@tonconnect/ui-react';
 import {
   useRfq,
   useOmniston,
   type AssetId,
-  type QuoteRequest,
-  type ChainAddress
+  type QuoteRequest
 } from '@ston-fi/omniston-sdk-react';
-import { useAccount, useSignTypedData } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
-// === Dynamic Premium Token Logos ===
+// === Dynamic Premium Token Logos with Local /tokens/ Priority ===
 const TokenLogo = ({ symbol, className = "w-5 h-5 rounded-full shrink-0" }: { symbol: string; className?: string }) => {
+  const [hasError, setHasError] = useState(false);
   const symbolUpper = symbol.toUpperCase();
-  let logoUrl = '';
   
-  if (symbolUpper === 'TON') {
-    logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/TON/logo.png';
-  } else if (symbolUpper === 'USDT' || symbolUpper === 'USD₮') {
-    logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/USD%E2%82%AE/logo.png';
-  } else if (symbolUpper === 'STON') {
-    logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/STON/logo.png';
-  } else if (symbolUpper === 'ETH') {
-    logoUrl = 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F279%2Flarge%2Fethereum.png&w=48&h=48';
-  } else if (symbolUpper === 'USDC') {
-    logoUrl = 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F6319%2Flarge%2FUSD_Coin_icon.png&w=48&h=48';
-  } else if (symbolUpper === 'POL') {
-    logoUrl = 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F31448%2Flarge%2Fpol.png&w=48&h=48';
+  // Format to match public/tokens/*.png filenames
+  let tokenKey = symbol.toLowerCase();
+  if (symbolUpper === 'USD₮') tokenKey = 'usdt';
+  if (symbolUpper === 'JUSDC') tokenKey = 'jusdc';
+  if (symbolUpper === 'JUSDT') tokenKey = 'jusdt';
+
+  const localUrl = `/tokens/${tokenKey}.png`;
+
+  if (hasError) {
+    return (
+      <div className={`${className} flex items-center justify-center bg-neutral-900 border border-white/10 rounded-full text-[9px] font-black text-[#FF9900]`}>
+        {symbol.charAt(0).toUpperCase()}
+      </div>
+    );
   }
 
-  const proxiedUrl = logoUrl 
-    ? `https://images.weserv.nl/?url=${encodeURIComponent(logoUrl)}&w=48&h=48&fit=cover`
-    : `https://images.weserv.nl/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftonkeeper%2Fton-assets%2Fmain%2Fbranding%2Ftonkeeper%2Flogo_128x128.png&w=48&h=48&fit=cover`;
-
   return (
-    <div className={`${className} flex items-center justify-center overflow-hidden shrink-0 bg-neutral-900 border border-white/10 rounded-full`}>
+    <div className={`${className} flex items-center justify-center overflow-hidden shrink-0 bg-neutral-950 border border-white/10 rounded-full`}>
       <img 
-        src={proxiedUrl} 
+        src={localUrl} 
         alt={symbol} 
         className="w-full h-full object-cover rounded-full"
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/branding/tonkeeper/logo_128x128.png';
-        }}
+        onError={() => setHasError(true)}
       />
     </div>
   );
@@ -86,7 +77,8 @@ const OMNISTON_CHAINS = {
 const OMNISTON_TOKENS = {
   ton: [
     { symbol: 'TON', name: 'Toncoin', priceUsd: 5.35 },
-    { symbol: 'STON', name: 'STON.fi', priceUsd: 3.38 }
+    { symbol: 'STON', name: 'STON.fi', priceUsd: 3.38 },
+    { symbol: 'USDT', name: 'Tether USD', priceUsd: 1.00 }
   ],
   base: [
     { symbol: 'ETH', name: 'Ethereum', priceUsd: 3450.00 },
@@ -102,6 +94,7 @@ const getAssetId = (chain: string, token: string): AssetId | null => {
   if (chain === 'ton') {
     if (token === 'TON') return { chain: { $case: "ton", value: { kind: { $case: "native", value: {} } } } };
     if (token === 'STON') return { chain: { $case: "ton", value: { kind: { $case: "jetton", value: "EQA2kCVNwVsil2EM2mB0SkXytxCqQjS4mttjDpnXmwG9T6bO" } } } };
+    if (token === 'USDT') return { chain: { $case: "ton", value: { kind: { $case: "jetton", value: "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs" } } } };
   } else if (chain === 'base') {
     if (token === 'ETH') return { chain: { $case: "base", value: { kind: { $case: "native", value: {} } } } };
     if (token === 'USDC') return { chain: { $case: "base", value: { kind: { $case: "erc20", value: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" } } } };
@@ -119,21 +112,25 @@ const DICTIONARY = {
     appSubName: 'CROSS-CHAIN PORTAL',
     letsGo: 'ПОГНАЛИ! 🚀',
     loading: 'Загрузка премиальной среды...',
-    tabCoPilot: 'Co-Pilot (ИИ Чат)',
+    tabCoPilot: 'Co-Pilot',
     tabProSwap: 'Pro Своп',
-    walletConnected: 'Подключен',
+    tabInfo: 'Инфо',
+    tabSupport: 'Саппорт',
     walletConnectTon: 'TON Кошелек',
     walletConnectEvm: 'EVM Кошелек',
-    connectPrompt: 'Подключите кошельки в шапке',
     
-    // Onboarding
-    welcomeTitle: 'Добро пожаловать в STONHub!',
-    welcomeDesc: 'Твой премиальный хаб для кросс-чейн обменов нового поколения. Пройдём короткий тур со штурманом!',
-    onboardingStep1: 'Привет! Я Mira, твой ИИ-штурман по кросс-чейну в STONHub. Моя цель — сделать обмены между блокчейнами максимально простыми. 💎',
-    onboardingStep2: 'Здесь больше нет сложных мостов! Мы используем передовую технологию Omniston. Вы можете менять TON на USDC на Base за пару кликов прямо в диалоге.',
-    onboardingStep3: 'Подключи свой TON-кошелек и EVM-кошелек вверху страницы. Вы можете писать мне запросы вроде "Хочу обменять 10 TON на USDC на Base", и я подготовлю сделку!',
-    onboardingStartBtn: 'Начать обмены 🚀',
-    next: 'Далее',
+    // Onboarding Dialogue Steps with Stone character
+    onboardTitle: 'Штурман STONHub 🗿',
+    onboardStep1: 'Здорово, крипто-сталкер! 🗿👋 Я твой личный гид по STONHub. Будем знакомы! Мы построили лучший кросс-чейн портал для мгновенных обменов. Давай покажу, как тут всё устроено!',
+    onboardStep2: 'Главная фича — Co-Pilot 💬. Это умный ИИ-чат со штурманом Mira. Просто напиши: "Своп 20 TON на USDC на Base", и она создаст живую сделку прямо в чате!',
+    onboardStep3: 'Предпочитаешь классику? Вкладка Pro Своп 🔄 — это доведенная до идеала, чистая стеклянная форма для ручного обмена активов.',
+    onboardStep4: 'Но для начала подключи кошельки! Вверху справа можно привязать TON кошелек (через TonConnect) и EVM (через RainbowKit). Это нужно, чтобы подписывать транзакции.',
+    onboardStep5: 'Во время обмена ты увидишь премиальный стеклянный трекер сделки 🛰️. Он показывает блокировку котировки RFQ, подпись и подтверждение релей-сети Cocoon в реальном времени.',
+    onboardStep6: 'Вкладка Инфо 📚 — твоя база знаний. Здесь лежат интерактивные карточки-справки и живое табло активности релеев, где я буду рассказывать тебе о деталях.',
+    onboardStep7: 'А если что-то пойдет не так — заглядывай во вкладку Саппорт 🛠️. Там я побуду инженером-диагностом, помогу проверить статус транзакций и дам кнопку связи с админами.',
+    onboardStep8: 'Ну что, готов стать кросс-чейн гигачадом и показать всем, кто тут батя? Жми "Погнали" и давай сделаем этот своп! 🪨🚀🔥',
+    onboardStartBtn: 'Погнали! 🚀',
+    next: 'Далее →',
     skip: 'Пропустить',
     
     // Chat & AI
@@ -167,29 +164,72 @@ const DICTIONARY = {
     step3: 'Обработка релеем Cocoon',
     step4: 'Зачисление активов на кошелек',
     
+    // Info Tab
+    infoTitle: 'База знаний STONHub 📚',
+    infoSub: 'Изучайте тонкости кросс-чейн обменов с Камушком',
+    infoCard1Title: 'Что такое Omniston?',
+    infoCard1Desc: 'Omniston — это революционный протокол, который объединяет ликвидность разных сетей. Вместо долгих ручных мостов он использует быстрые котировки RFQ.',
+    infoCard2Title: 'Безопасность сделок',
+    infoCard2Desc: 'Ваши средства никогда не хранятся на промежуточных смарт-контрактах. Все транзакции защищены криптографической подписью и исполняются атомарно.',
+    infoCard3Title: 'Скорость и Газ',
+    infoCard3Desc: 'Обмен занимает в среднем всего 24 секунды! Сеть релеев Cocoon берет на себя все хлопоты по оплате газа в целевой сети за вас.',
+    statsTitle: 'Активность Сети',
+    statRelayers: 'Статус Релеев',
+    statSpeed: 'Ср. время бриджа',
+    statFee: 'Кросс-чейн газ',
+    statActive: 'Активен 🟢',
+    statSpeedVal: '24 сек ⏱️',
+    statFeeVal: 'минимальный 💎',
+    
+    // Support Tab
+    supportTitle: 'Техническая поддержка 🛠️',
+    supportSub: 'Проверяйте хэши транзакций и отправляйте тикеты Камушку',
+    supportMascotMsg: 'Привет! Я твой инженер-диагност 🗿🔧. Заметил задержку? Или есть вопросы? Давай решим это быстро!',
+    faqTitle: 'Частые Вопросы',
+    faq1: 'Где взять хэш транзакции?',
+    faq1Ans: 'Скопируйте хэш транзакции (Tx Hash) в истории вашего кошелька (Tonkeeper или MetaMask).',
+    faq2: 'Что делать, если кошелек не подключается?',
+    faq2Ans: 'Убедитесь, что ваше приложение кошелька обновлено до последней версии и разблокировано.',
+    diagTitle: 'Диагностика транзакции',
+    diagPlaceholder: 'Вставьте хэш транзакции (0x... или EQ...)',
+    diagBtn: 'Проверить статус',
+    diagLoading: 'Сканирование блоков...',
+    diagSuccess: 'Доставлено! Релей Cocoon успешно перевел средства.',
+    formTitle: 'Отправить обращение',
+    formEmail: 'Telegram Username / Email',
+    formMsg: 'Описание вашей проблемы',
+    formSubmit: 'Отправить тикет',
+    formSuccess: 'Тикет успешно создан! Мой номер: STH-9924-OK. Я скоро свяжусь с тобой в Telegram! 😉',
+    directSupportBtn: 'Написать саппорту в Telegram 📢',
+    
     successMsg: 'Обмен успешно завершен! 🎉',
-    errorMsg: 'Произошла ошибка при обмене. Попробуйте еще раз. ❌'
+    errorMsg: 'Произошла ошибка при обмене. Попробуйте еще раз. ❌',
+    close: 'Закрыть'
   },
   en: {
     appName: 'STONHub',
     appSubName: 'CROSS-CHAIN PORTAL',
     letsGo: 'LET\'S GO! 🚀',
     loading: 'Loading premium environment...',
-    tabCoPilot: 'Co-Pilot (AI Chat)',
+    tabCoPilot: 'Co-Pilot',
     tabProSwap: 'Pro Swap',
-    walletConnected: 'Connected',
+    tabInfo: 'Info',
+    tabSupport: 'Support',
     walletConnectTon: 'TON Wallet',
     walletConnectEvm: 'EVM Wallet',
-    connectPrompt: 'Connect wallets in header',
     
-    // Onboarding
-    welcomeTitle: 'Welcome to STONHub!',
-    welcomeDesc: 'Your premium hub for next-generation cross-chain swaps. Let\'s take a quick tour with our co-pilot!',
-    onboardingStep1: 'Hi! I\'m Mira, your AI co-pilot for cross-chain in STONHub. My goal is to make multi-chain swaps as frictionless as possible. 💎',
-    onboardingStep2: 'No more complicated bridges! We use state-of-the-art Omniston technology. Swap TON directly to USDC on Base in a few clicks right here in our chat.',
-    onboardingStep3: 'Connect your TON wallet and EVM wallet in the header. Write prompts like "Swap 10 TON to USDC on Base" and I\'ll instantly setup the widget for you!',
-    onboardingStartBtn: 'Start Swapping 🚀',
-    next: 'Next',
+    // Onboarding Dialogue Steps with Stone character
+    onboardTitle: 'STONHub Companion 🗿',
+    onboardStep1: 'Yo, crypto stalker! 🗿👋 I\'m your guide through STONHub. Great to meet ya! We built the ultimate cross-chain portal for instant swaps. Let me show you how to start!',
+    onboardStep2: 'Our main feature is Co-Pilot 💬. It\'s a smart AI chat with co-pilot Mira. Just type: "Swap 20 TON to USDC on Base", and she\'ll configure a live trade directly in the feed!',
+    onboardStep3: 'Prefer the classics? The Pro Swap tab 🔄 is a visually perfect, clean glass widget for manual cross-chain swaps.',
+    onboardStep4: 'But first, connect your wallets! At the top right, connect your TON wallet (via TonConnect) and EVM wallet (via RainbowKit). This is required to sign transactions.',
+    onboardStep5: 'During the swap, you\'ll see a premium glass transaction stepper 🛰️ tracking RFQ rate lock, wallet signatures, and Cocoon relayer consensus in real-time.',
+    onboardStep6: 'The Info tab 📚 is your library. Here you\'ll find interactive card guides and live relayer activity stats, where I\'ll explain all the technical details.',
+    onboardStep7: 'And if anything goes wrong, visit the Support tab 🛠️. I\'ll act as a troubleshooter, help verify transaction hashes, and give you a direct button to connect with support.',
+    onboardStep8: 'So, ready to become a cross-chain giga-chad and show everyone who\'s boss? Hit "Let\'s Go" and let\'s make that first trade! 🪨🚀🔥',
+    onboardStartBtn: 'Let\'s Go! 🚀',
+    next: 'Next →',
     skip: 'Skip',
     
     // Chat & AI
@@ -223,8 +263,47 @@ const DICTIONARY = {
     step3: 'Processing by Cocoon relayer',
     step4: 'Disbursing assets to destination',
     
+    // Info Tab
+    infoTitle: 'STONHub Library 📚',
+    infoSub: 'Learn the secrets of cross-chain swaps with the Stone guide',
+    infoCard1Title: 'What is Omniston?',
+    infoCard1Desc: 'Omniston is a revolutionary protocol that aggregates liquidity across different chains. Instead of long manual bridges, it locks rapid RFQ quotes.',
+    infoCard2Title: 'Trade Security',
+    infoCard2Desc: 'Your assets are never stored on intermediate smart contracts. All swaps are secured by cryptographic signatures and executed atomically.',
+    infoCard3Title: 'Speed & Gas',
+    infoCard3Desc: 'An exchange takes just 24 seconds on average! The Cocoon relayer network handles all target network gas payments for you.',
+    statsTitle: 'Network Activity',
+    statRelayers: 'Relayers Status',
+    statSpeed: 'Avg. bridge speed',
+    statFee: 'Cross-chain gas',
+    statActive: 'Active 🟢',
+    statSpeedVal: '24 sec ⏱️',
+    statFeeVal: 'minimal 💎',
+    
+    // Support Tab
+    supportTitle: 'Technical Support 🛠️',
+    supportSub: 'Verify transaction hashes and send tickets directly to the Stone',
+    supportMascotMsg: 'Hey! I\'m your troubleshooter engineer 🗿🔧. Noticed a delay? Or have a question? Let\'s fix this quickly!',
+    faqTitle: 'Frequent Questions',
+    faq1: 'Where to find the Tx Hash?',
+    faq1Ans: 'Copy the transaction hash (Tx Hash) in your wallet history (Tonkeeper or MetaMask).',
+    faq2: 'What if my wallet won\'t connect?',
+    faq2Ans: 'Make sure your wallet application is updated to the latest version and is unlocked.',
+    diagTitle: 'Transaction Diagnostics',
+    diagPlaceholder: 'Paste transaction hash (0x... or EQ...)',
+    diagBtn: 'Verify Status',
+    diagLoading: 'Scanning blocks...',
+    diagSuccess: 'Delivered! Cocoon relayer successfully routed the assets.',
+    formTitle: 'Submit a ticket',
+    formEmail: 'Telegram Username / Email',
+    formMsg: 'Describe your issue',
+    formSubmit: 'Submit Ticket',
+    formSuccess: 'Ticket submitted! My number: STH-9924-OK. I\'ll contact you in Telegram soon! 😉',
+    directSupportBtn: 'Write to Support in Telegram 📢',
+    
     successMsg: 'Swap completed successfully! 🎉',
-    errorMsg: 'Transaction failed. Please try again. ❌'
+    errorMsg: 'Transaction failed. Please try again. ❌',
+    close: 'Close'
   }
 };
 
@@ -279,7 +358,7 @@ export default function Home() {
           clearInterval(timer);
           return 100;
         }
-        const step = Math.floor(Math.random() * 8) + 4;
+        const step = Math.floor(Math.random() * 8) + 5;
         return Math.min(prev + step, 100);
       });
     }, 80);
@@ -310,7 +389,7 @@ export default function Home() {
   const { address: evmAddress } = useAccount();
 
   // === App Navigation States ===
-  const [activeTab, setActiveTab] = useState<'copilot' | 'pro'>('copilot');
+  const [activeTab, setActiveTab] = useState<'copilot' | 'pro' | 'info' | 'support'>('copilot');
 
   // === Main Swap Parameter States ===
   const [srcChain, setSrcChain] = useState<'ton' | 'base' | 'polygon'>('ton');
@@ -352,6 +431,17 @@ export default function Home() {
   const [showTxOverlay, setShowTxOverlay] = useState<boolean>(false);
   const [txStep, setTxStep] = useState<number>(0);
   const [txSuccess, setTxSuccess] = useState<boolean | null>(null);
+
+  // === Info Tab States ===
+  const [infoModalCard, setInfoModalCard] = useState<number | null>(null);
+
+  // === Support Tab States ===
+  const [supportTxHash, setSupportTxHash] = useState<string>('');
+  const [isSupportSearching, setIsSupportSearching] = useState<boolean>(false);
+  const [supportTxResult, setSupportTxResult] = useState<boolean>(false);
+  const [supportFormEmail, setSupportFormEmail] = useState<string>('');
+  const [supportFormMsg, setSupportFormMsg] = useState<string>('');
+  const [isSupportFormSubmitted, setIsSupportFormSubmitted] = useState<boolean>(false);
 
   // === Omniston SDK Integration Hooks ===
   const omniston = useOmniston();
@@ -516,8 +606,8 @@ export default function Home() {
     setDstToken(data.dstToken);
     setSrcAmount(data.amount);
     
-    // Open transaction stepper directly
-    triggerTxWorkflow();
+    // Switch to Pro tab to complete execution seamlessly
+    setActiveTab('pro');
   };
 
   // === Cross-chain execution workflow stepper ===
@@ -548,6 +638,37 @@ export default function Home() {
     }, 1500);
   };
 
+  // Handle support check simulation
+  const handleSupportCheckHash = () => {
+    if (!supportTxHash.trim()) return;
+    setIsSupportSearching(true);
+    setSupportTxResult(false);
+
+    setTimeout(() => {
+      setIsSupportSearching(false);
+      setSupportTxResult(true);
+    }, 2000);
+  };
+
+  // Handle support ticket form submit
+  const handleSupportFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supportFormEmail.trim() || !supportFormMsg.trim()) return;
+    setIsSupportFormSubmitted(true);
+  };
+
+  // 8 Onboarding steps with mapped emotions images
+  const onboardingSteps = [
+    { text: t.onboardStep1, image: '/character_1.png' },
+    { text: t.onboardStep2, image: '/character_2.png' },
+    { text: t.onboardStep3, image: '/character_3.png' },
+    { text: t.onboardStep4, image: '/character_4.png' },
+    { text: t.onboardStep5, image: '/character_5.png' },
+    { text: t.onboardStep6, image: '/character_6.png' },
+    { text: t.onboardStep7, image: '/character_7.png' },
+    { text: t.onboardStep8, image: '/character_8.png' }
+  ];
+
   return (
     <div className="min-h-screen bg-[#060608] text-white flex flex-col font-sans select-none relative overflow-x-hidden">
       
@@ -557,7 +678,7 @@ export default function Home() {
       <div className="absolute bottom-[10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-[#FF9900]/1 blur-[120px] pointer-events-none z-0" />
 
       {/* ========================================================================= */}
-      {/* 1. STARTING SPLASH SCREEN (GLUSHER) */}
+      {/* 1. STARTING SPLASH SCREEN (GLUSHER) WITH LOGO.PNG */}
       {/* ========================================================================= */}
       <AnimatePresence>
         {showSplash && (
@@ -567,12 +688,12 @@ export default function Home() {
           >
             <div className="w-full max-w-sm flex flex-col items-center justify-center text-center space-y-8">
               
-              {/* Spinning Premium Rings */}
-              <div className="relative w-28 h-28 flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full border border-white/5 border-t-2 border-t-[#FF9900] animate-spin" style={{ animationDuration: '1.5s' }} />
-                <div className="absolute w-20 h-20 rounded-full border border-white/5 border-r-2 border-r-[#FF5500] animate-spin" style={{ animationDuration: '2.5s', animationDirection: 'reverse' }} />
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-950 border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(255,153,0,0.15)] z-10 glossy-reflection">
-                  <span className="text-xl font-black text-[#FF9900]">SH</span>
+              {/* Spinning Premium Rings around logo.png */}
+              <div className="relative w-36 h-36 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full border border-white/5 border-t-2 border-t-[#FF9900] animate-spin" style={{ animationDuration: '1.8s' }} />
+                <div className="absolute w-28 h-28 rounded-full border border-white/5 border-r-2 border-r-[#FF5500] animate-spin" style={{ animationDuration: '3s', animationDirection: 'reverse' }} />
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-neutral-950 border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(255,153,0,0.2)] z-10 glossy-reflection p-2">
+                  <img src="/logo.png" alt="STONHub Logo" className="w-full h-full object-contain" />
                 </div>
               </div>
 
@@ -609,7 +730,7 @@ export default function Home() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     onClick={() => setShowSplash(false)}
-                    className="px-8 py-3 rounded-full bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black font-black text-sm tracking-wider shadow-[0_4px_25px_rgba(255,153,0,0.3)] hover:shadow-[0_4px_30px_rgba(255,153,0,0.45)] transition-all cursor-pointer select-none"
+                    className="px-8 py-3 rounded-full bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black font-black text-sm tracking-wider shadow-[0_4px_25px_rgba(255,153,0,0.3)] hover:shadow-[0_4px_30px_rgba(255,153,0,0.45)] transition-all cursor-pointer select-none glossy-reflection"
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -623,74 +744,73 @@ export default function Home() {
       </AnimatePresence>
 
       {/* ========================================================================= */}
-      {/* 2. WELCOME ONBOARDING DIALOGUE */}
+      {/* 2. 8-STEP DIALOGUE-ONBOARDING WITH EMOTIONAL STONE CHARACTERS */}
       {/* ========================================================================= */}
       <AnimatePresence>
         {showOnboarding && (
-          <div className="fixed inset-0 bg-black/75 z-40 flex items-center justify-center p-4 backdrop-blur-md">
+          <div className="fixed inset-0 bg-black/80 z-40 flex items-center justify-center p-4 backdrop-blur-md">
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-md liquid-glass-card rounded-2xl p-6 relative overflow-hidden"
+              className="w-full max-w-md liquid-glass-card rounded-2xl p-6 relative overflow-hidden flex flex-col items-center"
             >
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FF9900] to-[#FF5500]" />
               
-              {/* AI Co-Pilot Mascot Header */}
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF9900] to-[#FF5500] flex items-center justify-center shadow-lg relative shrink-0">
-                  <span className="text-xl font-bold text-black">M</span>
-                  <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-[#060608]" />
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-white flex items-center gap-1.5">
-                    Mira <span className="bg-white/10 text-neutral-300 text-[9px] font-black px-1.5 py-0.5 rounded tracking-wide">CO-PILOT</span>
-                  </h3>
-                  <p className="text-[10px] text-neutral-400 font-medium">STONHub Cross-chain Assistant</p>
-                </div>
+              {/* Mascot Emotion Image */}
+              <div className="w-40 h-40 flex items-center justify-center relative mb-4 shrink-0 rounded-2xl overflow-hidden bg-black/45 border border-white/5">
+                <img 
+                  src={onboardingSteps[onboardingStep].image} 
+                  alt="STONHub Companion Emotion" 
+                  className="w-full h-full object-contain scale-[1.05]"
+                />
               </div>
 
-              {/* Steps Progress dots */}
+              {/* Guide Title Banner */}
+              <h3 className="text-base font-black text-[#FF9900] tracking-wide mb-2 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-brand-orange" />
+                {t.onboardTitle}
+              </h3>
+
+              {/* Progress Stepper indicators */}
               <div className="flex items-center gap-1 mb-4">
-                {[0, 1, 2].map((idx) => (
+                {onboardingSteps.map((_, idx) => (
                   <div 
                     key={idx} 
-                    className={`h-[3px] rounded-full transition-all duration-300 ${idx === onboardingStep ? 'w-6 bg-[#FF9900]' : 'w-2 bg-neutral-800'}`}
+                    className={`h-[3px] rounded-full transition-all duration-300 ${idx === onboardingStep ? 'w-5 bg-[#FF9900]' : 'w-1.5 bg-neutral-800'}`}
                   />
                 ))}
               </div>
 
-              {/* Chat Bubble Step Content */}
-              <div className="bg-black/30 border border-white/5 rounded-xl p-4 min-h-[120px] flex flex-col justify-center mb-6 relative">
-                <p className="text-sm font-medium leading-relaxed text-neutral-200">
-                  {onboardingStep === 0 && t.onboardingStep1}
-                  {onboardingStep === 1 && t.onboardingStep2}
-                  {onboardingStep === 2 && t.onboardingStep3}
+              {/* Description Box */}
+              <div className="bg-black/35 border border-white/5 rounded-xl p-4 min-h-[110px] w-full flex flex-col justify-center mb-6 relative">
+                <p className="text-sm font-medium leading-relaxed text-neutral-200 text-center">
+                  {onboardingSteps[onboardingStep].text}
                 </p>
               </div>
 
-              {/* Onboarding buttons */}
-              <div className="flex items-center justify-between">
+              {/* Dialogue Navigation Buttons */}
+              <div className="flex items-center justify-between w-full">
                 <button 
                   onClick={completeOnboarding}
-                  className="text-xs text-neutral-500 hover:text-white font-black tracking-wide"
+                  className="text-xs text-neutral-500 hover:text-white font-black tracking-wide cursor-pointer"
                 >
                   {t.skip}
                 </button>
                 
-                {onboardingStep < 2 ? (
+                {onboardingStep < onboardingSteps.length - 1 ? (
                   <button
                     onClick={() => setOnboardingStep((p) => p + 1)}
-                    className="px-5 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-black tracking-wide transition-all"
+                    className="px-5 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-black tracking-wide transition-all cursor-pointer"
                   >
                     {t.next}
                   </button>
                 ) : (
                   <button
                     onClick={completeOnboarding}
-                    className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black font-black text-xs tracking-wider shadow-lg"
+                    className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black font-black text-xs tracking-wider shadow-lg glossy-reflection cursor-pointer"
                   >
-                    {t.onboardingStartBtn}
+                    {t.onboardStartBtn}
                   </button>
                 )}
               </div>
@@ -700,16 +820,16 @@ export default function Home() {
       </AnimatePresence>
 
       {/* ========================================================================= */}
-      {/* 3. APP HEADER (CONNECT BUTTONS & TABS) */}
+      {/* 3. APP HEADER WITH LOGO.PNG */}
       {/* ========================================================================= */}
       <header className="w-full max-w-4xl mx-auto px-4 pt-6 pb-2 z-10 relative">
-        <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex items-center justify-between gap-4 mb-4">
           
-          {/* Brand Logo */}
+          {/* Logo Brand using public/logo.png */}
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('copilot')}>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF9900] to-[#FF5500] flex items-center justify-center shadow-lg relative">
-              <span className="text-sm font-black text-black">S</span>
-              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#060608]" />
+            <div className="w-10 h-10 rounded-xl bg-neutral-950 border border-white/10 flex items-center justify-center shadow-lg relative p-1.5 glossy-reflection shrink-0">
+              <img src="/logo.png" alt="STONHub Logo" className="w-full h-full object-contain" />
+              <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#060608]" />
             </div>
             <div className="flex flex-col">
               <span className="text-base font-black tracking-tighter text-white">STONHub</span>
@@ -717,7 +837,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Action Header Items */}
+          {/* Action Header items */}
           <div className="flex items-center gap-2">
             
             {/* Language toggle */}
@@ -744,46 +864,24 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        {/* ========================================================================= */}
-        {/* PREMIUM TABS BAR */}
-        {/* ========================================================================= */}
-        <div className="w-full max-w-sm mx-auto mb-4 bg-black/40 border border-white/5 p-1 rounded-xl flex">
-          <button
-            onClick={() => setActiveTab('copilot')}
-            className={`flex-1 py-2.5 rounded-lg text-xs font-black tracking-wide flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeTab === 'copilot' ? 'bg-[#FF9900] text-black shadow-md' : 'text-neutral-400 hover:text-white'}`}
-          >
-            <MessageSquare className="w-3.5 h-3.5" />
-            {t.tabCoPilot}
-          </button>
-          <button
-            onClick={() => setActiveTab('pro')}
-            className={`flex-1 py-2.5 rounded-lg text-xs font-black tracking-wide flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeTab === 'pro' ? 'bg-[#FF9900] text-black shadow-md' : 'text-neutral-400 hover:text-white'}`}
-          >
-            <SwapIcon className="w-3.5 h-3.5" />
-            {t.tabProSwap}
-          </button>
-        </div>
       </header>
 
       {/* ========================================================================= */}
-      {/* 4. MAIN CONTENT TABS WITH ANIMATIONS */}
+      {/* 4. MAIN DISPLAY CARD WITH ANIMATIONS */}
       {/* ========================================================================= */}
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 pb-24 z-10 relative flex flex-col items-center">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 pb-28 z-10 relative flex flex-col items-center">
         <AnimatePresence mode="wait">
           
-          {/* TAB 1: CO-PILOT AI CHAT */}
+          {/* TAB 1: CO-PILOT CHAT INTERFACE */}
           {activeTab === 'copilot' && (
             <motion.div
               key="copilot"
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 20, opacity: 0 }}
+              initial={{ opacity: 0, x: -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 15 }}
               transition={{ type: 'spring', damping: 25, stiffness: 180 }}
-              className="w-full max-w-xl flex flex-col h-[65vh] liquid-glass-card rounded-2xl overflow-hidden"
+              className="w-full max-w-xl flex flex-col h-[60vh] liquid-glass-card rounded-2xl overflow-hidden"
             >
-              
-              {/* Chat Header banner */}
               <div className="px-4 py-3 bg-black/35 border-b border-white/5 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
@@ -795,22 +893,20 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Chat History Flow */}
+              {/* Chat Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar bg-neutral-950/20">
                 {chatMessages.map((msg) => (
                   <div 
                     key={msg.id} 
                     className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
                   >
-                    
-                    {/* Chat Bubble */}
                     <div 
                       className={`max-w-[85%] rounded-xl p-3 text-sm leading-relaxed ${msg.sender === 'user' ? 'bg-gradient-to-br from-[#FF9900]/20 to-[#FF5500]/10 border border-[#FF9900]/20 text-white' : 'bg-white/5 border border-white/5 text-neutral-200'}`}
                     >
                       {msg.text}
                     </div>
 
-                    {/* Inline active widget if returned by Co-Pilot */}
+                    {/* Inline active widget if triggered */}
                     {msg.widgetData && (
                       <div className="w-full max-w-sm mt-3 liquid-glass-card border border-[#FF9900]/20 rounded-xl p-4 space-y-3 bg-black/40">
                         <div className="flex items-center justify-between border-b border-white/5 pb-2">
@@ -818,14 +914,16 @@ export default function Home() {
                           <span className="text-[10px] font-black text-[#FF9900] bg-[#FF9900]/10 px-1.5 py-0.5 rounded">LIVE RFQ</span>
                         </div>
 
-                        {/* Route mapping */}
+                        {/* Chain path visualization */}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1.5">
+                            <TokenLogo symbol={msg.widgetData.srcToken} className="w-4 h-4" />
                             <span className="text-xs font-black">{msg.widgetData.srcToken}</span>
                             <span className="text-[10px] text-neutral-500">({msg.widgetData.srcChain.toUpperCase()})</span>
                           </div>
                           <ArrowRight className="w-3.5 h-3.5 text-neutral-600 animate-pulse" />
-                          <div className="flex items-center gap-1 text-right">
+                          <div className="flex items-center gap-1.5 text-right">
+                            <TokenLogo symbol={msg.widgetData.dstToken} className="w-4 h-4" />
                             <span className="text-xs font-black">{msg.widgetData.dstToken}</span>
                             <span className="text-[10px] text-neutral-500">({msg.widgetData.dstChain.toUpperCase()})</span>
                           </div>
@@ -839,7 +937,7 @@ export default function Home() {
 
                         <button 
                           onClick={() => handleExecuteWidgetSwap(msg.widgetData!)}
-                          className="w-full py-2.5 rounded-lg bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black font-black text-xs tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer"
+                          className="w-full py-2.5 rounded-lg bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black font-black text-xs tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer glossy-reflection"
                         >
                           {t.swapBtnActive}
                         </button>
@@ -848,7 +946,7 @@ export default function Home() {
                   </div>
                 ))}
 
-                {/* Typing status indicator */}
+                {/* AI Typing Indicator */}
                 {isAiTyping && (
                   <div className="flex items-center gap-1.5 p-3 rounded-xl bg-white/5 border border-white/5 max-w-[120px]">
                     <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -859,7 +957,7 @@ export default function Home() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Quick Prompt Suggesters */}
+              {/* Quick Suggesters */}
               {chatMessages.length === 1 && (
                 <div className="p-3 bg-black/20 border-t border-white/5 flex flex-wrap gap-2 justify-center shrink-0">
                   <button 
@@ -883,7 +981,7 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Chat Input panel */}
+              {/* Input Chat Box */}
               <div className="p-3 bg-black/35 border-t border-white/5 flex gap-2 shrink-0">
                 <input 
                   type="text" 
@@ -903,13 +1001,13 @@ export default function Home() {
             </motion.div>
           )}
 
-          {/* TAB 2: PRO SWAP WIDGET */}
+          {/* TAB 2: PRO SWAP FORM */}
           {activeTab === 'pro' && (
             <motion.div
               key="pro"
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
+              initial={{ opacity: 0, x: -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 15 }}
               transition={{ type: 'spring', damping: 25, stiffness: 180 }}
               className="w-full max-w-md liquid-glass-card rounded-2xl p-6 space-y-6 relative overflow-hidden"
             >
@@ -996,7 +1094,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Centered Swapper Switcher Button */}
+              {/* Centered Switcher */}
               <div className="flex justify-center -my-3 relative z-10">
                 <button 
                   onClick={() => {
@@ -1089,7 +1187,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* RFQ Quote Details Box */}
+              {/* Quote details */}
               {activeQuote && (
                 <div className="bg-black/30 border border-white/5 rounded-xl p-3 space-y-2 text-xs font-medium">
                   <div className="flex justify-between">
@@ -1110,11 +1208,11 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Main Submit Action */}
+              {/* Execute Button */}
               <button
                 onClick={triggerTxWorkflow}
                 disabled={!tonAddress || !evmAddress || !srcAmount}
-                className={`w-full py-4 rounded-xl font-black text-sm tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${(!tonAddress || !evmAddress) ? 'bg-white/5 border border-white/5 text-neutral-500 cursor-not-allowed' : !srcAmount ? 'bg-white/10 text-neutral-300' : 'bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black shadow-[0_4px_20px_rgba(255,153,0,0.2)] hover:scale-[1.01]'}`}
+                className={`w-full py-4 rounded-xl font-black text-sm tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${(!tonAddress || !evmAddress) ? 'bg-white/5 border border-white/5 text-neutral-500 cursor-not-allowed' : !srcAmount ? 'bg-white/10 text-neutral-300' : 'bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black shadow-[0_4px_20px_rgba(255,153,0,0.2)] hover:scale-[1.01] glossy-reflection'}`}
               >
                 {(!tonAddress || !evmAddress) ? (
                   <>
@@ -1133,6 +1231,258 @@ export default function Home() {
             </motion.div>
           )}
 
+          {/* TAB 3: INFO LIBRARY PAGE */}
+          {activeTab === 'info' && (
+            <motion.div
+              key="info"
+              initial={{ opacity: 0, x: -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 15 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 180 }}
+              className="w-full max-w-md space-y-6"
+            >
+              
+              {/* Info Header */}
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-black tracking-wider text-white">{t.infoTitle}</h2>
+                <p className="text-xs text-neutral-400 font-medium">{t.infoSub}</p>
+              </div>
+
+              {/* Mini Guide Cards */}
+              <div className="space-y-3">
+                {[
+                  { id: 1, title: t.infoCard1Title, desc: t.infoCard1Desc, charImg: '/character_2.png' },
+                  { id: 2, title: t.infoCard2Title, desc: t.infoCard2Desc, charImg: '/character_6.png' },
+                  { id: 3, title: t.infoCard3Title, desc: t.infoCard3Desc, charImg: '/character_5.png' }
+                ].map((card) => (
+                  <div
+                    key={card.id}
+                    onClick={() => setInfoModalCard(card.id)}
+                    className="p-4 rounded-xl liquid-glass-card-interactive flex items-center justify-between gap-4 cursor-pointer"
+                  >
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-black text-white">{card.title}</h4>
+                      <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">{card.desc}</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-lg bg-neutral-900 border border-white/5 flex items-center justify-center shrink-0 overflow-hidden">
+                      <img src={card.charImg} alt={card.title} className="w-full h-full object-contain" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Live Network Stats */}
+              <div className="liquid-glass-card rounded-2xl p-5 space-y-4">
+                <h3 className="text-xs font-black tracking-wider text-neutral-400 uppercase border-b border-white/5 pb-2">
+                  {t.statsTitle}
+                </h3>
+                
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="p-3 bg-black/35 rounded-xl border border-white/5 space-y-1">
+                    <span className="text-[9px] text-neutral-500 font-bold block">{t.statRelayers}</span>
+                    <span className="text-xs font-black text-green-400 block">{t.statActive}</span>
+                  </div>
+                  <div className="p-3 bg-black/35 rounded-xl border border-white/5 space-y-1">
+                    <span className="text-[9px] text-neutral-500 font-bold block">{t.statSpeed}</span>
+                    <span className="text-xs font-black text-[#FF9900] block">{t.statSpeedVal}</span>
+                  </div>
+                  <div className="p-3 bg-black/35 rounded-xl border border-white/5 space-y-1">
+                    <span className="text-[9px] text-neutral-500 font-bold block">{t.statFee}</span>
+                    <span className="text-xs font-black text-blue-400 block">{t.statFeeVal}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Guide Modal Popups */}
+              <AnimatePresence>
+                {infoModalCard !== null && (
+                  <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <motion.div 
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      className="w-full max-w-sm liquid-glass-card rounded-2xl p-6 space-y-4 relative flex flex-col items-center"
+                    >
+                      <button 
+                        onClick={() => setInfoModalCard(null)}
+                        className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/5 border border-white/5 flex items-center justify-center cursor-pointer hover:bg-white/10"
+                      >
+                        <X className="w-4 h-4 text-neutral-400" />
+                      </button>
+
+                      {/* Modal Emotional Character */}
+                      <div className="w-28 h-28 overflow-hidden rounded-xl bg-black/40 border border-white/5 flex items-center justify-center">
+                        <img 
+                          src={infoModalCard === 1 ? '/character_2.png' : infoModalCard === 2 ? '/character_6.png' : '/character_5.png'} 
+                          alt="Stoneguide character" 
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+
+                      <h3 className="text-base font-black text-white mt-2">
+                        {infoModalCard === 1 && t.infoCard1Title}
+                        {infoModalCard === 2 && t.infoCard2Title}
+                        {infoModalCard === 3 && t.infoCard3Title}
+                      </h3>
+
+                      <p className="text-xs text-neutral-300 leading-relaxed text-center bg-black/30 border border-white/5 p-3.5 rounded-xl">
+                        {infoModalCard === 1 && t.infoCard1Desc}
+                        {infoModalCard === 2 && t.infoCard2Desc}
+                        {infoModalCard === 3 && t.infoCard3Desc}
+                      </p>
+
+                      <button
+                        onClick={() => setInfoModalCard(null)}
+                        className="w-full py-2.5 rounded-lg bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black font-black text-xs tracking-wider shadow-md cursor-pointer"
+                      >
+                        {t.close}
+                      </button>
+                    </motion.div>
+                  </div>
+                )}
+              </AnimatePresence>
+
+            </motion.div>
+          )}
+
+          {/* TAB 4: SUPPORT TROUBLESHOOTER PAGE */}
+          {activeTab === 'support' && (
+            <motion.div
+              key="support"
+              initial={{ opacity: 0, x: -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 15 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 180 }}
+              className="w-full max-w-md space-y-6"
+            >
+              {/* Support Header */}
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-black tracking-wider text-white">{t.supportTitle}</h2>
+                <p className="text-xs text-neutral-400 font-medium">{t.supportSub}</p>
+              </div>
+
+              {/* Mascot Bubble welcome */}
+              <div className="liquid-glass-card rounded-2xl p-4 flex items-center gap-4 bg-black/45">
+                <div className="w-16 h-16 rounded-xl bg-neutral-900 border border-white/5 flex items-center justify-center shrink-0 overflow-hidden">
+                  <img src="/character_7.png" alt="Stone engineer mascot" className="w-full h-full object-contain scale-110" />
+                </div>
+                <div className="bg-black/35 rounded-xl p-3 border border-white/5 flex-1 relative">
+                  <p className="text-xs font-semibold text-neutral-200 leading-relaxed">{t.supportMascotMsg}</p>
+                </div>
+              </div>
+
+              {/* Transaction Diagnostic checker */}
+              <div className="liquid-glass-card rounded-2xl p-5 space-y-4">
+                <h3 className="text-xs font-black tracking-wider text-neutral-400 uppercase border-b border-white/5 pb-2 flex items-center gap-1.5">
+                  <Search className="w-3.5 h-3.5 text-[#FF9900]" />
+                  {t.diagTitle}
+                </h3>
+
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={supportTxHash}
+                    onChange={(e) => setSupportTxHash(e.target.value)}
+                    placeholder={t.diagPlaceholder}
+                    className="flex-1 bg-black/45 border border-white/5 rounded-xl px-3 text-xs focus:border-[#FF9900]/40 outline-none transition-all placeholder-neutral-600"
+                  />
+                  <button
+                    onClick={handleSupportCheckHash}
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black font-black text-xs shrink-0 hover:scale-103 cursor-pointer glossy-reflection"
+                  >
+                    {t.diagBtn}
+                  </button>
+                </div>
+
+                {isSupportSearching && (
+                  <div className="text-center py-2 text-xs text-neutral-400 font-bold animate-pulse flex items-center justify-center gap-2">
+                    <div className="w-3 h-3 rounded-full border border-t-2 border-t-[#FF9900] animate-spin" />
+                    {t.diagLoading}
+                  </div>
+                )}
+
+                {supportTxResult && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-3 bg-green-500/10 border border-green-500/20 text-green-400 rounded-xl text-xs font-semibold flex items-center gap-2"
+                  >
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    {t.diagSuccess}
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Support Email Ticket form */}
+              <div className="liquid-glass-card rounded-2xl p-5 space-y-4 relative">
+                
+                {/* Form Re-render successfully */}
+                {isSupportFormSubmitted ? (
+                  <motion.div 
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="text-center space-y-4 py-4"
+                  >
+                    <div className="w-20 h-20 overflow-hidden mx-auto bg-black/40 rounded-xl border border-white/5 flex items-center justify-center">
+                      <img src="/character_1.png" alt="Happy stone companion" className="w-full h-full object-contain" />
+                    </div>
+                    <p className="text-xs text-neutral-300 leading-relaxed max-w-[280px] mx-auto bg-green-500/5 border border-green-500/20 p-3 rounded-xl font-semibold">
+                      {t.formSuccess}
+                    </p>
+                  </motion.div>
+                ) : (
+                  <form onSubmit={handleSupportFormSubmit} className="space-y-4">
+                    <h3 className="text-xs font-black tracking-wider text-neutral-400 uppercase border-b border-white/5 pb-2">
+                      {t.formTitle}
+                    </h3>
+                    
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-500 font-bold uppercase">{t.formEmail}</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={supportFormEmail}
+                        onChange={(e) => setSupportFormEmail(e.target.value)}
+                        placeholder="@username или email"
+                        className="w-full bg-black/45 border border-white/5 rounded-xl px-3 py-2 text-xs focus:border-[#FF9900]/40 outline-none transition-all placeholder-neutral-600"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-neutral-500 font-bold uppercase">{t.formMsg}</label>
+                      <textarea 
+                        rows={3}
+                        required
+                        value={supportFormMsg}
+                        onChange={(e) => setSupportFormMsg(e.target.value)}
+                        placeholder="Опишите проблему подробно..."
+                        className="w-full bg-black/45 border border-white/5 rounded-xl px-3 py-2 text-xs focus:border-[#FF9900]/40 outline-none transition-all placeholder-neutral-600 resize-none"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-black tracking-wide cursor-pointer transition-all"
+                    >
+                      {t.formSubmit}
+                    </button>
+                  </form>
+                )}
+              </div>
+
+              {/* Direct Telegram Support Button */}
+              <a 
+                href="https://t.me/stonhubapp" 
+                target="_blank" 
+                rel="noreferrer"
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black font-black text-sm tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer glossy-reflection hover:scale-[1.01]"
+              >
+                <MessageCircle className="w-5 h-5" />
+                {t.directSupportBtn}
+              </a>
+            </motion.div>
+          )}
+
         </AnimatePresence>
       </main>
 
@@ -1147,14 +1497,11 @@ export default function Home() {
               animate={{ scale: 1, opacity: 1 }}
               className="w-full max-w-sm liquid-glass-card rounded-2xl p-6 relative text-center space-y-6"
             >
-              
-              {/* Stepper Header */}
               <div className="space-y-1">
                 <h4 className="text-base font-black text-white">{t.swappingProgress}</h4>
                 <p className="text-[10px] text-neutral-500 font-bold tracking-wider uppercase">Powered by Cocoon Relayer</p>
               </div>
 
-              {/* Active Loading Ring */}
               {txSuccess === null && (
                 <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
                   <div className="absolute inset-0 rounded-full border-2 border-white/5 border-t-2 border-t-[#FF9900] animate-spin" />
@@ -1162,7 +1509,6 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Success Checkmark */}
               {txSuccess === true && (
                 <motion.div 
                   initial={{ scale: 0.5, opacity: 0 }}
@@ -1173,7 +1519,7 @@ export default function Home() {
                 </motion.div>
               )}
 
-              {/* Step checklist blocks */}
+              {/* Stepper details */}
               <div className="space-y-3 text-left">
                 {[
                   { step: 1, label: t.step1 },
@@ -1201,7 +1547,6 @@ export default function Home() {
                 })}
               </div>
 
-              {/* Complete Action Button */}
               {txSuccess === true && (
                 <button
                   onClick={() => {
@@ -1214,11 +1559,55 @@ export default function Home() {
                   {t.letsGo}
                 </button>
               )}
-
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
+      {/* ========================================================================= */}
+      {/* 6. NEW BOTTOM LIQUID-GLASS NAVBAR */}
+      {/* ========================================================================= */}
+      <footer className="fixed bottom-0 left-0 right-0 p-4 z-30 shrink-0 bg-gradient-to-t from-[#060608] via-[#060608]/90 to-transparent">
+        <div className="w-full max-w-md mx-auto bg-neutral-950/45 backdrop-blur-xl border border-white/5 p-1 rounded-2xl flex shadow-2xl justify-between">
+          
+          {/* Tab 1: Co-Pilot */}
+          <button
+            onClick={() => setActiveTab('copilot')}
+            className={`flex-1 py-3 rounded-xl text-[10px] font-black tracking-wider uppercase flex flex-col items-center gap-1 transition-all cursor-pointer ${activeTab === 'copilot' ? 'bg-[#FF9900] text-black shadow-md' : 'text-neutral-500 hover:text-white'}`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>{t.tabCoPilot}</span>
+          </button>
+          
+          {/* Tab 2: Pro Swap */}
+          <button
+            onClick={() => setActiveTab('pro')}
+            className={`flex-1 py-3 rounded-xl text-[10px] font-black tracking-wider uppercase flex flex-col items-center gap-1 transition-all cursor-pointer ${activeTab === 'pro' ? 'bg-[#FF9900] text-black shadow-md' : 'text-neutral-500 hover:text-white'}`}
+          >
+            <SwapIcon className="w-4 h-4" />
+            <span>{t.tabProSwap}</span>
+          </button>
+          
+          {/* Tab 3: Info */}
+          <button
+            onClick={() => setActiveTab('info')}
+            className={`flex-1 py-3 rounded-xl text-[10px] font-black tracking-wider uppercase flex flex-col items-center gap-1 transition-all cursor-pointer ${activeTab === 'info' ? 'bg-[#FF9900] text-black shadow-md' : 'text-neutral-500 hover:text-white'}`}
+          >
+            <BookOpen className="w-4 h-4" />
+            <span>{t.tabInfo}</span>
+          </button>
+          
+          {/* Tab 4: Support */}
+          <button
+            onClick={() => setActiveTab('support')}
+            className={`flex-1 py-3 rounded-xl text-[10px] font-black tracking-wider uppercase flex flex-col items-center gap-1 transition-all cursor-pointer ${activeTab === 'support' ? 'bg-[#FF9900] text-black shadow-md' : 'text-neutral-500 hover:text-white'}`}
+          >
+            <Wrench className="w-4 h-4" />
+            <span>{t.tabSupport}</span>
+          </button>
+          
+        </div>
+      </footer>
 
     </div>
   );
