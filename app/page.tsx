@@ -666,6 +666,34 @@ export default function Home() {
     }
   }, [activeQuote, quoteEvent, showTxOverlay]);
 
+  // Dynamic wallet requirement and connection logic
+  const isTonRequired = useMemo(() => {
+    return srcChain === 'ton' || dstChain === 'ton';
+  }, [srcChain, dstChain]);
+
+  const isEvmRequired = useMemo(() => {
+    return srcChain === 'base' || srcChain === 'polygon' || dstChain === 'base' || dstChain === 'polygon';
+  }, [srcChain, dstChain]);
+
+  const isWalletConnected = useMemo(() => {
+    const tonConnected = !isTonRequired || !!tonAddress;
+    const evmConnected = !isEvmRequired || !!evmAddress;
+    return tonConnected && evmConnected;
+  }, [isTonRequired, tonAddress, isEvmRequired, evmAddress]);
+
+  const walletConnectText = useMemo(() => {
+    if (isTonRequired && !tonAddress && isEvmRequired && !evmAddress) {
+      return lang === 'ru' ? 'Подключите оба кошелька' : 'Connect both wallets';
+    }
+    if (isTonRequired && !tonAddress) {
+      return lang === 'ru' ? 'Подключите TON кошелек' : 'Connect TON wallet';
+    }
+    if (isEvmRequired && !evmAddress) {
+      return lang === 'ru' ? 'Подключите EVM кошелек' : 'Connect EVM wallet';
+    }
+    return t.swapBtnConnect;
+  }, [isTonRequired, tonAddress, isEvmRequired, evmAddress, lang, t.swapBtnConnect]);
+
   // Trigger dynamic selection side-effects to ensure valid pair choices
   const handleChainChange = (type: 'src' | 'dst', chain: 'ton' | 'base' | 'polygon') => {
     if (type === 'src') {
@@ -1437,13 +1465,13 @@ export default function Home() {
               {/* Execute Button */}
               <button
                 onClick={triggerTxWorkflow}
-                disabled={!tonAddress || !evmAddress || !srcAmount}
-                className={`w-full py-4 rounded-xl font-black text-sm tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${(!tonAddress || !evmAddress) ? 'bg-white/5 border border-white/5 text-neutral-500 cursor-not-allowed' : !srcAmount ? 'bg-white/10 text-neutral-300' : 'bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black shadow-[0_4px_20px_rgba(255,153,0,0.2)] hover:scale-[1.01] glossy-reflection'}`}
+                disabled={!isWalletConnected || !srcAmount}
+                className={`w-full py-4 rounded-xl font-black text-sm tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${!isWalletConnected ? 'bg-white/5 border border-white/5 text-neutral-500 cursor-not-allowed' : !srcAmount ? 'bg-white/10 text-neutral-300' : 'bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black shadow-[0_4px_20px_rgba(255,153,0,0.2)] hover:scale-[1.01] glossy-reflection'}`}
               >
-                {(!tonAddress || !evmAddress) ? (
+                {!isWalletConnected ? (
                   <>
                     <WalletIcon className="w-4 h-4" />
-                    {t.swapBtnConnect}
+                    {walletConnectText}
                   </>
                 ) : !srcAmount ? (
                   t.swapBtnAmount
