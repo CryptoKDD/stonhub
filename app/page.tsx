@@ -851,33 +851,45 @@ export default function Home() {
       {/* 3. APP HEADER WITH LOGO.PNG */}
       {/* ========================================================================= */}
       <header className="w-full max-w-4xl mx-auto px-4 pt-6 pb-2 z-10 relative">
-        <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           
           {/* Logo Brand using public/logo.png */}
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('copilot')}>
-            <div className="w-10 h-10 rounded-xl bg-neutral-950 border border-white/10 flex items-center justify-center shadow-lg relative p-1.5 glossy-reflection shrink-0">
-              <img src="/logo.png" alt="STONHub Logo" className="w-full h-full object-contain" />
-              <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#060608]" />
+          <div className="flex items-center justify-between w-full sm:w-auto">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('copilot')}>
+              <div className="w-9 h-9 rounded-xl bg-neutral-950 border border-white/10 flex items-center justify-center shadow-lg relative p-1.5 glossy-reflection shrink-0">
+                <img src="/logo.png" alt="STONHub Logo" className="w-full h-full object-contain" />
+                <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border border-[#060608]" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-black tracking-tighter text-white">STONHub</span>
+                <span className="text-[7px] tracking-[0.18em] text-[#8C8C96] font-bold uppercase">{t.appSubName}</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-base font-black tracking-tighter text-white">STONHub</span>
-              <span className="text-[8px] tracking-[0.18em] text-[#8C8C96] font-bold uppercase">{t.appSubName}</span>
+
+            {/* Compact Language Toggle on mobile next to brand */}
+            <div className="flex sm:hidden items-center gap-1.5">
+              <button 
+                onClick={toggleLang}
+                className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center transition-all cursor-pointer"
+              >
+                <Languages className="w-3.5 h-3.5 text-neutral-400" />
+              </button>
             </div>
           </div>
 
-          {/* Action Header items */}
-          <div className="flex items-center gap-2">
+          {/* Wallets Row: Self-wrapping responsive container to prevent layout overflows */}
+          <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto justify-center sm:justify-end">
             
-            {/* Language toggle */}
+            {/* Language Toggle on desktop */}
             <button 
               onClick={toggleLang}
-              className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center transition-all cursor-pointer"
+              className="hidden sm:flex w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 items-center justify-center transition-all cursor-pointer"
             >
-              <Languages className="w-4 h-4 text-neutral-400 hover:text-white" />
+              <Languages className="w-4 h-4 text-neutral-400" />
             </button>
 
-            {/* EVM Rainbow Wallet Connect */}
-            <div className="scale-90 origin-right">
+            {/* EVM Connect Button with safe responsive styling */}
+            <div className="scale-[0.82] xs:scale-90 sm:scale-95 origin-center sm:origin-right flex justify-center min-w-0">
               <ConnectButton 
                 label={t.walletConnectEvm}
                 accountStatus="avatar"
@@ -886,8 +898,8 @@ export default function Home() {
               />
             </div>
 
-            {/* TON Connect button */}
-            <div className="scale-90 origin-right">
+            {/* TON Connect Button with safe responsive styling */}
+            <div className="scale-[0.82] xs:scale-90 sm:scale-95 origin-center flex justify-center min-w-0">
               <TonConnectButton />
             </div>
           </div>
@@ -1047,78 +1059,89 @@ export default function Home() {
                   <span>{t.balanceLabel} 12.45</span>
                 </div>
                 
-                <div className="bg-black/45 border border-white/5 rounded-xl p-4 flex items-center justify-between gap-4">
-                  <input 
-                    type="text" 
-                    value={srcAmount}
-                    onChange={(e) => {
-                      setSrcAmount(e.target.value);
-                      if (activeQuote) setDstAmount('...');
-                    }}
-                    placeholder="0.0"
-                    className="flex-1 bg-transparent border-none text-2xl font-black focus:outline-none placeholder-neutral-700 min-w-0"
-                  />
-                  
-                  {/* Select Source Chain / Asset */}
-                  <div className="flex gap-1.5 shrink-0">
+                <div className="bg-black/45 border border-white/5 rounded-xl p-3 flex flex-col gap-3">
+                  {/* Numeric Input */}
+                  <div className="w-full flex items-center">
+                    <input 
+                      type="text" 
+                      value={srcAmount}
+                      onChange={(e) => {
+                        setSrcAmount(e.target.value);
+                        if (activeQuote) setDstAmount('...');
+                      }}
+                      placeholder="0.0"
+                      className="w-full bg-transparent border-none text-3xl font-black focus:outline-none placeholder-neutral-700 min-w-0"
+                    />
+                  </div>
+
+                  {/* Divider line */}
+                  <div className="h-[1px] bg-white/5 w-full animate-pulse" />
+
+                  {/* Route & selectors row */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider">{lang === 'ru' ? 'Отправка:' : 'Sending:'}</span>
                     
-                    {/* Chain Dropdown */}
-                    <div className="relative">
-                      <button 
-                        onClick={() => setShowSrcChainDrop(!showSrcChainDrop)}
-                        className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1 text-[9px] font-black tracking-wide cursor-pointer transition-all text-neutral-400"
-                      >
-                        <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Сеть:' : 'Chain:'}</span>
-                        <span>{OMNISTON_CHAINS[srcChain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
-                        <span className="uppercase text-white">{srcChain}</span>
-                        <ChevronDown className="w-3 h-3 text-neutral-500" />
-                      </button>
+                    {/* Select Source Chain / Asset */}
+                    <div className="flex gap-1.5 shrink-0">
+                      
+                      {/* Chain Dropdown */}
+                      <div className="relative">
+                        <button 
+                          onClick={() => setShowSrcChainDrop(!showSrcChainDrop)}
+                          className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1 text-[9px] font-black tracking-wide cursor-pointer transition-all text-neutral-400"
+                        >
+                          <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Сеть:' : 'Chain:'}</span>
+                          <span>{OMNISTON_CHAINS[srcChain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
+                          <span className="uppercase text-white">{srcChain}</span>
+                          <ChevronDown className="w-3 h-3 text-neutral-500" />
+                        </button>
 
-                      {showSrcChainDrop && (
-                        <div className="absolute right-0 mt-1 w-32 bg-[#121215] border border-white/10 rounded-lg p-1 shadow-2xl z-20">
-                          {(['ton', 'base', 'polygon'] as const).map((chain) => (
-                            <button
-                              key={chain}
-                              onClick={() => handleChainChange('src', chain)}
-                              className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer"
-                            >
-                              <span>{OMNISTON_CHAINS[chain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
-                              {chain}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                        {showSrcChainDrop && (
+                          <div className="absolute right-0 mt-1 w-32 bg-[#121215] border border-white/10 rounded-lg p-1 shadow-2xl z-20">
+                            {(['ton', 'base', 'polygon'] as const).map((chain) => (
+                              <button
+                                key={chain}
+                                onClick={() => handleChainChange('src', chain)}
+                                className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <span>{OMNISTON_CHAINS[chain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
+                                {chain}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
 
-                    {/* Token Dropdown */}
-                    <div className="relative">
-                      <button 
-                        onClick={() => setShowSrcTokenDrop(!showSrcTokenDrop)}
-                        className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-[9px] font-black cursor-pointer transition-all text-neutral-400"
-                      >
-                        <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Токен:' : 'Token:'}</span>
-                        <TokenLogo symbol={srcToken} className="w-3.5 h-3.5" />
-                        <span className="text-white text-xs">{srcToken}</span>
-                        <ChevronDown className="w-3 h-3 text-neutral-500" />
-                      </button>
+                      {/* Token Dropdown */}
+                      <div className="relative">
+                        <button 
+                          onClick={() => setShowSrcTokenDrop(!showSrcTokenDrop)}
+                          className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-[9px] font-black cursor-pointer transition-all text-neutral-400"
+                        >
+                          <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Токен:' : 'Token:'}</span>
+                          <TokenLogo symbol={srcToken} className="w-3.5 h-3.5" />
+                          <span className="text-white text-xs">{srcToken}</span>
+                          <ChevronDown className="w-3 h-3 text-neutral-500" />
+                        </button>
 
-                      {showSrcTokenDrop && (
-                        <div className="absolute right-0 mt-1 w-28 bg-[#121215] border border-white/10 rounded-lg p-1 shadow-2xl z-20">
-                          {OMNISTON_TOKENS[srcChain].map((tkn) => (
-                            <button
-                              key={tkn.symbol}
-                              onClick={() => {
-                                setSrcToken(tkn.symbol);
-                                setShowSrcTokenDrop(false);
-                              }}
-                              className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-xs font-black flex items-center gap-1.5 cursor-pointer"
-                            >
-                              <TokenLogo symbol={tkn.symbol} className="w-3.5 h-3.5" />
-                              {tkn.symbol}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                        {showSrcTokenDrop && (
+                          <div className="absolute right-0 mt-1 w-28 bg-[#121215] border border-white/10 rounded-lg p-1 shadow-2xl z-20">
+                            {OMNISTON_TOKENS[srcChain].map((tkn) => (
+                              <button
+                                key={tkn.symbol}
+                                onClick={() => {
+                                  setSrcToken(tkn.symbol);
+                                  setShowSrcTokenDrop(false);
+                                }}
+                                className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-xs font-black flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <TokenLogo symbol={tkn.symbol} className="w-3.5 h-3.5" />
+                                {tkn.symbol}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1150,70 +1173,82 @@ export default function Home() {
                   <span>{t.balanceLabel} 0.00</span>
                 </div>
                 
-                <div className="bg-black/45 border border-white/5 rounded-xl p-4 flex items-center justify-between gap-4">
-                  <div className="flex-1 bg-transparent text-2xl font-black text-neutral-300">
-                    {dstAmount || '0.0'}
-                  </div>
-                  
-                  <div className="flex gap-1.5 shrink-0">
-                    
-                    {/* Destination Chain Dropdown */}
-                    <div className="relative">
-                      <button 
-                        onClick={() => setShowDstChainDrop(!showDstChainDrop)}
-                        className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1 text-[9px] font-black tracking-wide cursor-pointer transition-all text-neutral-400"
-                      >
-                        <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Сеть:' : 'Chain:'}</span>
-                        <span>{OMNISTON_CHAINS[dstChain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
-                        <span className="uppercase text-white">{dstChain}</span>
-                        <ChevronDown className="w-3 h-3 text-neutral-500" />
-                      </button>
-
-                      {showDstChainDrop && (
-                        <div className="absolute right-0 mt-1 w-32 bg-[#121215] border border-white/10 rounded-lg p-1 shadow-2xl z-20">
-                          {(['ton', 'base', 'polygon'] as const).map((chain) => (
-                            <button
-                              key={chain}
-                              onClick={() => handleChainChange('dst', chain)}
-                              className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer"
-                            >
-                              <span>{OMNISTON_CHAINS[chain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
-                              {chain}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                <div className="bg-black/45 border border-white/5 rounded-xl p-3 flex flex-col gap-3">
+                  {/* Numeric Output */}
+                  <div className="w-full flex items-center">
+                    <div className="w-full bg-transparent border-none text-3xl font-black text-neutral-300 focus:outline-none min-w-0">
+                      {dstAmount || '0.0'}
                     </div>
+                  </div>
 
-                    {/* Destination Token Dropdown */}
-                    <div className="relative">
-                      <button 
-                        onClick={() => setShowDstTokenDrop(!showDstTokenDrop)}
-                        className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-[9px] font-black cursor-pointer transition-all text-neutral-400"
-                      >
-                        <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Токен:' : 'Token:'}</span>
-                        <TokenLogo symbol={dstToken} className="w-3.5 h-3.5" />
-                        <span className="text-white text-xs">{dstToken}</span>
-                        <ChevronDown className="w-3 h-3 text-neutral-500" />
-                      </button>
+                  {/* Divider line */}
+                  <div className="h-[1px] bg-white/5 w-full animate-pulse" />
 
-                      {showDstTokenDrop && (
-                        <div className="absolute right-0 mt-1 w-28 bg-[#121215] border border-white/10 rounded-lg p-1 shadow-2xl z-20">
-                          {OMNISTON_TOKENS[dstChain].map((tkn) => (
-                            <button
-                              key={tkn.symbol}
-                              onClick={() => {
-                                setDstToken(tkn.symbol);
-                                setShowDstTokenDrop(false);
-                              }}
-                              className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-xs font-black flex items-center gap-1.5 cursor-pointer"
-                            >
-                              <TokenLogo symbol={tkn.symbol} className="w-3.5 h-3.5" />
-                              {tkn.symbol}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                  {/* Route & selectors row */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider">{lang === 'ru' ? 'Получение:' : 'Receiving:'}</span>
+                    
+                    {/* Select Destination Chain / Asset */}
+                    <div className="flex gap-1.5 shrink-0">
+                      
+                      {/* Destination Chain Dropdown */}
+                      <div className="relative">
+                        <button 
+                          onClick={() => setShowDstChainDrop(!showDstChainDrop)}
+                          className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1 text-[9px] font-black tracking-wide cursor-pointer transition-all text-neutral-400"
+                        >
+                          <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Сеть:' : 'Chain:'}</span>
+                          <span>{OMNISTON_CHAINS[dstChain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
+                          <span className="uppercase text-white">{dstChain}</span>
+                          <ChevronDown className="w-3 h-3 text-neutral-500" />
+                        </button>
+
+                        {showDstChainDrop && (
+                          <div className="absolute right-0 mt-1 w-32 bg-[#121215] border border-white/10 rounded-lg p-1 shadow-2xl z-20">
+                            {(['ton', 'base', 'polygon'] as const).map((chain) => (
+                              <button
+                                key={chain}
+                                onClick={() => handleChainChange('dst', chain)}
+                                className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <span>{OMNISTON_CHAINS[chain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
+                                {chain}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Destination Token Dropdown */}
+                      <div className="relative">
+                        <button 
+                          onClick={() => setShowDstTokenDrop(!showDstTokenDrop)}
+                          className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-[9px] font-black cursor-pointer transition-all text-neutral-400"
+                        >
+                          <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Токен:' : 'Token:'}</span>
+                          <TokenLogo symbol={dstToken} className="w-3.5 h-3.5" />
+                          <span className="text-white text-xs">{dstToken}</span>
+                          <ChevronDown className="w-3 h-3 text-neutral-500" />
+                        </button>
+
+                        {showDstTokenDrop && (
+                          <div className="absolute right-0 mt-1 w-28 bg-[#121215] border border-white/10 rounded-lg p-1 shadow-2xl z-20">
+                            {OMNISTON_TOKENS[dstChain].map((tkn) => (
+                              <button
+                                key={tkn.symbol}
+                                onClick={() => {
+                                  setDstToken(tkn.symbol);
+                                  setShowDstTokenDrop(false);
+                                }}
+                                className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-xs font-black flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <TokenLogo symbol={tkn.symbol} className="w-3.5 h-3.5" />
+                                {tkn.symbol}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
