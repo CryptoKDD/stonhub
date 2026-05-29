@@ -434,28 +434,45 @@ export default function Home() {
   const [tonConnectUI] = useTonConnectUI();
   const { address: evmAddress } = useAccount();
 
-  // Dynamic EVM Balance hook via Wagmi v2
+  // Dynamic EVM Native Balance hook via Wagmi v2 (ETH/POL)
   const { data: evmBalanceData } = useBalance({
     address: evmAddress,
   });
 
+  // Base USDC balance
+  const { data: baseUsdcBalance } = useBalance({
+    address: evmAddress,
+    token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  });
+
+  // Polygon USDC balance
+  const { data: polygonUsdcBalance } = useBalance({
+    address: evmAddress,
+    token: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+  });
+
   const [tonBalance, setTonBalance] = useState<string>('0.00');
+  const [jettonBalances, setJettonBalances] = useState<Record<string, string>>({
+    STON: '0.00',
+    USDT: '0.00'
+  });
 
   useEffect(() => {
     if (!tonAddress) {
       setTonBalance('0.00');
+      setJettonBalances({ STON: '0.00', USDT: '0.00' });
       return;
     }
 
     let isMounted = true;
-    const fetchTonBalance = async () => {
+    const fetchBalances = async () => {
+      // 1. Fetch TON native balance
       try {
         const res = await fetch(`https://toncenter.com/api/v2/getAddressInformation?address=${encodeURIComponent(tonAddress)}`);
         const json = await res.json();
         if (isMounted && json && json.ok && json.result) {
           const rawBalance = json.result.balance;
-          const formatted = (Number(rawBalance) / 1e9).toFixed(4);
-          setTonBalance(formatted);
+          setTonBalance((Number(rawBalance) / 1e9).toFixed(4));
         }
       } catch (err) {
         console.error("Error fetching TON balance from Toncenter, trying fallback...", err);
@@ -463,18 +480,36 @@ export default function Home() {
           const res = await fetch(`https://tonapi.io/v2/accounts/${encodeURIComponent(tonAddress)}`);
           const json = await res.json();
           if (isMounted && json && json.balance) {
-            const rawBalance = json.balance;
-            const formatted = (Number(rawBalance) / 1e9).toFixed(4);
-            setTonBalance(formatted);
+            setTonBalance((Number(json.balance) / 1e9).toFixed(4));
           }
         } catch (fallbackErr) {
           console.error("Error fetching TON balance from fallback...", fallbackErr);
         }
       }
+
+      // 2. Fetch Jetton balances from Tonapi
+      try {
+        const res = await fetch(`https://tonapi.io/v2/accounts/${encodeURIComponent(tonAddress)}/jettons`);
+        const json = await res.json();
+        if (isMounted && json && json.balances) {
+          const newBalances: Record<string, string> = { STON: '0.00', USDT: '0.00' };
+          for (const item of json.balances) {
+            const sym = item.jetton?.symbol?.toUpperCase();
+            if (sym === 'STON' || sym === 'USDT') {
+              const decimals = item.jetton?.decimals || 9;
+              const formatted = (Number(item.balance) / Math.pow(10, decimals)).toFixed(4);
+              newBalances[sym] = formatted;
+            }
+          }
+          setJettonBalances(newBalances);
+        }
+      } catch (jettonErr) {
+        console.error("Error fetching Jettons from Tonapi:", jettonErr);
+      }
     };
 
-    fetchTonBalance();
-    const interval = setInterval(fetchTonBalance, 15000);
+    fetchBalances();
+    const interval = setInterval(fetchBalances, 15000);
 
     return () => {
       isMounted = false;
@@ -501,22 +536,46 @@ export default function Home() {
 
   // Format balances for display
   const evmBalanceFormatted = evmBalanceData ? Number(evmBalanceData.formatted).toFixed(4) : '0.00';
+  const baseUsdcFormatted = baseUsdcBalance ? Number(baseUsdcBalance.formatted).toFixed(4) : '0.00';
+  const polygonUsdcFormatted = polygonUsdcBalance ? Number(polygonUsdcBalance.formatted).toFixed(4) : '0.00';
 
   const displayedSrcBalance = useMemo(() => {
     if (srcChain === 'ton') {
-      return tonAddress ? tonBalance : '0.00';
-    } else {
-      return evmAddress ? evmBalanceFormatted : '0.00';
+      if (!tonAddress) return '0.00';
+      if (srcToken === 'TON') return tonBalance;
+      return jettonBalances[srcToken.toUpperCase()] || '0.00';
+    } else if (srcChain === 'base') {
+      if (!evmAddress) return '0.00';
+      if (srcToken === 'ETH') return evmBalanceFormatted;
+      if (srcToken === 'USDC') return baseUsdcFormatted;
+      return '0.00';
+    } else if (srcChain === 'polygon') {
+      if (!evmAddress) return '0.00';
+      if (srcToken === 'POL') return evmBalanceFormatted;
+      if (srcToken === 'USDC') return polygonUsdcFormatted;
+      return '0.00';
     }
-  }, [srcChain, tonAddress, tonBalance, evmAddress, evmBalanceFormatted]);
+    return '0.00';
+  }, [srcChain, srcToken, tonAddress, tonBalance, jettonBalances, evmAddress, evmBalanceFormatted, baseUsdcFormatted, polygonUsdcFormatted]);
 
   const displayedDstBalance = useMemo(() => {
     if (dstChain === 'ton') {
-      return tonAddress ? tonBalance : '0.00';
-    } else {
-      return evmAddress ? evmBalanceFormatted : '0.00';
+      if (!tonAddress) return '0.00';
+      if (dstToken === 'TON') return tonBalance;
+      return jettonBalances[dstToken.toUpperCase()] || '0.00';
+    } else if (dstChain === 'base') {
+      if (!evmAddress) return '0.00';
+      if (dstToken === 'ETH') return evmBalanceFormatted;
+      if (dstToken === 'USDC') return baseUsdcFormatted;
+      return '0.00';
+    } else if (dstChain === 'polygon') {
+      if (!evmAddress) return '0.00';
+      if (dstToken === 'POL') return evmBalanceFormatted;
+      if (dstToken === 'USDC') return polygonUsdcFormatted;
+      return '0.00';
     }
-  }, [dstChain, tonAddress, tonBalance, evmAddress, evmBalanceFormatted]);
+    return '0.00';
+  }, [dstChain, dstToken, tonAddress, tonBalance, jettonBalances, evmAddress, evmBalanceFormatted, baseUsdcFormatted, polygonUsdcFormatted]);
 
   // === Co-Pilot Chat States ===
   const [chatInput, setChatInput] = useState<string>('');
