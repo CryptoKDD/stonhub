@@ -592,7 +592,7 @@ export default function Home() {
 
   useEffect(() => {
     if (activeQuote && !showTxOverlay) {
-      setDstAmount((Number(activeQuote.expectedOutput) / 1e9).toFixed(4));
+      setDstAmount((Number((activeQuote as any).expectedOutput) / 1e9).toFixed(4));
     } else if (quoteEvent?.$case === 'noQuote') {
       setDstAmount('0.00');
     }
@@ -1350,7 +1350,7 @@ export default function Home() {
                 <div className="bg-black/30 border border-white/5 rounded-xl p-3 space-y-2 text-xs font-medium">
                   <div className="flex justify-between">
                     <span className="text-neutral-500">{t.rateLabel}</span>
-                    <span className="text-neutral-300 font-bold">1 {srcToken} ≈ {(Number(activeQuote.expectedOutput) / Number(activeQuote.expectedInput)).toFixed(4)} {dstToken}</span>
+                    <span className="text-neutral-300 font-bold">1 {srcToken} ≈ {(Number((activeQuote as any).expectedOutput) / Number((activeQuote as any).expectedInput)).toFixed(4)} {dstToken}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-neutral-500">{t.slippageLabel}</span>
