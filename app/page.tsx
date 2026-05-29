@@ -95,6 +95,24 @@ const TokenLogo = ({ symbol, className = "w-5 h-5 rounded-full shrink-0" }: { sy
   );
 };
 
+// === Premium Chain Logos with Local Icons Priority ===
+const ChainLogo = ({ chain, className = "w-3.5 h-3.5 rounded-full shrink-0" }: { chain: string; className?: string }) => {
+  const chainLower = chain.toLowerCase();
+  return (
+    <div className={`${className} flex items-center justify-center overflow-hidden shrink-0 bg-neutral-950/40 border border-white/10 rounded-full p-[1px]`}>
+      <img 
+        src={`/${chainLower}.png`} 
+        alt={chain} 
+        className="w-full h-full object-contain rounded-full"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+        }}
+      />
+    </div>
+  );
+};
+
+
 // === Data Structures ===
 const OMNISTON_CHAINS = {
   TON: { id: 'ton', name: 'The Open Network', icon: '💎', symbol: 'TON' },
@@ -957,15 +975,21 @@ export default function Home() {
                         {/* Chain path visualization */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
-                            <TokenLogo symbol={msg.widgetData.srcToken} className="w-4 h-4" />
-                            <span className="text-xs font-black">{msg.widgetData.srcToken}</span>
-                            <span className="text-[10px] text-neutral-500">({msg.widgetData.srcChain.toUpperCase()})</span>
+                            <TokenLogo symbol={msg.widgetData.srcToken} className="w-4.5 h-4.5" />
+                            <span className="text-xs font-black text-white">{msg.widgetData.srcToken}</span>
+                            <div className="flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded text-[8px] text-neutral-400 font-bold border border-white/5">
+                              <ChainLogo chain={msg.widgetData.srcChain} className="w-3 h-3" />
+                              <span className="uppercase">{msg.widgetData.srcChain}</span>
+                            </div>
                           </div>
-                          <ArrowRight className="w-3.5 h-3.5 text-neutral-600 animate-pulse" />
-                          <div className="flex items-center gap-1.5 text-right">
-                            <TokenLogo symbol={msg.widgetData.dstToken} className="w-4 h-4" />
-                            <span className="text-xs font-black">{msg.widgetData.dstToken}</span>
-                            <span className="text-[10px] text-neutral-500">({msg.widgetData.dstChain.toUpperCase()})</span>
+                          <ArrowRight className="w-3.5 h-3.5 text-neutral-500 animate-pulse" />
+                          <div className="flex items-center gap-1.5 text-right justify-end">
+                            <div className="flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded text-[8px] text-neutral-400 font-bold border border-white/5">
+                              <ChainLogo chain={msg.widgetData.dstChain} className="w-3 h-3" />
+                              <span className="uppercase">{msg.widgetData.dstChain}</span>
+                            </div>
+                            <span className="text-xs font-black text-white">{msg.widgetData.dstToken}</span>
+                            <TokenLogo symbol={msg.widgetData.dstToken} className="w-4.5 h-4.5" />
                           </div>
                         </div>
 
@@ -1088,10 +1112,10 @@ export default function Home() {
                       <div className="relative">
                         <button 
                           onClick={() => setShowSrcChainDrop(!showSrcChainDrop)}
-                          className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1 text-[9px] font-black tracking-wide cursor-pointer transition-all text-neutral-400"
+                          className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-[9px] font-black tracking-wide cursor-pointer transition-all text-neutral-400"
                         >
                           <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Сеть:' : 'Chain:'}</span>
-                          <span>{OMNISTON_CHAINS[srcChain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
+                          <ChainLogo chain={srcChain} className="w-3.5 h-3.5" />
                           <span className="uppercase text-white">{srcChain}</span>
                           <ChevronDown className="w-3 h-3 text-neutral-500" />
                         </button>
@@ -1104,7 +1128,7 @@ export default function Home() {
                                 onClick={() => handleChainChange('src', chain)}
                                 className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer"
                               >
-                                <span>{OMNISTON_CHAINS[chain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
+                                <ChainLogo chain={chain} className="w-3.5 h-3.5" />
                                 {chain}
                               </button>
                             ))}
@@ -1195,10 +1219,10 @@ export default function Home() {
                       <div className="relative">
                         <button 
                           onClick={() => setShowDstChainDrop(!showDstChainDrop)}
-                          className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1 text-[9px] font-black tracking-wide cursor-pointer transition-all text-neutral-400"
+                          className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-[9px] font-black tracking-wide cursor-pointer transition-all text-neutral-400"
                         >
                           <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Сеть:' : 'Chain:'}</span>
-                          <span>{OMNISTON_CHAINS[dstChain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
+                          <ChainLogo chain={dstChain} className="w-3.5 h-3.5" />
                           <span className="uppercase text-white">{dstChain}</span>
                           <ChevronDown className="w-3 h-3 text-neutral-500" />
                         </button>
@@ -1211,7 +1235,7 @@ export default function Home() {
                                 onClick={() => handleChainChange('dst', chain)}
                                 className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer"
                               >
-                                <span>{OMNISTON_CHAINS[chain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
+                                <ChainLogo chain={chain} className="w-3.5 h-3.5" />
                                 {chain}
                               </button>
                             ))}
