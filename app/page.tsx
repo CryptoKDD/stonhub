@@ -465,6 +465,46 @@ export default function Home() {
     USDT: '0.00'
   });
 
+  // === Live Token Prices (CoinGecko, updated every 60s) ===
+  const [livePrices, setLivePrices] = useState<Record<string, number>>({
+    ton: 5.35,
+    ston: 3.38,
+    tether: 1.00,
+    ethereum: 3450.00,
+    'usd-coin': 1.00,
+    'polygon-ecosystem-token': 0.62,
+  });
+  const [pricesError, setPricesError] = useState<boolean>(false);
+
+  useEffect(() => {
+    const IDS = 'the-open-network,ston-fi,tether,ethereum,usd-coin,polygon-ecosystem-token';
+    const fetchPrices = async () => {
+      try {
+        const res = await fetch(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${IDS}&vs_currencies=usd`,
+          { cache: 'no-store' }
+        );
+        if (!res.ok) throw new Error('CoinGecko error');
+        const json = await res.json();
+        setLivePrices({
+          ton: json['the-open-network']?.usd ?? livePrices.ton,
+          ston: json['ston-fi']?.usd ?? livePrices.ston,
+          tether: json['tether']?.usd ?? livePrices.tether,
+          ethereum: json['ethereum']?.usd ?? livePrices.ethereum,
+          'usd-coin': json['usd-coin']?.usd ?? livePrices['usd-coin'],
+          'polygon-ecosystem-token': json['polygon-ecosystem-token']?.usd ?? livePrices['polygon-ecosystem-token'],
+        });
+        setPricesError(false);
+      } catch {
+        setPricesError(true);
+      }
+    };
+    fetchPrices();
+    const interval = setInterval(fetchPrices, 60_000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (!tonAddress) {
       setTonBalance('0.00');
@@ -656,15 +696,58 @@ export default function Home() {
   }, [inputAsset, outputAsset, srcAmount]);
 
   const { data: quoteEvent } = useRfq(quoteRequest as any);
-  const activeQuote = quoteEvent?.$case === 'quoteUpdated' ? quoteEvent.value : null;
+
+  const fallbackQuote = useMemo(() => {
+    if (!srcAmount || Number(srcAmount) <= 0) return null;
+
+    // Map token symbol+chain to CoinGecko ID key
+    const toGeckoKey = (chain: string, symbol: string): string => {
+      if (symbol === 'TON') return 'ton';
+      if (symbol === 'STON') return 'ston';
+      if (symbol === 'USDT') return 'tether';
+      if (symbol === 'ETH') return 'ethereum';
+      if (symbol === 'USDC') return 'usd-coin';
+      if (symbol === 'POL') return 'polygon-ecosystem-token';
+      return '';
+    };
+
+    const srcKey = toGeckoKey(srcChain, srcToken);
+    const dstKey = toGeckoKey(dstChain, dstToken);
+
+    const srcPrice = srcKey ? (livePrices[srcKey] ?? 0) : 0;
+    const dstPrice = dstKey ? (livePrices[dstKey] ?? 0) : 0;
+
+    if (!srcPrice || !dstPrice) return null;
+
+    const amountNum = Number(srcAmount);
+    const expectedOutputNum = (amountNum * srcPrice) / dstPrice;
+
+    return {
+      quoteId: "simulated-quote-id",
+      expectedInput: (amountNum * 1e9).toString(),
+      expectedOutput: (expectedOutputNum * 1e9).toFixed(0),
+      settlementData: {
+        $case: "swap" as const,
+      },
+      isSimulated: true
+    };
+  }, [srcChain, srcToken, dstChain, dstToken, srcAmount, livePrices]);
+
+  const sdkQuote = quoteEvent?.$case === 'quoteUpdated' ? quoteEvent.value : null;
+  const activeQuote = sdkQuote || fallbackQuote;
+
+  // Track whether we are waiting for a quote
+  const isQuoteLoading = !!(srcAmount && Number(srcAmount) > 0 && !activeQuote && quoteEvent?.$case !== 'noQuote');
 
   useEffect(() => {
     if (activeQuote && !showTxOverlay) {
       setDstAmount((Number((activeQuote as any).expectedOutput) / 1e9).toFixed(4));
-    } else if (quoteEvent?.$case === 'noQuote') {
-      setDstAmount('0.00');
+    } else if (!srcAmount || Number(srcAmount) <= 0) {
+      setDstAmount('');
+    } else if (quoteEvent?.$case === 'noQuote' && !fallbackQuote) {
+      setDstAmount('—');
     }
-  }, [activeQuote, quoteEvent, showTxOverlay]);
+  }, [activeQuote, quoteEvent, showTxOverlay, fallbackQuote, srcAmount]);
 
   // Dynamic wallet requirement and connection logic
   const isTonRequired = useMemo(() => {
@@ -693,6 +776,15 @@ export default function Home() {
     }
     return t.swapBtnConnect;
   }, [isTonRequired, tonAddress, isEvmRequired, evmAddress, lang, t.swapBtnConnect]);
+
+  // Check if user has insufficient balance to cover the swap amount
+  const isInsufficientBalance = useMemo(() => {
+    if (!srcAmount || Number(srcAmount) <= 0) return false;
+    const entered = Number(srcAmount);
+    const available = Number(displayedSrcBalance);
+    if (isNaN(available)) return false;
+    return entered > available;
+  }, [srcAmount, displayedSrcBalance]);
 
   // Trigger dynamic selection side-effects to ensure valid pair choices
   const handleChainChange = (type: 'src' | 'dst', chain: 'ton' | 'base' | 'polygon') => {
@@ -827,8 +919,8 @@ export default function Home() {
     setTxStep(1);
     setTxSuccess(null);
 
-    // If source chain is TON, we can execute a REAL transaction!
-    if (srcChain === 'ton') {
+    // If source chain is TON and it is a real SDK quote, we can execute a REAL transaction!
+    if (srcChain === 'ton' && !(activeQuote as any).isSimulated) {
       try {
         const traderAddress = {
           chain: { $case: "ton" as const, value: tonAddress },
@@ -1524,6 +1616,42 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* Live Price Ticker — always shown when srcToken is set */}
+              {(() => {
+                const toGeckoKey = (symbol: string) => {
+                  if (symbol === 'TON') return 'ton';
+                  if (symbol === 'STON') return 'ston';
+                  if (symbol === 'USDT') return 'tether';
+                  if (symbol === 'ETH') return 'ethereum';
+                  if (symbol === 'USDC') return 'usd-coin';
+                  if (symbol === 'POL') return 'polygon-ecosystem-token';
+                  return '';
+                };
+                const srcKey = toGeckoKey(srcToken);
+                const dstKey = toGeckoKey(dstToken);
+                const srcUsd = srcKey ? livePrices[srcKey] : null;
+                const dstUsd = dstKey ? livePrices[dstKey] : null;
+                if (!srcUsd || !dstUsd) return null;
+                return (
+                  <div className="flex items-center justify-between px-1 py-0.5">
+                    <div className="flex items-center gap-2 text-[10px] text-neutral-500">
+                      <TokenLogo symbol={srcToken} className="w-3.5 h-3.5" />
+                      <span className="font-bold text-neutral-300">{srcToken}</span>
+                      <span>= ${srcUsd.toLocaleString('en-US', { maximumFractionDigits: 4 })}</span>
+                    </div>
+                    <div className={`flex items-center gap-1 text-[9px] font-black px-1.5 py-0.5 rounded-full border ${pricesError ? 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5' : 'border-green-500/30 text-green-400 bg-green-500/5'}`}>
+                      <div className={`w-1.5 h-1.5 rounded-full ${pricesError ? 'bg-yellow-500' : 'bg-green-400 animate-pulse'}`} />
+                      {pricesError ? (lang === 'ru' ? 'КЭШ' : 'CACHED') : 'LIVE'}
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-neutral-500">
+                      <span>= ${dstUsd.toLocaleString('en-US', { maximumFractionDigits: 4 })}</span>
+                      <span className="font-bold text-neutral-300">{dstToken}</span>
+                      <TokenLogo symbol={dstToken} className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Quote details */}
               {activeQuote && (
                 <div className="bg-black/30 border border-white/5 rounded-xl p-3 space-y-2 text-xs font-medium">
@@ -1545,11 +1673,24 @@ export default function Home() {
                 </div>
               )}
 
+
               {/* Execute Button */}
               <button
                 onClick={triggerTxWorkflow}
-                disabled={!isWalletConnected || !srcAmount || !activeQuote}
-                className={`w-full py-4 rounded-xl font-black text-sm tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${(!isWalletConnected || !activeQuote) ? 'bg-white/5 border border-white/5 text-neutral-500 cursor-not-allowed' : !srcAmount ? 'bg-white/10 text-neutral-300' : 'bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black shadow-[0_4px_20px_rgba(255,153,0,0.2)] hover:scale-[1.01] glossy-reflection'}`}
+                disabled={!isWalletConnected || !srcAmount || !activeQuote || isQuoteLoading || isInsufficientBalance}
+                className={`w-full py-4 rounded-xl font-black text-sm tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  !isWalletConnected
+                    ? 'bg-white/5 border border-white/5 text-neutral-500 cursor-not-allowed'
+                    : !srcAmount
+                    ? 'bg-white/10 text-neutral-400'
+                    : isInsufficientBalance
+                    ? 'bg-red-500/10 border border-red-500/20 text-red-400 cursor-not-allowed'
+                    : isQuoteLoading
+                    ? 'bg-white/10 text-neutral-400 cursor-wait'
+                    : !activeQuote
+                    ? 'bg-white/5 border border-white/5 text-neutral-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black shadow-[0_4px_20px_rgba(255,153,0,0.2)] hover:scale-[1.01] glossy-reflection'
+                }`}
               >
                 {!isWalletConnected ? (
                   <>
@@ -1558,8 +1699,21 @@ export default function Home() {
                   </>
                 ) : !srcAmount ? (
                   t.swapBtnAmount
+                ) : isInsufficientBalance ? (
+                  <>
+                    <Info className="w-4 h-4" />
+                    {lang === 'ru' ? 'Недостаточно средств' : 'Insufficient balance'}
+                  </>
+                ) : isQuoteLoading ? (
+                  <>
+                    <div className="w-4 h-4 rounded-full border-2 border-neutral-500 border-t-white animate-spin" />
+                    {lang === 'ru' ? 'Получение котировки...' : 'Fetching quote...'}
+                  </>
                 ) : !activeQuote ? (
-                  lang === 'ru' ? 'Маршрут не найден / Сумма мала ⚠️' : 'No route / Amount too small ⚠️'
+                  <>
+                    <Info className="w-4 h-4" />
+                    {lang === 'ru' ? 'Котировка недоступна' : 'Quote unavailable'}
+                  </>
                 ) : (
                   <>
                     <Zap className="w-4 h-4" />
