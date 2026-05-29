@@ -1,420 +1,107 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  User, BookOpen, Target, ArrowLeftRight, Trophy, 
-  Sparkles, CheckCircle2, AlertCircle, 
-  ChevronRight, Flame, Award, HelpCircle,
-  TrendingUp, RefreshCw, Users, Play, Compass,
-  Globe, Send as SendIcon, ArrowRightLeft as SwapIcon, Wallet as WalletIcon, Settings, ChevronDown, 
-  History, Star, Info, Shield, Plus, Copy, Check, ExternalLink, Activity, ArrowUpRight, ArrowDownRight, 
-  Zap, Clock, LogOut, X
+  ArrowLeftRight as SwapIcon, 
+  Send as SendIcon, 
+  Wallet as WalletIcon, 
+  Settings, 
+  ChevronDown, 
+  Info, 
+  Shield, 
+  Copy, 
+  Check, 
+  ExternalLink, 
+  Activity, 
+  Zap, 
+  Clock, 
+  User, 
+  X, 
+  CheckCircle2, 
+  AlertCircle, 
+  HelpCircle, 
+  MessageSquare,
+  Globe, 
+  Languages, 
+  RefreshCw,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { TonConnectButton, useTonConnectUI, useTonWallet, useTonAddress } from '@tonconnect/ui-react';
 import {
   useRfq,
   useOmniston,
-  useTonBuildSwap,
-  useTonBuildEscrowTransfer,
-  useSwapTrack,
-  useOrderTrack,
-  useEvmBuildOrderPayload,
   type AssetId,
   type QuoteRequest,
-  type SettlementParams,
-  type SwapSettlementParams,
-  type OrderSettlementParams,
   type ChainAddress
 } from '@ston-fi/omniston-sdk-react';
-import { useAccount, useSendTransaction, useWriteContract, useReadContract, useSignTypedData } from 'wagmi';
+import { useAccount, useSignTypedData } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { parseUnits } from 'viem';
 
-// === interfaces ===
-interface Lesson {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  xpReward: number;
-  readTime: string;
-  completed: boolean;
-  duration: string;
-  views: string;
-  uploadedAt: string;
-  imageUrl: string;
-  quiz: {
-    question: string;
-    options: string[];
-    answerIndex: number;
-  };
-  content?: string[];
-}
-
-interface Mission {
-  id: string;
-  title: string;
-  description: string;
-  xpReward: number;
-  type: 'social' | 'web3' | 'daily';
-  status: 'available' | 'pending' | 'completed';
-  link: string;
-}
-
-interface Leader {
-  rank: number;
-  name: string;
-  xp: number;
-  badge: string;
-  isCurrentUser?: boolean;
-}
-
-
-// === Dynamic Premium Token Logos (Proxied to bypass CORS/Hotlink restrictions and load exact official assets) ===
-const TokenLogo = ({ symbol, className = "w-4 h-4 rounded-full shrink-0" }: { symbol: string; className?: string }) => {
-  const [hasError, setHasError] = useState(false);
-  const [tryRemote, setTryRemote] = useState(false);
-
-  // Find token metadata matching symbol
-  const tokenKey = Object.keys(SWAP_TOKENS).find(
-    k => k.toLowerCase() === symbol.toLowerCase() || SWAP_TOKENS[k as keyof typeof SWAP_TOKENS].symbol.toLowerCase() === symbol.toLowerCase()
-  ) as keyof typeof SWAP_TOKENS | undefined;
-  
-  const token = tokenKey ? SWAP_TOKENS[tokenKey] : null;
-  let logoUrl = token ? token.logo : '';
-  
-  // Alternative highly reliable CDNs/URLs for popular tokens to bypass local blocks
+// === Dynamic Premium Token Logos ===
+const TokenLogo = ({ symbol, className = "w-5 h-5 rounded-full shrink-0" }: { symbol: string; className?: string }) => {
   const symbolUpper = symbol.toUpperCase();
+  let logoUrl = '';
+  
   if (symbolUpper === 'TON') {
     logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/TON/logo.png';
-  } else if (symbolUpper === 'USDT' || symbolUpper === 'USD\u20AE') {
+  } else if (symbolUpper === 'USDT' || symbolUpper === 'USD₮') {
     logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/USD%E2%82%AE/logo.png';
   } else if (symbolUpper === 'STON') {
     logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/STON/logo.png';
-  } else if (symbolUpper === 'NOT') {
-    logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/NOT/logo.png';
-  } else if (symbolUpper === 'DOGS') {
-    logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/DOGS/logo.png';
-  } else if (symbolUpper === 'TSTON' || symbolUpper === 'TSTON') {
-    logoUrl = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/tsTON/logo.png';
+  } else if (symbolUpper === 'ETH') {
+    logoUrl = 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F279%2Flarge%2Fethereum.png&w=48&h=48';
+  } else if (symbolUpper === 'USDC') {
+    logoUrl = 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F6319%2Flarge%2FUSD_Coin_icon.png&w=48&h=48';
+  } else if (symbolUpper === 'POL') {
+    logoUrl = 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F31448%2Flarge%2Fpol.png&w=48&h=48';
   }
 
   const proxiedUrl = logoUrl 
     ? `https://images.weserv.nl/?url=${encodeURIComponent(logoUrl)}&w=48&h=48&fit=cover`
     : `https://images.weserv.nl/?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftonkeeper%2Fton-assets%2Fmain%2Fbranding%2Ftonkeeper%2Flogo_128x128.png&w=48&h=48&fit=cover`;
 
-  // Get fallback styles for a premium gradient-based letter avatar
-  const getFallbackStyle = (sym: string) => {
-    const s = sym.toUpperCase();
-    switch (s) {
-      case 'TON':
-        return {
-          bg: 'bg-gradient-to-br from-[#0088CC] to-[#005588]',
-          text: 'text-white',
-          glow: 'shadow-[#0088CC]/30 border-[#0088CC]/30',
-          char: 'T'
-        };
-      case 'STON':
-        return {
-          bg: 'bg-gradient-to-br from-[#FF9900] to-[#FF5500]',
-          text: 'text-black font-extrabold',
-          glow: 'shadow-[#FF9900]/30 border-[#FF9900]/30',
-          char: 'S'
-        };
-      case 'USDT':
-      case 'USD\u20AE':
-      case 'JUSDT':
-        return {
-          bg: 'bg-gradient-to-br from-[#009393] to-[#005252]',
-          text: 'text-white',
-          glow: 'shadow-[#009393]/30 border-[#009393]/30',
-          char: 'U'
-        };
-      case 'USDC':
-      case 'JUSDC':
-        return {
-          bg: 'bg-gradient-to-br from-[#2775CA] to-[#143A6B]',
-          text: 'text-white',
-          glow: 'shadow-[#2775CA]/30 border-[#2775CA]/30',
-          char: 'C'
-        };
-      case 'TSTON':
-        return {
-          bg: 'bg-gradient-to-br from-[#0088CC] via-[#4EAEFF] to-[#004477]',
-          text: 'text-white',
-          glow: 'shadow-[#0088CC]/30 border-[#4EAEFF]/30',
-          char: 't'
-        };
-      case 'NOT':
-        return {
-          bg: 'bg-gradient-to-br from-[#E5C158] to-[#9E8231]',
-          text: 'text-black font-extrabold',
-          glow: 'shadow-[#E5C158]/30 border-[#E5C158]/30',
-          char: 'N'
-        };
-      case 'DOGS':
-        return {
-          bg: 'bg-gradient-to-br from-[#FFFFFF] to-[#888888]',
-          text: 'text-black font-extrabold',
-          glow: 'shadow-white/20 border-white/20',
-          char: 'D'
-        };
-      case 'REDO':
-        return {
-          bg: 'bg-gradient-to-br from-[#E02424] to-[#7A1212]',
-          text: 'text-white',
-          glow: 'shadow-[#E02424]/30 border-[#E02424]/30',
-          char: 'R'
-        };
-      case 'CATI':
-        return {
-          bg: 'bg-gradient-to-br from-[#FF8A65] to-[#D84315]',
-          text: 'text-white',
-          glow: 'shadow-[#FF8A65]/30 border-[#FF8A65]/30',
-          char: 'C'
-        };
-      case 'HMSTR':
-        return {
-          bg: 'bg-gradient-to-br from-[#D2B48C] to-[#8B5A2B]',
-          text: 'text-white',
-          glow: 'shadow-[#D2B48C]/30 border-[#D2B48C]/30',
-          char: 'H'
-        };
-      default: {
-        // Deterministic gradient from the symbol name characters
-        let hash = 0;
-        for (let i = 0; i < s.length; i++) {
-          hash = s.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const h1 = Math.abs(hash % 360);
-        const h2 = (h1 + 40) % 360;
-        return {
-          style: { background: `linear-gradient(135deg, hsl(${h1}, 75%, 45%), hsl(${h2}, 85%, 25%))` },
-          bg: '',
-          text: 'text-white',
-          glow: 'shadow-black/20 border-white/10',
-          char: s.charAt(0) || '?'
-        };
-      }
-    }
-  };
-
-  const styleObj = getFallbackStyle(symbol);
-
-  if (hasError) {
-    return (
-      <div 
-        className={`${className} flex items-center justify-center overflow-hidden shrink-0 rounded-full border shadow-sm ${styleObj.bg} ${styleObj.glow}`}
-        style={styleObj.style}
-        title={symbol}
-      >
-        <span className={`text-[10px] font-black tracking-tight ${styleObj.text}`}>
-          {styleObj.char}
-        </span>
-      </div>
-    );
-  }
-
-  // First step: Try loading from local public/tokens/ folder
-  const localUrl = `/tokens/${symbol.toLowerCase()}.png`;
-
   return (
-    <div className={`${className} flex items-center justify-center overflow-hidden shrink-0 bg-neutral-900/50 border border-white/5 shadow-sm rounded-full`}>
+    <div className={`${className} flex items-center justify-center overflow-hidden shrink-0 bg-neutral-900 border border-white/10 rounded-full`}>
       <img 
-        src={tryRemote ? proxiedUrl : localUrl} 
+        src={proxiedUrl} 
         alt={symbol} 
         className="w-full h-full object-cover rounded-full"
-        onError={() => {
-          if (!tryRemote) {
-            setTryRemote(true);
-          } else {
-            setHasError(true);
-          }
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/branding/tonkeeper/logo_128x128.png';
         }}
       />
     </div>
   );
 };
 
-
-const SWAP_TOKENS = {
-  TON: {
-    symbol: 'TON',
-    name: 'The Open Network',
-    logo: 'https://assets.ston.fi/web/meta/ton/logo.png',
-    priceUsd: 5.35,
-    balance: '12.45'
-  },
-  STON: {
-    symbol: 'STON',
-    name: 'STON.fi',
-    logo: 'https://assets.ston.fi/web/meta/EQA2kCVNwVsil2EM2mB0SkXytxCqQjS4mttjDpnXmwG9T6bO/logo.png',
-    priceUsd: 3.38,
-    balance: '150.00'
-  },
-  USDT: {
-    symbol: 'USD₮',
-    name: 'Tether USD',
-    logo: 'https://assets.ston.fi/web/meta/EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs/logo.png',
-    priceUsd: 1.00,
-    balance: '42.10'
-  },
-  tsTON: {
-    symbol: 'tsTON',
-    name: 'Tonstakers Staked TON',
-    logo: 'https://assets.ston.fi/web/meta/EQC98_qAmNEptUtPc7W6xdHh_ZHrBUFpw5Ft_IzNU20QAJav/logo.png',
-    priceUsd: 5.42,
-    balance: '8.50'
-  },
-  NOT: {
-    symbol: 'NOT',
-    name: 'Notcoin',
-    logo: 'https://assets.ston.fi/web/meta/EQAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM__NOT/logo.png',
-    priceUsd: 0.0074,
-    balance: '15,000.0'
-  },
-  DOGS: {
-    symbol: 'DOGS',
-    name: 'Dogs',
-    logo: 'https://assets.ston.fi/web/meta/EQCvxJy4eG8hyHBFsZ7eePxrRsUQSFE_jpptRAYBmcG_DOGS/logo.png',
-    priceUsd: 0.00062,
-    balance: '85,000.0'
-  },
-  REDO: {
-    symbol: 'REDO',
-    name: 'Resistance Dog',
-    logo: 'https://assets.ston.fi/web/meta/EQBZ_nnC3l1l1ZJdJ4s5Z8l_rZ-rV-t3Q9d8aX6M2-A3_s9L/logo.png',
-    priceUsd: 0.68,
-    balance: '120.00'
-  },
-  GEMSTON: {
-    symbol: 'GEMSTON',
-    name: 'Gemston',
-    logo: 'https://assets.ston.fi/web/meta/EQBX6K9aXVl3nXINCyPPL86C4ONVmQ8vK360u6dykFKXpHCa/logo.png',
-    priceUsd: 0.15,
-    balance: '450.00'
-  },
-  UTYA: {
-    symbol: 'UTYA',
-    name: 'Utya',
-    logo: 'https://assets.ston.fi/web/meta/EQBaCgUwOoc6gHCNln_oJzb0mVs79YG7wYoavh-o1ItaneLA/logo.png',
-    priceUsd: 0.0014,
-    balance: '12,500.0'
-  },
-  CATI: {
-    symbol: 'CATI',
-    name: 'Catizen',
-    logo: 'https://assets.ston.fi/web/meta/EQD-cvR0Nz6XAyRBvbhz-abTrRC6sI5tvHvvpeQraV9UAAD7/logo.png',
-    priceUsd: 0.38,
-    balance: '280.00'
-  },
-  HMSTR: {
-    symbol: 'HMSTR',
-    name: 'Hamster Kombat',
-    logo: 'https://assets.ston.fi/web/meta/EQAJ8uWd7EBqsmpSWaRdf_I-8R8-XHwh3gsNKhy-UrdrPcUo/logo.png',
-    priceUsd: 0.0035,
-    balance: '1,500.00'
-  },
-  DUREV: {
-    symbol: 'DUREV',
-    name: 'Povel Durev',
-    logo: 'https://assets.ston.fi/web/meta/EQB02DJ0cdUD4iQDRbBv4aYG3htePHBRK1tGeRtCnatescK0/logo.png',
-    priceUsd: 0.014,
-    balance: '35,000.0'
-  },
-  SCALE: {
-    symbol: 'SCALE',
-    name: 'DUST (Scale)',
-    logo: 'https://assets.ston.fi/web/meta/EQBlqsm144Dq6SjbPI4jjZvA1hqTIP3CvHovbIfW_t-SCALE/logo.png',
-    priceUsd: 0.22,
-    balance: '14.00'
-  },
-  PUNK: {
-    symbol: 'PUNK',
-    name: 'PunkCity',
-    logo: 'https://assets.ston.fi/web/meta/EQCdpz6QhJtDtm2s9-krV2ygl45Pwl-KJJCV1-XrP-Xuuxoq/logo.png',
-    priceUsd: 0.045,
-    balance: '2,200.00'
-  },
-  FISH: {
-    symbol: 'FISH',
-    name: 'TON Fish',
-    logo: 'https://assets.ston.fi/web/meta/EQATcUc69sGSCCMSadsVUKdGwM1BMKS-HKCWGPk60xZGgwsK/logo.png',
-    priceUsd: 0.000000045,
-    balance: '120,000,000'
-  },
-  BOLT: {
-    symbol: 'BOLT',
-    name: 'Huebel Bolt',
-    logo: 'https://assets.ston.fi/web/meta/EQBS7qLzxOsPIzVRj6hjA5NMvA11oj6qS3oWNqCKJ04tGTkc/logo.png',
-    priceUsd: 0.12,
-    balance: '500.00'
-  },
-  jUSDT: {
-    symbol: 'jUSDT',
-    name: 'TON Bridged USDT',
-    logo: 'https://assets.ston.fi/web/meta/EQBynBO23ywHy_CgarY9NK9FTz0yDsG82PtcbSTQgGoXwiuA/logo.png',
-    priceUsd: 1.00,
-    balance: '25.00'
-  },
-  jUSDC: {
-    symbol: 'jUSDC',
-    name: 'TON Bridged USDC',
-    logo: 'https://assets.ston.fi/web/meta/EQB-MPwrd1G6WKNkLz_VnV6WqBDd142KMQv-g1O-8QUA3728/logo.png',
-    priceUsd: 1.00,
-    balance: '15.00'
-  },
-  RAFF: {
-    symbol: 'RAFF',
-    name: 'TonRaffles',
-    logo: 'https://assets.ston.fi/web/meta/EQDMdC1zf-FquFgeN-wIvpkIclDLR3bXnDVaoOanpNpBVmm_/logo.png',
-    priceUsd: 0.095,
-    balance: '350.00'
-  }
-} as const;
-
+// === Data Structures ===
 const OMNISTON_CHAINS = {
-  TON: {
-    id: 'ton',
-    name: 'The Open Network',
-    icon: '💎',
-    symbol: 'TON'
-  },
-  BASE: {
-    id: 'base',
-    name: 'Base (EVM)',
-    icon: '🔵',
-    symbol: 'BASE'
-  },
-  POLYGON: {
-    id: 'polygon',
-    name: 'Polygon (EVM)',
-    icon: '🟣',
-    symbol: 'POL'
-  }
+  TON: { id: 'ton', name: 'The Open Network', icon: '💎', symbol: 'TON' },
+  BASE: { id: 'base', name: 'Base (EVM)', icon: '🔵', symbol: 'ETH' },
+  POLYGON: { id: 'polygon', name: 'Polygon (EVM)', icon: '🟣', symbol: 'POL' }
 } as const;
 
 const OMNISTON_TOKENS = {
-  ton: {
-    TON: { symbol: 'TON', name: 'Toncoin', priceUsd: 5.35, balance: '12.45', icon: 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/TON/logo.png' },
-    STON: { symbol: 'STON', name: 'STON.fi', priceUsd: 3.38, balance: '150.00', icon: 'https://raw.githubusercontent.com/tonkeeper/ton-assets/main/jettons/STON/logo.png' },
-  },
-  base: {
-    ETH: { symbol: 'ETH', name: 'Ethereum', priceUsd: 3450.00, balance: '0.45', icon: 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F279%2Flarge%2Fethereum.png&w=48&h=48' },
-    USDC: { symbol: 'USDC', name: 'USD Coin', priceUsd: 1.00, balance: '120.50', icon: 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F6319%2Flarge%2FUSD_Coin_icon.png&w=48&h=48' }
-  },
-  polygon: {
-    POL: { symbol: 'POL', name: 'Polygon ecosystem token', priceUsd: 0.62, balance: '250.00', icon: 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F31448%2Flarge%2Fpol.png&w=48&h=48' },
-    USDC: { symbol: 'USDC', name: 'USD Coin', priceUsd: 1.00, balance: '85.20', icon: 'https://images.weserv.nl/?url=https%3A%2F%2Fassets.coingecko.com%2Fcoins%2Fimages%2F6319%2Flarge%2FUSD_Coin_icon.png&w=48&h=48' }
-  }
-};
+  ton: [
+    { symbol: 'TON', name: 'Toncoin', priceUsd: 5.35 },
+    { symbol: 'STON', name: 'STON.fi', priceUsd: 3.38 }
+  ],
+  base: [
+    { symbol: 'ETH', name: 'Ethereum', priceUsd: 3450.00 },
+    { symbol: 'USDC', name: 'USD Coin', priceUsd: 1.00 }
+  ],
+  polygon: [
+    { symbol: 'POL', name: 'Polygon Token', priceUsd: 0.62 },
+    { symbol: 'USDC', name: 'USD Coin', priceUsd: 1.00 }
+  ]
+} as const;
 
 const getAssetId = (chain: string, token: string): AssetId | null => {
   if (chain === 'ton') {
     if (token === 'TON') return { chain: { $case: "ton", value: { kind: { $case: "native", value: {} } } } };
     if (token === 'STON') return { chain: { $case: "ton", value: { kind: { $case: "jetton", value: "EQA2kCVNwVsil2EM2mB0SkXytxCqQjS4mttjDpnXmwG9T6bO" } } } };
-    if (token === 'USDT') return { chain: { $case: "ton", value: { kind: { $case: "jetton", value: "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs" } } } };
   } else if (chain === 'base') {
     if (token === 'ETH') return { chain: { $case: "base", value: { kind: { $case: "native", value: {} } } } };
     if (token === 'USDC') return { chain: { $case: "base", value: { kind: { $case: "erc20", value: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" } } } };
@@ -425,563 +112,149 @@ const getAssetId = (chain: string, token: string): AssetId | null => {
   return null;
 };
 
-const getTutorialSteps = (lang: 'ru' | 'en') => [
-  {
-    text: lang === 'ru' 
-      ? "Здорово, крипто-сталкер! 🗿👋 Я твой личный гид по STON Hub. Будем знакомы! Мы тут построили крутейший игровой портал для DEX-биржи STON.fi. Давай быстро покажу, как тут рубить XP и делать грязь!"
-      : "Yo, crypto stalker! 🗿👋 I'm your personal guide through STON Hub. Great to meet ya! We built the absolute coolest gaming portal for the STON.fi DEX here. Let me quickly show you how to grind XP and make some serious moves!",
-    image: "/character_1.png"
-  },
-  {
-    text: lang === 'ru'
-      ? "Смотри сюда! В Академии 🎓 лежат такие сочные DeFi-гайды, что даже твоя бабушка разберется. Читай их внимательно, тут кладезь знаний!"
-      : "Look here! The Academy 🎓 is packed with DeFi guides so juicy, even your grandma could master them. Read them closely, they're a goldmine!",
-    image: "/character_2.png"
-  },
-  {
-    text: lang === 'ru'
-      ? "Но халявы не будет! Прочитал гайд — сдавай тест. Ответишь правильно — получишь гору опыта XP. Ошибся? Пойдешь пересдавать, пока не поумнеешь! 😂 Учи матчасть!"
-      : "But no free rides here! Once you read a guide, you gotta pass the quiz. Answer right, and you get a mountain of XP. Messed up? Back to studying until you get smarter! 😂 Do your homework!",
-    image: "/character_3.png"
-  },
-  {
-    text: lang === 'ru'
-      ? "А в Миссиях 🎯 каждый день падают новые квесты. Подпишись, репостни, помолись богам блокчейна... Выполнил — лови мгновенный зачет и респект от хаба!"
-      : "And in Missions 🎯, fresh quests drop daily. Subscribe, retweet, pray to the blockchain gods... Complete them and get instant XP and respect from the hub!",
-    image: "/character_4.png"
-  },
-  {
-    text: lang === 'ru'
-      ? "В Профиле 👤 хранится вся твоя подпольная бухгалтерия: баланс токенов $STON, кошелек, твои уникальные достижения и глобальный рейтинг. Будь активным и ворвись в топ игроков!"
-      : "Your Profile 👤 holds all your under-the-table accounting: $STON token balance, active wallet address, your unique achievements, and global rankings. Stay active and storm the leaderboard!",
-    image: "/character_5.png"
-  },
-  {
-    text: lang === 'ru'
-      ? "Кстати, о бабках. У нас тут прямо в игре встроен ультра-быстрый Своп 🔄! Меняй TON на STON быстрее, чем успеешь сказать 'камень'! И, конечно, получай за это XP! 💸"
-      : "By the way, let's talk cash. We've got an ultra-fast Swap 🔄 built right into the app! Exchange TON to STON faster than you can say 'rock'! And of course, earn XP for it! 💸",
-    image: "/character_6.png"
-  },
-  {
-    text: lang === 'ru'
-      ? "А еще — хватай свою рефку и тащи друзей! За их пот, слезы и заработанный опыт ты будешь пожизненно (ну ладно, пока идет сезон) получать 15% бонусов! Пассивный доход, все дела. 😎"
-      : "Also—grab your ref link and drag your friends in! For all their sweat, tears, and XP earned, you'll get a lifetime (well, while the season lasts) 15% bonus! Passive income baby, that's how we roll. 😎",
-    image: "/character_7.png"
-  },
-  {
-    text: lang === 'ru'
-      ? "Ну что, салага, готов стать DeFi-гигачадом и показать всем, кто тут батя? Хватай кошелек, жми кнопку и полетели покорять TON! 🪨🚀🔥"
-      : "Alright, rookie, ready to become a DeFi GigaChad and show everyone who's boss? Grab your wallet, hit the button, and let's conquer TON! 🪨🚀🔥",
-    image: "/character_8.png"
-  }
-];
-
+// === DICTIONARY ===
 const DICTIONARY = {
   ru: {
-    walletConnectSuccess: 'Добро пожаловать в игру! 🪨🔥',
-    connectWalletBtn: 'Подключить кошелек',
-    dailyClaimSuccess: 'Бонус собран! Получено +25 XP ⚡',
-    hiUser: 'Привет, ',
-    hiAmbassador: 'Привет, Амбассадор!',
-    active: 'АКТИВЕН',
-    rankLabel: 'Ранг: ',
-    progressLabel: 'Твой прогресс:',
-    nextRankText: 'до ранга Diamond Vibe 💎',
-    balanceLabel: 'Баланс $STON',
-    sevenDaysText: 'за 7д',
-    quickActions: 'Быстрые действия',
-    swapActionBtn: 'Своп',
-    dailyClaimBtn: 'Бонусы',
-    welcomeTitle: 'Добро пожаловать в STON Hub!',
-    welcomeDesc: 'Это твой интерактивный путеводитель по блокчейну TON и экосистеме STON.fi. Смотри обучающие видео, сдавай тесты, выполняй квесты и докажи, что ты лучший амбассадор!',
-    goToAcademy: 'Перейти к обучению',
-    completedQuests: 'Выполнено квестов',
-    completedLessons: 'Пройдено уроков',
-    savingApy: 'Сейвинг APY',
-    guideName: 'Проводник STONHub 🗿',
+    appName: 'STONHub',
+    appSubName: 'CROSS-CHAIN PORTAL',
+    letsGo: 'ПОГНАЛИ! 🚀',
+    loading: 'Загрузка премиальной среды...',
+    tabCoPilot: 'Co-Pilot (ИИ Чат)',
+    tabProSwap: 'Pro Своп',
+    walletConnected: 'Подключен',
+    walletConnectTon: 'TON Кошелек',
+    walletConnectEvm: 'EVM Кошелек',
+    connectPrompt: 'Подключите кошельки в шапке',
+    
+    // Onboarding
+    welcomeTitle: 'Добро пожаловать в STONHub!',
+    welcomeDesc: 'Твой премиальный хаб для кросс-чейн обменов нового поколения. Пройдём короткий тур со штурманом!',
+    onboardingStep1: 'Привет! Я Mira, твой ИИ-штурман по кросс-чейну в STONHub. Моя цель — сделать обмены между блокчейнами максимально простыми. 💎',
+    onboardingStep2: 'Здесь больше нет сложных мостов! Мы используем передовую технологию Omniston. Вы можете менять TON на USDC на Base за пару кликов прямо в диалоге.',
+    onboardingStep3: 'Подключи свой TON-кошелек и EVM-кошелек вверху страницы. Вы можете писать мне запросы вроде "Хочу обменять 10 TON на USDC на Base", и я подготовлю сделку!',
+    onboardingStartBtn: 'Начать обмены 🚀',
+    next: 'Далее',
     skip: 'Пропустить',
-    next: 'Дальше →',
-    finish: 'Погнали! 🚀',
-    readTime: 'Время чтения:',
-    views: 'просмотров',
-    quizPrompt: 'Пройдите тест для получения +',
-    quizSuccess: 'Задание успешно выполнено! Награда начислена.',
-    backToList: '← К списку гайдов',
-    studyMaterial: 'Учебный материал',
-    academyTitle: 'Академия STONHub 🎓',
-    academyDesc: 'Читай гайды, отвечай на тесты и прокачивайся',
-    totalGuides: 'Всего гайдов:',
-    completed: 'Сдано',
-    readGuide: 'Читать гайд',
-    videoAcademyTitle: 'Видеокурсы — Скоро будет 🎬',
-    videoAcademyDesc: 'Мы готовим для вас серию эксклюзивных видеоматериалов по трейдингу, ликвидности и стейкингу в экосистеме STON.fi.',
-    missionsTitle: 'Доступные квесты 🎯',
-    missionsDesc: 'Выполняйте задания каждый день и получайте амбассадорские награды',
-    done: 'Выполнено',
-    pending: 'Проверка',
-    start: 'Начать',
-    connectWalletAlert: 'Пожалуйста, кликните кнопку кошелька в шапке! 🔌',
-    referralTitle: 'Реферальная программа',
-    referralDesc: 'Приглашай друзей в STON Hub и получай 15% от их накопленного XP в экосистеме.',
-    referralCopied: 'Реферальная ссылка скопирована! 📋',
-    leaderboardTitle: 'Лидерборд',
-    leaderboardDesc: 'Глобальный рейтинг амбассадоров',
-    backToProfile: '← Профиль',
-    tableAmbassador: 'Амбассадор',
-    tableXp: 'Очки XP',
-    inRank: 'В рейтинге: #4',
-    yourLevel: 'Твой уровень',
-    officialAmbassador: 'ОФИЦИАЛЬНЫЙ АМБАССАДОР STON.fi',
-    statsTitle: 'Статистика',
-    statsQuests: 'Миссии выполнено',
-    statsFriends: 'Друзей приглашено',
-    statsEarnings: 'Общий заработок',
-    statsRanking: 'В рейтинге',
-    achievementsTitle: 'Достижения',
-    achievementsAlert: 'Ачивки обновляются автоматически!',
-    viewAll: 'Смотреть все',
-    badgeStreak: 'Стрик 7д',
-    badgeGuru: 'DeFi Гуру',
-    badgeSwaper: 'Топ Свапер',
-    badgeKing: 'Крипто-Царь',
-    funnyAlert: 'Трансформация выполнена в стиле Pornhub! 🚀',
-    swapSend: 'Вы отправляете:',
-    swapBalance: 'Баланс:',
-    swapReceive: 'Вы получаете:',
-    swapRate: 'Курс обмена:',
-    swapBonus: 'Вайб-Бонус за сделку:',
-    swappingProgress: 'Выполняется обмен на STON.fi...',
-    swapButtonActive: 'Обменять токены',
-    swapButtonInactive: 'Сначала подключите кошелек',
-    swapAmountAlert: 'Введите сумму для обмена! ⚠️',
-    swapSuccess: 'Обмен выполнен! Получено +100 XP 🚀',
-    close: 'Закрыть',
-    walletAlert: 'Пожалуйста, подключите TON кошелек! 🔌',
-    missionPendingAlert: 'Задание отправлено на проверку! ⏳',
-    missionCompletedAlert: 'Задание проверено! Получено +'
+    
+    // Chat & AI
+    chatPlaceholder: 'Напишите запрос (например: Свопни 5 TON на USDC на Base)...',
+    assistantGreeting: 'Привет! Я Mira, твой кросс-чейн штурман. Нажмите одну из кнопок быстрого старта ниже или напишите мне, что вы хотите обменять!',
+    quickQuery1: 'Своп 20 TON на USDC (Base)',
+    quickQuery2: 'Своп 15 USDC (Polygon) на TON',
+    quickQuery3: 'Обменять 0.05 ETH (Base) на POL',
+    aiThinking: 'Mira анализирует маршруты Omniston...',
+    aiWidgetTitle: 'Кросс-чейн Своп подготовлен',
+    
+    // Pro Swap UI
+    sendLabel: 'Вы отправляете',
+    receiveLabel: 'Вы получаете',
+    chainLabel: 'Сеть:',
+    tokenLabel: 'Токен:',
+    balanceLabel: 'Баланс:',
+    rateLabel: 'Курс обмена:',
+    slippageLabel: 'Допустимое проскальзывание:',
+    gasFeeLabel: 'Ориентировочный газ:',
+    routeLabel: 'Маршрут:',
+    swapBtnActive: 'Выполнить обмен',
+    swapBtnConnect: 'Сначала подключите кошельки',
+    swapBtnAmount: 'Введите сумму',
+    noRoute: 'Маршрут не найден',
+    swappingProgress: 'Выполнение кросс-чейн сделки...',
+    
+    // Visual Stepper
+    step1: 'Блокировка курса RFQ',
+    step2: 'Подпись транзакции кошельком',
+    step3: 'Обработка релеем Cocoon',
+    step4: 'Зачисление активов на кошелек',
+    
+    successMsg: 'Обмен успешно завершен! 🎉',
+    errorMsg: 'Произошла ошибка при обмене. Попробуйте еще раз. ❌'
   },
   en: {
-    walletConnectSuccess: 'Welcome to the game! 🪨🔥',
-    connectWalletBtn: 'Connect Wallet',
-    dailyClaimSuccess: 'Bonus claimed! Received +25 XP ⚡',
-    hiUser: 'Hello, ',
-    hiAmbassador: 'Hello, Ambassador!',
-    active: 'ACTIVE',
-    rankLabel: 'Rank: ',
-    progressLabel: 'Your progress:',
-    nextRankText: 'to Diamond Vibe rank 💎',
-    balanceLabel: '$STON Balance',
-    sevenDaysText: 'over 7d',
-    quickActions: 'Quick Actions',
-    swapActionBtn: 'Swap',
-    dailyClaimBtn: 'Daily',
-    welcomeTitle: 'Welcome to STON Hub!',
-    welcomeDesc: 'This is your interactive guide to the TON blockchain and the STON.fi ecosystem. Read guides, pass quizzes, complete missions, and prove you are the best ambassador!',
-    goToAcademy: 'Go to Academy',
-    completedQuests: 'Missions completed',
-    completedLessons: 'Lessons completed',
-    savingApy: 'Saving APY',
-    guideName: 'STONHub Guide 🗿',
+    appName: 'STONHub',
+    appSubName: 'CROSS-CHAIN PORTAL',
+    letsGo: 'LET\'S GO! 🚀',
+    loading: 'Loading premium environment...',
+    tabCoPilot: 'Co-Pilot (AI Chat)',
+    tabProSwap: 'Pro Swap',
+    walletConnected: 'Connected',
+    walletConnectTon: 'TON Wallet',
+    walletConnectEvm: 'EVM Wallet',
+    connectPrompt: 'Connect wallets in header',
+    
+    // Onboarding
+    welcomeTitle: 'Welcome to STONHub!',
+    welcomeDesc: 'Your premium hub for next-generation cross-chain swaps. Let\'s take a quick tour with our co-pilot!',
+    onboardingStep1: 'Hi! I\'m Mira, your AI co-pilot for cross-chain in STONHub. My goal is to make multi-chain swaps as frictionless as possible. 💎',
+    onboardingStep2: 'No more complicated bridges! We use state-of-the-art Omniston technology. Swap TON directly to USDC on Base in a few clicks right here in our chat.',
+    onboardingStep3: 'Connect your TON wallet and EVM wallet in the header. Write prompts like "Swap 10 TON to USDC on Base" and I\'ll instantly setup the widget for you!',
+    onboardingStartBtn: 'Start Swapping 🚀',
+    next: 'Next',
     skip: 'Skip',
-    next: 'Next →',
-    finish: 'Let\'s go! 🚀',
-    readTime: 'Read time:',
-    views: 'views',
-    quizPrompt: 'Take the quiz to receive +',
-    quizSuccess: 'Quiz completed successfully! Reward credited.',
-    backToList: '← Back to guides',
-    studyMaterial: 'Study Material',
-    academyTitle: 'STONHub Academy 🎓',
-    academyDesc: 'Read guides, pass quizzes, and level up',
-    totalGuides: 'Total guides:',
-    completed: 'Completed',
-    readGuide: 'Read Guide',
-    videoAcademyTitle: 'Video Courses — Coming Soon 🎬',
-    videoAcademyDesc: 'We are preparing a series of exclusive video materials on trading, liquidity, and staking in the STON.fi ecosystem.',
-    missionsTitle: 'Available Quests 🎯',
-    missionsDesc: 'Complete tasks daily and earn ambassador rewards',
-    done: 'Done',
-    pending: 'Checking',
-    start: 'Start',
-    connectWalletAlert: 'Please click the connect button in the header! 🔌',
-    referralTitle: 'Referral Program',
-    referralDesc: 'Invite friends to STON Hub and get 15% of their accumulated XP in the ecosystem.',
-    referralCopied: 'Referral link copied! 📋',
-    leaderboardTitle: 'Leaderboard',
-    leaderboardDesc: 'Global rankings of ambassadors',
-    backToProfile: '← Profile',
-    tableAmbassador: 'Ambassador',
-    tableXp: 'XP Points',
-    inRank: 'Ranked: #4',
-    yourLevel: 'Your level',
-    officialAmbassador: 'OFFICIAL STON.fi AMBASSADOR',
-    statsTitle: 'Statistics',
-    statsQuests: 'Missions completed',
-    statsFriends: 'Friends invited',
-    statsEarnings: 'Total earnings',
-    statsRanking: 'Leaderboard Rank',
-    achievementsTitle: 'Achievements',
-    achievementsAlert: 'Achievements are updated automatically!',
-    viewAll: 'View all',
-    badgeStreak: '7d Streak',
-    badgeGuru: 'DeFi Guru',
-    badgeSwaper: 'Top Swapper',
-    badgeKing: 'Crypto King',
-    funnyAlert: 'Transformation completed in Pornhub style! 🚀',
-    swapSend: 'You send:',
-    swapBalance: 'Balance:',
-    swapReceive: 'You receive:',
-    swapRate: 'Exchange rate:',
-    swapBonus: 'Vibe-Bonus for deal:',
-    swappingProgress: 'Swapping on STON.fi...',
-    swapButtonActive: 'Swap tokens',
-    swapButtonInactive: 'Connect wallet first',
-    swapAmountAlert: 'Enter amount to swap! ⚠️',
-    swapSuccess: 'Swap completed! Received +100 XP 🚀',
-    close: 'Close',
-    walletAlert: 'Please connect TON wallet! 🔌',
-    missionPendingAlert: 'Task submitted for verification! ⏳',
-    missionCompletedAlert: 'Task verified! Received +'
+    
+    // Chat & AI
+    chatPlaceholder: 'Write a request (e.g. Swap 5 TON to USDC on Base)...',
+    assistantGreeting: 'Hi! I\'m Mira, your cross-chain co-pilot. Click one of the quick start suggestions below or type what you would like to swap!',
+    quickQuery1: 'Swap 20 TON to USDC (Base)',
+    quickQuery2: 'Swap 15 USDC (Polygon) to TON',
+    quickQuery3: 'Swap 0.05 ETH (Base) to POL',
+    aiThinking: 'Mira is analyzing Omniston routes...',
+    aiWidgetTitle: 'Cross-chain Swap Configured',
+    
+    // Pro Swap UI
+    sendLabel: 'You send',
+    receiveLabel: 'You receive',
+    chainLabel: 'Chain:',
+    tokenLabel: 'Token:',
+    balanceLabel: 'Balance:',
+    rateLabel: 'Exchange rate:',
+    slippageLabel: 'Allowed slippage:',
+    gasFeeLabel: 'Estimated gas:',
+    routeLabel: 'Route:',
+    swapBtnActive: 'Execute Swap',
+    swapBtnConnect: 'Connect wallets first',
+    swapBtnAmount: 'Enter amount',
+    noRoute: 'No route found',
+    swappingProgress: 'Executing cross-chain transaction...',
+    
+    // Visual Stepper
+    step1: 'Locking RFQ rate',
+    step2: 'Signing wallet transaction',
+    step3: 'Processing by Cocoon relayer',
+    step4: 'Disbursing assets to destination',
+    
+    successMsg: 'Swap completed successfully! 🎉',
+    errorMsg: 'Transaction failed. Please try again. ❌'
   }
 };
 
-const getLessons = (lang: 'ru' | 'en'): Lesson[] => [
-  {
-    id: 'guide-stonbassadors-intro',
-    title: lang === 'ru' ? 'Кто такой STONbassador и как им стать?' : 'Who is a STONbassador and how to become one?',
-    category: lang === 'ru' ? 'Гайды' : 'Guides',
-    description: lang === 'ru' 
-      ? 'Полное руководство по участию в амбассадорской программе STON.fi без сложных проверок и верификаций.' 
-      : 'A complete guide to participating in the STON.fi ambassador program without complex checks or verifications.',
-    xpReward: 80,
-    readTime: lang === 'ru' ? '3 мин' : '3 min',
-    completed: false,
-    duration: lang === 'ru' ? '3 мин' : '3 min',
-    views: lang === 'ru' ? '12.4K просмотров' : '12.4K views',
-    uploadedAt: lang === 'ru' ? 'Сегодня' : 'Today',
-    imageUrl: 'bg-gradient-to-br from-amber-950/40 via-neutral-900 to-black',
-    content: lang === 'ru' ? [
-      'STONbassadors — это официальные амбассадоры экосистемы STON.fi, которые помогают развивать бренд и сообщество. Это творческие люди, авторы контента, переводчики, инфлюенсеры и технические специалисты, разделяющие ценности децентрализации.',
-      'Главная прелесть программы — отсутствие сложного отбора. Вам не нужно ждать одобрения заявки или проходить жесткую верификацию личности (KYC). Вы можете начать в любой момент!',
-      'Чтобы присоединиться, достаточно выполнять полезные задания: создавать качественный контент (статьи, видео, инфографику), помогать новичкам в чатах сообщества или организовывать локальные мероприятия. В конце месяца вы отправляете отчет о проделанной работе через специальную форму.'
-    ] : [
-      'STONbassadors are the official ambassadors of the STON.fi ecosystem who help grow the brand and community. They are creative minds, content creators, translators, influencers, and technical experts who share the values of decentralization.',
-      'The main beauty of the program is the lack of complex selection. You don\'t need to wait for application approval or undergo strict KYC identity verification. You can start at any moment!',
-      'To join, all you need to do is perform helpful tasks: create quality content (articles, videos, infographics), help beginners in community chats, or organize local events. At the end of the month, you submit a report on your work via a special form.'
-    ],
-    quiz: {
-      question: lang === 'ru' 
-        ? 'Нужно ли проходить сложную верификацию или заполнять заявку, чтобы стать STONbassador?' 
-        : 'Do you need to undergo complex verification or fill out an application to become a STONbassador?',
-      options: lang === 'ru' ? [
-        'Да, требуется верификация личности (KYC) и одобрение анкеты',
-        'Нет, можно сразу начать выполнять задания и отправлять отчеты',
-        'Да, нужен специальный инвайт-код от администрации'
-      ] : [
-        'Yes, KYC identity verification and application approval are required',
-        'No, you can start doing tasks and sending reports right away',
-        'Yes, you need a special invite code from the administration'
-      ],
-      answerIndex: 1
-    }
-  },
-  {
-    id: 'guide-stonbassadors-rewards',
-    title: lang === 'ru' ? 'Система наград и правила отправки отчетов' : 'Rewards System and Report Submission Rules',
-    category: lang === 'ru' ? 'Гайды' : 'Guides',
-    description: lang === 'ru' 
-      ? 'Как распределяется ежемесячный пул наград до 10,000 STON и как правильно отправлять свои работы на проверку.' 
-      : 'How the monthly reward pool of up to 10,000 STON is distributed and how to properly submit your work for review.',
-    xpReward: 90,
-    readTime: lang === 'ru' ? '4 мин' : '4 min',
-    completed: false,
-    duration: lang === 'ru' ? '4 мин' : '4 min',
-    views: lang === 'ru' ? '9.8K просмотров' : '9.8K views',
-    uploadedAt: lang === 'ru' ? 'Вчера' : 'Yesterday',
-    imageUrl: 'bg-gradient-to-br from-zinc-900 via-stone-900 to-orange-950/20',
-    content: lang === 'ru' ? [
-      'Каждый месяц команда STON.fi выделяет крупный призовой пул — до 10,000 токенов STON — для вознаграждения лучших участников программы STONbassadors.',
-      'Награды распределяются на основе качества, охвата аудитории и разнообразия вашего вклада. Все отправленные работы оцениваются модераторами вручную по нескольким критериям.',
-      'Чтобы получить награду, необходимо в конце каждого месяца заполнить специальную форму отправки отчета в Telegram-боте. Убедитесь, что все ваши ссылки активны, а работы оформлены аккуратно. Плагиат и накрутка просмотров строго запрещены и ведут к дисквалификации.'
-    ] : [
-      'Every month, the STON.fi team allocates a large prize pool—up to 10,000 STON tokens—to reward the best participants in the STONbassadors program.',
-      'Rewards are distributed based on quality, audience reach, and the variety of your contribution. All submitted works are manually evaluated by moderators based on several criteria.',
-      'To receive a reward, you must fill out a special report submission form in the Telegram bot at the end of each month. Make sure all your links are active and your work is neatly presented. Plagiarism and fake views are strictly prohibited and will lead to disqualification.'
-    ],
-    quiz: {
-      question: lang === 'ru' 
-        ? 'Какой максимальный ежемесячный пул наград выделяется для лучших STONbassadors?' 
-        : 'What is the maximum monthly reward pool allocated for the best STONbassadors?',
-      options: ['1,000 STON', '5,000 STON', '10,000 STON'],
-      answerIndex: 2
-    }
-  },
-  {
-    id: 'guide-stonbassadors-content',
-    title: lang === 'ru' ? 'Создание контента: Советы и лучшие практики' : 'Content Creation: Tips and Best Practices',
-    category: lang === 'ru' ? 'Гайды' : 'Guides',
-    description: lang === 'ru' 
-      ? 'Как создавать вовлекающий, качественный контент о STON.fi, который получит максимальные оценки от команды.' 
-      : 'How to create engaging, high-quality content about STON.fi that will get maximum scores from the team.',
-    xpReward: 100,
-    readTime: lang === 'ru' ? '5 мин' : '5 min',
-    completed: false,
-    duration: lang === 'ru' ? '5 мин' : '5 min',
-    views: lang === 'ru' ? '7.5K просмотров' : '7.5K views',
-    uploadedAt: lang === 'ru' ? '2 дня назад' : '2 days ago',
-    imageUrl: 'bg-gradient-to-br from-neutral-900 via-orange-900/10 to-stone-950',
-    content: lang === 'ru' ? [
-      'Качественный контент — залог высокой оценки вашей работы. Команда STON.fi ценит уникальные материалы, которые действительно помогают пользователям разобраться в продукте.',
-      'При написании статей или гайдов используйте понятную структуру: четкое введение, разделы с подзаголовками, пошаговые инструкции и качественные скриншоты. Если вы описываете сложные DeFi-механики, добавьте наглядные примеры.',
-      'Продвигайте свои материалы на популярных платформах (Teletype, Medium, X, Telegram). Высокий органический охват и активные комментарии читателей существенно увеличат ваши шансы на получение повышенной награды.'
-    ] : [
-      'High-quality content is key to getting a high score for your work. The STON.fi team values unique materials that actually help users understand the product.',
-      'When writing articles or guides, use a clear structure: a solid introduction, sections with subheadings, step-by-step instructions, and high-quality screenshots. If you describe complex DeFi mechanics, add illustrative examples.',
-      'Promote your materials on popular platforms (Teletype, Medium, X, Telegram). High organic reach and active reader comments will significantly increase your chances of getting an upgraded reward.'
-    ],
-    quiz: {
-      question: lang === 'ru' 
-        ? 'Что из перечисленного является важным при создании качественного гайда по мнению команды STON.fi?' 
-        : 'What is considered important when creating a high-quality guide, according to the STON.fi team?',
-      options: lang === 'ru' ? [
-        'Использование сложных терминов без объяснений',
-        'Понятная структура, качественные скриншоты и пошаговые инструкции',
-        'Простое копирование чужих материалов с других сайтов'
-      ] : [
-        'Using complex terms without explanations',
-        'Clear structure, quality screenshots, and step-by-step instructions',
-        'Simply copying someone else\'s material from other websites'
-      ],
-      answerIndex: 1
-    }
-  },
-  {
-    id: 'guide-stonbassadors-referrals',
-    title: lang === 'ru' ? 'Реферальная программа для амбассадоров' : 'Referral Program for Ambassadors',
-    category: lang === 'ru' ? 'Гайды' : 'Guides',
-    description: lang === 'ru' 
-      ? 'Узнайте, как приглашать друзей в программу и получать 10% от их наград в течение 6 месяцев.' 
-      : 'Learn how to invite friends to the program and receive 10% of their rewards for 6 months.',
-    xpReward: 70,
-    readTime: lang === 'ru' ? '3 мин' : '3 min',
-    completed: false,
-    duration: lang === 'ru' ? '3 мин' : '3 min',
-    views: lang === 'ru' ? '5.2K просмотров' : '5.2K views',
-    uploadedAt: lang === 'ru' ? '3 дня назад' : '3 days ago',
-    imageUrl: 'bg-gradient-to-br from-amber-950/40 via-neutral-900 to-black',
-    content: lang === 'ru' ? [
-      'Программа STONbassadors включает в себя выгодную реферальную систему, которая позволяет получать пассивный доход за приглашение новых амбассадоров.',
-      'Вы можете поделиться своей уникальной реферальной ссылкой с друзьями. Если приглашенный пользователь регистрируется в программе и начинает зарабатывать награды, вы будете получать бонус в размере 10% от его ежемесячных начислений.',
-      'Этот реферальный бонус выплачивается из специального фонда команды STON.fi в течение 6 месяцев с момента регистрации реферала. При этом награда самого реферала никак не уменьшается.'
-    ] : [
-      'The STONbassadors program includes a lucrative referral system that allows you to earn passive income by inviting new ambassadors.',
-      'You can share your unique referral link with friends. If the invited user registers in the program and starts earning rewards, you will receive a bonus equal to 10% of their monthly payouts.',
-      'This referral bonus is paid from a special fund allocated by the STON.fi team for 6 months from the moment of the referral\'s registration. Meanwhile, the referral\'s own reward is not reduced in any way.'
-    ],
-    quiz: {
-      question: lang === 'ru' 
-        ? 'Какой процент от наград ваших рефералов вы будете получать в течение 6 месяцев?' 
-        : 'What percentage of your referrals\' rewards will you receive for 6 months?',
-      options: ['5%', '10%', '15%'],
-      answerIndex: 1
-    }
-  },
-  {
-    id: 'lesson-1',
-    title: lang === 'ru' ? 'Что такое STON.fi? Полный гайд для новичков' : 'What is STON.fi? Complete Guide for Beginners',
-    category: lang === 'ru' ? 'Академия' : 'Academy',
-    description: lang === 'ru' 
-      ? 'Узнайте о ведущем децентрализованном маркетмейкере (AMM DEX) на блокчейне TON, его преимуществах и возможностях.' 
-      : 'Learn about the leading decentralized automated market maker (AMM DEX) on the TON blockchain, its advantages, and opportunities.',
-    xpReward: 75,
-    readTime: lang === 'ru' ? '3 мин' : '3 min',
-    completed: false,
-    duration: lang === 'ru' ? '3 мин' : '3 min',
-    views: lang === 'ru' ? '8.4K просмотров' : '8.4K views',
-    uploadedAt: lang === 'ru' ? '2 дня назад' : '2 days ago',
-    imageUrl: 'bg-gradient-to-br from-amber-950/40 via-neutral-900 to-black',
-    content: lang === 'ru' ? [
-      'STON.fi — это ведущий децентрализованный автоматический маркетмейкер (AMM DEX) на блокчейне TON, предлагающий пользователям сверхнизкие комиссии, минимальное проскальзывание и удобный интерфейс.',
-      'В отличие от традиционных централизованных бирж, на STON.fi вам не нужно проходить регистрацию или доверять свои средства третьим лицам. Все обмены происходят напрямую между кошельками пользователей через безопасные смарт-контракты.',
-      'Благодаря архитектуре блокчейна TON, транзакции на STON.fi проходят практически мгновенно, делая торговлю криптовалютой доступной и быстрой для каждого.'
-    ] : [
-      'STON.fi is the leading decentralized automatic market maker (AMM DEX) on the TON blockchain, offering users ultra-low fees, minimal slippage, and an intuitive user interface.',
-      'Unlike traditional centralized exchanges, on STON.fi you do not need to register or trust your funds to third parties. All exchanges happen directly between users\' wallets through secure smart contracts.',
-      'Thanks to the architecture of the TON blockchain, transactions on STON.fi occur almost instantly, making cryptocurrency trading accessible and fast for everyone.'
-    ],
-    quiz: {
-      question: lang === 'ru' 
-        ? 'Какую архитектуру использует STON.fi DEX?' 
-        : 'Which architecture does the STON.fi DEX use?',
-      options: lang === 'ru' ? [
-        'Order Book (Книга ордеров)',
-        'AMM (Автоматический маркетмейкер)',
-        'Централизованный оракул'
-      ] : [
-        'Order Book',
-        'AMM (Automated Market Maker)',
-        'Centralized Oracle'
-      ],
-      answerIndex: 1
-    }
-  },
-  {
-    id: 'lesson-2',
-    title: lang === 'ru' ? 'Как фармить STON на пулах ликвидности' : 'How to Farm STON on Liquidity Pools',
-    category: lang === 'ru' ? 'Гайды' : 'Guides',
-    description: lang === 'ru' 
-      ? 'Поймите, как работают пулы ликвидности, как вносить средства и получать комиссионные с каждой сделки в экосистеме.' 
-      : 'Understand how liquidity pools work, how to deposit funds, and earn commission fees on every trade in the ecosystem.',
-    xpReward: 100,
-    readTime: lang === 'ru' ? '5 мин' : '5 min',
-    completed: false,
-    duration: lang === 'ru' ? '5 мин' : '5 min',
-    views: lang === 'ru' ? '6.1K просмотров' : '6.1K views',
-    uploadedAt: lang === 'ru' ? '4 дня назад' : '4 days ago',
-    imageUrl: 'bg-gradient-to-br from-zinc-900 via-stone-900 to-orange-950/20',
-    content: lang === 'ru' ? [
-      'Фарминг и предоставление ликвидности — один из самых популярных способов пассивного заработка в децентрализованных финансах (DeFi) на платформе STON.fi.',
-      'Когда вы вносите пару токенов (например, TON и STON) в пул ликвидности, вы получаете LP-токены, подтверждающие вашу долю в пуле. Провайдеры ликвидности получают часть торговых комиссий с каждого обмена в этой паре.',
-      'Дополнительно вы можете отправлять свои LP-токены в стейкинг в разделе фарминга, чтобы зарабатывать бонусные токены управления STON с высокой процентной ставкой APY.'
-    ] : [
-      'Farming and providing liquidity is one of the most popular ways to earn passive income in decentralized finance (DeFi) on the STON.fi platform.',
-      'When you deposit a pair of tokens (e.g., TON and STON) into a liquidity pool, you receive LP tokens that confirm your share in the pool. Liquidity providers receive a portion of the trading fees from each swap in that pair.',
-      'Additionally, you can stake your LP tokens in the farming section to earn bonus STON governance tokens with a high APY interest rate.'
-    ],
-    quiz: {
-      question: lang === 'ru' 
-        ? 'Что получает провайдер ликвидности взамен внесенных токенов?' 
-        : 'What does a liquidity provider receive in return for deposited tokens?',
-      options: lang === 'ru' ? [
-        'LP токены',
-        'NFT ваучеры',
-        'Только устную благодарность'
-      ] : [
-        'LP tokens',
-        'NFT vouchers',
-        'Only verbal appreciation'
-      ],
-      answerIndex: 0
-    }
-  },
-  {
-    id: 'lesson-3',
-    title: lang === 'ru' ? 'Управление и стейкинг токена $STON' : 'Governance and Staking of the $STON Token',
-    category: lang === 'ru' ? 'Академия' : 'Academy',
-    description: lang === 'ru' 
-      ? 'Роль нативного токена управления $STON, протоколы стейкинга и как участвовать в голосованиях за будущее платформы.' 
-      : 'The role of the native governance token $STON, staking protocols, and how to participate in voting on the platform\'s future.',
-    xpReward: 120,
-    readTime: lang === 'ru' ? '4 мин' : '4 min',
-    completed: false,
-    duration: lang === 'ru' ? '4 мин' : '4 min',
-    views: lang === 'ru' ? '3.2K просмотров' : '3.2K views',
-    uploadedAt: lang === 'ru' ? '1 неделю назад' : '1 week ago',
-    imageUrl: 'bg-gradient-to-br from-neutral-900 via-orange-900/10 to-stone-950',
-    content: lang === 'ru' ? [
-      'Токен $STON является ключевым элементом управления и стимуляции всей экосистемы децентрализованной биржи STON.fi.',
-      'Стейкинг токенов STON позволяет пользователям блокировать свои средства на определенный период в обмен на получение специальных токенов AR-STON. Эти токены дают право участвовать в голосованиях за ключевые изменения платформы.',
-      'Кроме того, стейкеры получают долю от доходов протокола, что делает долгосрочное удержание токена STON еще более выгодным и стратегически важным для участников.'
-    ] : [
-      'The $STON token is a key element of governance and incentivization for the entire STON.fi decentralized exchange ecosystem.',
-      'Staking STON tokens allows users to lock their funds for a specific period in exchange for receiving special AR-STON tokens. These tokens grant the right to vote on key changes to the platform.',
-      'In addition, stakers receive a share of the protocol\'s revenue, making holding STON tokens long-term even more lucrative and strategically important for participants.'
-    ],
-    quiz: {
-      question: lang === 'ru' 
-        ? 'Какое ключевое преимущество стейкинга $STON на платформе STON.fi?' 
-        : 'What is the key benefit of staking $STON on the STON.fi platform?',
-      options: lang === 'ru' ? [
-        'Снижение лимитов обмена',
-        'Получение AR-STON и доли в доходах протокола',
-        'Автоматическая покупка TON'
-      ] : [
-        'Lower swap limits',
-        'Receiving AR-STON and a share of the protocol\'s revenue',
-        'Automatic purchase of TON'
-      ],
-      answerIndex: 1
-    }
-  }
-];
-
-const getMissions = (lang: 'ru' | 'en'): Mission[] => [
-  {
-    id: 'm-1',
-    title: lang === 'ru' ? 'Подключи кошелек' : 'Connect Wallet',
-    description: lang === 'ru' 
-      ? 'Подключите ваш TON кошелек (Tonkeeper, MyTonWallet и др.) к нашей системе.' 
-      : 'Connect your TON wallet (Tonkeeper, MyTonWallet, etc.) to our system.',
-    xpReward: 50,
-    type: 'web3',
-    status: 'available',
-    link: '#connect'
-  },
-  {
-    id: 'm-2',
-    title: lang === 'ru' ? 'Подпишись на STON.fi в X' : 'Follow STON.fi on X',
-    description: lang === 'ru' 
-      ? 'Присоединяйтесь к официальному каналу X (Twitter) экосистемы STON.fi.' 
-      : 'Join the official X (Twitter) channel of the STON.fi ecosystem.',
-    xpReward: 25,
-    type: 'social',
-    status: 'available',
-    link: 'https://x.com/ston_fi'
-  },
-  {
-    id: 'm-3',
-    title: lang === 'ru' ? 'Пройди урок в Академии' : 'Complete an Academy Lesson',
-    description: lang === 'ru' 
-      ? 'Изучите любой гайд в разделе «Академия» и решите тест без ошибок.' 
-      : 'Study any guide in the Academy and pass the test without errors.',
-    xpReward: 75,
-    type: 'daily',
-    status: 'available',
-    link: '#videos'
-  },
-  {
-    id: 'm-4',
-    title: lang === 'ru' ? 'Свопни любой токен' : 'Swap Any Token',
-    description: lang === 'ru' 
-      ? 'Совершите быстрый обмен TON/STON внутри нашего Mini App.' 
-      : 'Perform a quick TON/STON exchange inside our Mini App.',
-    xpReward: 100,
-    type: 'web3',
-    status: 'available',
-    link: '#swap'
-  },
-  {
-    id: 'm-5',
-    title: lang === 'ru' ? 'Пригласи 3 друзей' : 'Invite 3 Friends',
-    description: lang === 'ru' 
-      ? 'Поделитесь своей реферальной ссылкой и приведите 3 активных амбассадоров.' 
-      : 'Share your referral link and invite 3 active ambassadors.',
-    xpReward: 200,
-    type: 'social',
-    status: 'available',
-    link: 'https://t.me/share/url?url=https://t.me/ston_vibe_studio_bot/app'
-  }
-];
-
-const getLeaders = (lang: 'ru' | 'en'): Leader[] => [
-  { rank: 1, name: 'tonlegend 👑', xp: 5420, badge: lang === 'ru' ? 'Алмазный Вайб' : 'Diamond Vibe' },
-  { rank: 2, name: 'cryptoboss', xp: 2890, badge: lang === 'ru' ? 'Алмазный Вайб' : 'Diamond Vibe' },
-  { rank: 3, name: 'stonmaster', xp: 2450, badge: lang === 'ru' ? 'Платиновый Вайб' : 'Platinum Vibe' },
-  { rank: 4, name: 'stonplayer', xp: 1980, badge: lang === 'ru' ? 'Платиновый Вайб' : 'Platinum Vibe' },
-  { rank: 5, name: 'stonlover', xp: 1760, badge: lang === 'ru' ? 'Золотой Вайб' : 'Gold Vibe' },
-  { rank: 6, name: 'stonaddict', xp: 1230, badge: lang === 'ru' ? 'Золотой Вайб' : 'Gold Vibe' },
-  { rank: 7, name: lang === 'ru' ? 'Твой рейтинг (Вы)' : 'Your rank (You)', xp: 4250, badge: lang === 'ru' ? 'Золотой Вайб' : 'Gold Vibe', isCurrentUser: true }
-];
-
+interface ChatMessage {
+  id: string;
+  sender: 'user' | 'assistant';
+  text: string;
+  timestamp: Date;
+  widgetData?: {
+    srcChain: 'ton' | 'base' | 'polygon';
+    srcToken: string;
+    dstChain: 'ton' | 'base' | 'polygon';
+    dstToken: string;
+    amount: string;
+  };
+}
 
 export default function Home() {
   // === Language States ===
   const [lang, setLang] = useState<'ru' | 'en'>('ru');
-
+  
   useEffect(() => {
-    const saved = localStorage.getItem('stonhub_lang');
-    if (saved === 'ru' || saved === 'en') {
-      setLang(saved);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('stonhub_lang');
+      if (saved === 'ru' || saved === 'en') {
+        setLang(saved);
+      } else {
+        const isBrowserRu = window.navigator.language.startsWith('ru');
+        setLang(isBrowserRu ? 'ru' : 'en');
+      }
     }
   }, []);
 
@@ -993,568 +266,106 @@ export default function Home() {
     }
   };
 
-  const TUTORIAL_STEPS = getTutorialSteps(lang);
-  // === Onboarding Tutorial States ===
-  const [tutorialStep, setTutorialStep] = useState<number | null>(null);
+  const t = DICTIONARY[lang];
 
-  const handleNextTutorial = () => {
-    if (tutorialStep === null) return;
-    if (tutorialStep < TUTORIAL_STEPS.length - 1) {
-      setTutorialStep(tutorialStep + 1);
-    } else {
-      handleSkipTutorial();
+  // === Splash Screen States ===
+  const [showSplash, setShowSplash] = useState<boolean>(true);
+  const [splashPercent, setSplashPercent] = useState<number>(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSplashPercent((prev) => {
+        if (prev >= 100) {
+          clearInterval(timer);
+          return 100;
+        }
+        const step = Math.floor(Math.random() * 8) + 4;
+        return Math.min(prev + step, 100);
+      });
+    }, 80);
+    return () => clearInterval(timer);
+  }, []);
+
+  // === Onboarding Welcome Dialogue States ===
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const [onboardingStep, setOnboardingStep] = useState<number>(0);
+
+  useEffect(() => {
+    if (!showSplash) {
+      const seen = localStorage.getItem('stonhub_onboarding_completed');
+      if (!seen) {
+        setShowOnboarding(true);
+      }
     }
+  }, [showSplash]);
+
+  const completeOnboarding = () => {
+    setShowOnboarding(false);
+    localStorage.setItem('stonhub_onboarding_completed', 'true');
   };
 
-  const handleSkipTutorial = () => {
-    setTutorialStep(null);
-    localStorage.setItem('stonhub_tutorial_seen', 'true');
-    showNotificationMessage(DICTIONARY[lang].walletConnectSuccess);
-  };
-  // === Web3 states ===
-  const walletAddress = useTonAddress();
+  // === Core Wallet Connections ===
+  const tonAddress = useTonAddress();
   const [tonConnectUI] = useTonConnectUI();
+  const { address: evmAddress } = useAccount();
 
-  // === App navigation states ===
-  const [activeTab, setActiveTab] = useState<'home' | 'videos' | 'missions' | 'profile'>('home');
-  const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
-  const [showSwapModal, setShowSwapModal] = useState<boolean>(false);
+  // === App Navigation States ===
+  const [activeTab, setActiveTab] = useState<'copilot' | 'pro'>('copilot');
 
-  // === Omniston Cross-Chain States ===
-  const [showOmnistonModal, setShowOmnistonModal] = useState<boolean>(false);
-  const [omniSourceChain, setOmniSourceChain] = useState<'ton' | 'base' | 'polygon'>('base');
-  const [omniSourceToken, setOmniSourceToken] = useState<string>('ETH');
-  const [omniDestChain, setOmniDestChain] = useState<'ton' | 'base' | 'polygon'>('ton');
-  const [omniDestToken, setOmniDestToken] = useState<string>('TON');
-  const [omniSourceAmount, setOmniSourceAmount] = useState<string>('');
-  const [omniDestAmount, setOmniDestAmount] = useState<string>('0.0');
-  const [isOmniSwapping, setIsOmniSwapping] = useState<boolean>(false);
-  const [omniSwapStep, setOmniSwapStep] = useState<number>(0);
-  const [omniTxHash, setOmniTxHash] = useState<string>('');
-  const [omniActiveDropdown, setOmniActiveDropdown] = useState<string | null>(null);
+  // === Main Swap Parameter States ===
+  const [srcChain, setSrcChain] = useState<'ton' | 'base' | 'polygon'>('ton');
+  const [srcToken, setSrcToken] = useState<string>('TON');
+  const [dstChain, setDstChain] = useState<'ton' | 'base' | 'polygon'>('base');
+  const [dstToken, setDstToken] = useState<string>('USDC');
+  const [srcAmount, setSrcAmount] = useState<string>('');
+  const [dstAmount, setDstAmount] = useState<string>('');
 
-  // === EVM Wagmi Hooks ===
-  const { address: evmWalletAddress, isConnected: isEvmConnected } = useAccount();
-  const { sendTransactionAsync } = useSendTransaction();
-  const { writeContractAsync } = useWriteContract();
-  const { signTypedDataAsync } = useSignTypedData();
-  
+  // Dropdowns
+  const [showSrcChainDrop, setShowSrcChainDrop] = useState<boolean>(false);
+  const [showSrcTokenDrop, setShowSrcTokenDrop] = useState<boolean>(false);
+  const [showDstChainDrop, setShowDstChainDrop] = useState<boolean>(false);
+  const [showDstTokenDrop, setShowDstTokenDrop] = useState<boolean>(false);
 
-  // === App local states ===
-  const [userXp, setUserXp] = useState<number>(4250);
-  const [userRank, setUserRank] = useState<string>('Silver Vibe');
-  const [dailyClaimed, setDailyClaimed] = useState<boolean>(false);
-  const [stonPrice, setStonPrice] = useState<number>(3.25);
-  const [priceDirection, setPriceDirection] = useState<'up' | 'down'>('up');
-  const [notification, setNotification] = useState<string | null>(null);
-  
-  // Telegram User Information
-  const [tgUser, setTgUser] = useState<{ 
-    firstName?: string; 
-    lastName?: string; 
-    username?: string; 
-    photoUrl?: string; 
-  } | null>(null);
+  // === Co-Pilot Chat States ===
+  const [chatInput, setChatInput] = useState<string>('');
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [isAiTyping, setIsAiTyping] = useState<boolean>(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // === Video / Academy States ===
-  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
-  const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
-  const [quizResult, setQuizResult] = useState<'correct' | 'wrong' | null>(null);
-  const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
-  const [videoFilter, setVideoFilter] = useState<string>('guides');
-
-
-
-  // === Swap States ===
-  const [swapFromToken, setSwapFromToken] = useState<keyof typeof SWAP_TOKENS>('TON');
-  const [swapToToken, setSwapToToken] = useState<keyof typeof SWAP_TOKENS>('STON');
-  const [swapFromAmount, setSwapFromAmount] = useState<string>('');
-  const [swapToAmount, setSwapToAmount] = useState<string>('');
-  const [isSwapping, setIsSwapping] = useState<boolean>(false);
-  const [activeDropdown, setActiveDropdown] = useState<'from' | 'to' | null>(null);
-
-  // === Mock Data with multi-language synchronization ===
-  const [lessons, setLessons] = useState<Lesson[]>(() => getLessons('ru'));
-  const [missions, setMissions] = useState<Mission[]>(() => getMissions('ru'));
-  const [leaders, setLeaders] = useState<Leader[]>(() => getLeaders('ru'));
-
-  // Synchronize dynamic localized lists when lang updates
+  // Initialize chat greeting
   useEffect(() => {
-    // 1. Lessons
-    const freshLessons = getLessons(lang);
-    setLessons(freshLessons);
+    setChatMessages([
+      {
+        id: 'greet',
+        sender: 'assistant',
+        text: t.assistantGreeting,
+        timestamp: new Date()
+      }
+    ]);
+  }, [lang]);
 
-    // 2. Missions
-    const freshMissions = getMissions(lang);
-    setMissions(prev => {
-      return freshMissions.map(fresh => {
-        const existing = prev.find(m => m.id === fresh.id);
-        return {
-          ...fresh,
-          status: existing ? existing.status : fresh.status
-        };
-      });
-    });
-
-    // 3. Leaders
-    const freshLeaders = getLeaders(lang);
-    setLeaders(prev => {
-      return freshLeaders.map(fresh => {
-        const existing = prev.find(l => l.rank === fresh.rank || l.isCurrentUser === fresh.isCurrentUser);
-        if (fresh.isCurrentUser && existing) {
-          let currentName = fresh.name;
-          if (tgUser) {
-            currentName = tgUser.username ? `@${tgUser.username} (${lang === 'ru' ? 'Вы' : 'You'})` : `${tgUser.firstName} (${lang === 'ru' ? 'Вы' : 'You'})`;
-          }
-          return {
-            ...fresh,
-            name: currentName,
-            xp: userXp,
-            badge: userRank
-          };
-        }
-        return fresh;
-      });
-    });
-  }, [lang, tgUser, userXp, userRank]);
-
-
-
-  // === Real Price Fetcher & Simulator fallback ===
   useEffect(() => {
-    const fetchRealPrice = async () => {
-      try {
-        const res = await fetch(
-          'https://api.geckoterminal.com/api/v2/networks/ton/tokens/EQA2kCVNwVsil2EM2mB0SkXytxCqQjS4mttjDpnXmwG9T6bO',
-          { headers: { 'Accept': 'application/json;version=20230203' } }
-        );
-        const json = await res.json();
-        const priceStr = json?.data?.attributes?.price_usd;
-        if (priceStr) {
-          const nextPrice = parseFloat(priceStr);
-          setStonPrice(prev => {
-            setPriceDirection(nextPrice >= prev ? 'up' : 'down');
-            return Number(nextPrice.toFixed(3));
-          });
-          return true;
-        }
-      } catch (err) {
-        console.warn('GeckoTerminal price fetch failed, using simulator', err);
-      }
-      return false;
-    };
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, isAiTyping]);
 
-    fetchRealPrice();
-    const interval = setInterval(async () => {
-      const success = await fetchRealPrice();
-      if (!success) {
-        const change = (Math.random() - 0.48) * 0.04;
-        setStonPrice(prev => {
-          const nextPrice = Number((prev + change).toFixed(3));
-          setPriceDirection(nextPrice >= prev ? 'up' : 'down');
-          return nextPrice;
-        });
-      }
-    }, 15000);
+  // === Transaction Progress Overlay ===
+  const [showTxOverlay, setShowTxOverlay] = useState<boolean>(false);
+  const [txStep, setTxStep] = useState<number>(0);
+  const [txSuccess, setTxSuccess] = useState<boolean | null>(null);
 
-    return () => clearInterval(interval);
-  }, []);
-
-  // === Fetch Telegram User Info ===
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const tg = (window as unknown as { 
-        Telegram?: { 
-          WebApp?: { 
-            initDataUnsafe?: { 
-              user?: { 
-                first_name?: string; 
-                last_name?: string; 
-                username?: string; 
-                photo_url?: string; 
-              } 
-            } 
-          } 
-        } 
-      }).Telegram?.WebApp;
-      
-      const user = tg?.initDataUnsafe?.user;
-      if (user) {
-        setTgUser({
-          firstName: user.first_name,
-          lastName: user.last_name,
-          username: user.username,
-          photoUrl: user.photo_url
-        });
-        
-        // Update user name in leaderboard list
-        const userName = user.username ? `@${user.username} (Вы)` : `${user.first_name} (Вы)`;
-        setLeaders(prev => 
-          prev.map(l => l.isCurrentUser ? { ...l, name: userName } : l)
-        );
-      }
-    }
-  }, []);
-
-  // === Dynamic Rank Update ===
-  useEffect(() => {
-    let currentRank = 'Bronze Vibe 🚀';
-    if (userXp >= 5000) {
-      currentRank = 'Diamond Vibe 💎';
-    } else if (userXp >= 4000) {
-      currentRank = 'Platinum Vibe 👑';
-    } else if (userXp >= 2000) {
-      currentRank = 'Gold Vibe 🌟';
-    } else if (userXp >= 1000) {
-      currentRank = 'Silver Vibe ✨';
-    }
-    setUserRank(currentRank);
-
-    // Update in rankings
-    setLeaders(prev => 
-      prev.map(l => l.isCurrentUser ? { ...l, xp: userXp, badge: currentRank } : l)
-        .sort((a, b) => b.xp - a.xp)
-        .map((l, idx) => ({ ...l, rank: idx + 1 }))
-    );
-  }, [userXp]);
-
-  const executeOmniSwap = async () => {
-    if (!activeQuote) {
-      showNotificationMessage(lang === 'ru' ? 'Котировка не найдена. Подождите... ⏳' : 'Quote not found. Please wait... ⏳');
-      return;
-    }
-
-    if (omniSourceChain === 'ton') {
-      if (!walletAddress) {
-        showNotificationMessage(lang === 'ru' ? 'Пожалуйста, подключите TON кошелек! 💎' : 'Please connect TON wallet! 💎');
-        return;
-      }
-
-      setIsOmniSwapping(true);
-      setOmniSwapStep(1);
-
-      try {
-        const traderAddress: ChainAddress = {
-          chain: { $case: "ton", value: walletAddress },
-        };
-
-        if (activeQuote.settlementData?.$case === 'swap') {
-          setOmniSwapStep(2);
-          const swapTx = await omniston.tonBuildSwap({
-            quoteId: activeQuote.quoteId,
-            transferSrcAddress: traderAddress,
-            refundSrcAddress: traderAddress,
-            gasExcessAddress: traderAddress,
-            traderDstAddress: traderAddress,
-          });
-
-          const messages = swapTx.messages.map((msg: any) => ({
-            address: msg.targetAddress,
-            amount: msg.tonAmount,
-            payload: msg.payload
-          }));
-
-          setOmniSwapStep(3);
-          const txResult = await tonConnectUI.sendTransaction({
-            validUntil: Date.now() + 5 * 60 * 1000,
-            messages
-          });
-
-          if (txResult) {
-            setOmniTxHash('Processing...');
-            setOmniSwapStep(4);
-
-            const stream = await omniston.swapTrack({
-              quoteId: activeQuote.quoteId,
-              traderAddress,
-              outgoingTxQuery: messages[0].payload,
-            });
-
-            stream.subscribe({
-              next(event: any) {
-                if (event?.$case === 'progress' && event.value.status === 'completed') {
-                  setOmniSwapStep(5);
-                  setUserXp(prev => Math.min(prev + 200, 5000));
-                  showNotificationMessage(lang === 'ru' ? 'Свап успешно завершен! +200 XP 🎉' : 'Swap completed successfully! +200 XP 🎉');
-                  setTimeout(() => { setIsOmniSwapping(false); setOmniSwapStep(0); setShowOmnistonModal(false); setOmniSourceAmount(''); }, 2500);
-                }
-              }
-            });
-          }
-        } else if (activeQuote.settlementData?.$case === 'order') {
-          // TON to EVM Cross-chain
-          setOmniSwapStep(2);
-          const escrowTx = await omniston.tonBuildEscrowTransfer({
-            quoteId: activeQuote.quoteId,
-            transferSrcAddress: traderAddress,
-            refundSrcAddress: traderAddress,
-            traderDstAddress: { chain: { $case: omniDestChain as any, value: evmWalletAddress || '0x0000000000000000000000000000000000000000' } },
-          });
-
-          const messages = escrowTx.messages.map((msg: any) => ({
-            address: msg.targetAddress,
-            amount: msg.tonAmount,
-            payload: msg.payload
-          }));
-
-          setOmniSwapStep(3);
-          const txResult = await tonConnectUI.sendTransaction({
-            validUntil: Date.now() + 5 * 60 * 1000,
-            messages
-          });
-
-          if (txResult) {
-            setOmniTxHash('Cross-Chain Processing...');
-            setOmniSwapStep(4);
-
-            const stream = await omniston.orderTrack({ quoteId: activeQuote.quoteId, traderAddress });
-            stream.subscribe({
-              next(event: any) {
-                if (event?.$case === 'order' && event.value.status === 'completed') {
-                  setOmniSwapStep(5);
-                  setUserXp(prev => Math.min(prev + 500, 5000));
-                  showNotificationMessage(lang === 'ru' ? 'Кросс-чейн успешен! +500 XP 🎉' : 'Cross-chain success! +500 XP 🎉');
-                  setTimeout(() => { setIsOmniSwapping(false); setOmniSwapStep(0); setShowOmnistonModal(false); setOmniSourceAmount(''); }, 2500);
-                }
-              }
-            });
-          }
-        } else {
-          simulateMockSwap();
-        }
-      } catch (err) {
-        console.error('Omniston Swap Error:', err);
-        showNotificationMessage(lang === 'ru' ? 'Отменено или ошибка ❌' : 'Cancelled or Error ❌');
-        setIsOmniSwapping(false);
-        setOmniSwapStep(0);
-      }
-    } else {
-      // EVM Source Chain -> TON/Polygon/Base
-      if (!evmWalletAddress) {
-        showNotificationMessage(lang === 'ru' ? 'EVM кошелек не подключен! 🔌' : 'EVM wallet not connected! 🔌');
-        return;
-      }
-      setIsOmniSwapping(true);
-      setOmniSwapStep(1);
-
-      try {
-        const traderAddress: ChainAddress = {
-          chain: { $case: omniSourceChain as any, value: evmWalletAddress },
-        };
-
-        if (activeQuote.settlementData?.$case === 'order') {
-          setOmniSwapStep(2);
-          const payload = await omniston.evmBuildOrderPayload({
-            quoteId: activeQuote.quoteId,
-            traderAddress,
-          });
-
-          const typedData = JSON.parse(payload.typedData);
-          
-          setOmniSwapStep(3);
-          const signature = await signTypedDataAsync({
-            domain: typedData.domain,
-            types: typedData.types,
-            primaryType: typedData.primaryType,
-            message: typedData.message,
-          });
-
-          setOmniSwapStep(4);
-          // Fallback to simulation if exact ABI bytes required aren't standard
-          simulateMockSwap();
-        } else {
-          simulateMockSwap();
-        }
-      } catch (err) {
-        console.warn('EVM Signing failed or not supported natively yet, falling back to simulation...', err);
-        simulateMockSwap();
-      }
-    }
-  };
-
-  // Wallet address updates specific missions
-  useEffect(() => {
-    if (walletAddress) {
-      setMissions(prev =>
-        prev.map(m => m.id === 'm-1' ? { ...m, status: 'completed' } : m)
-      );
-    }
-  }, [walletAddress]);
-
-  // Onboarding trigger - always for testing
-  useEffect(() => {
-    setTutorialStep(0);
-  }, []);
-
-  const showNotificationMessage = (msg: string) => {
-    setNotification(msg);
-    setTimeout(() => {
-      setNotification(null);
-    }, 3000);
-  };
-
-  // === Handlers ===
-  const handleDailyClaim = () => {
-    if (dailyClaimed) return;
-    setUserXp(prev => prev + 25);
-    setDailyClaimed(true);
-    showNotificationMessage(DICTIONARY[lang].dailyClaimSuccess);
-    
-    if (typeof window !== 'undefined') {
-      const tg = (window as unknown as { 
-        Telegram?: { 
-          WebApp?: { 
-            HapticFeedback?: { 
-              notificationOccurred: (type: 'success' | 'warning' | 'error') => void 
-            } 
-          } 
-        } 
-      }).Telegram?.WebApp;
-      if (tg?.HapticFeedback) {
-        try {
-          tg.HapticFeedback.notificationOccurred('success');
-        } catch (e) {
-          console.warn(e);
-        }
-      }
-    }
-  };
-
-  const handleLessonQuizSubmit = (index: number) => {
-    if (!selectedLesson) return;
-    setQuizAnswer(index);
-
-    if (index === selectedLesson.quiz.answerIndex) {
-      setQuizResult('correct');
-      if (!completedLessonIds.includes(selectedLesson.id)) {
-        setCompletedLessonIds(prev => [...prev, selectedLesson.id]);
-        setUserXp(prev => prev + selectedLesson.xpReward);
-        showNotificationMessage(`Тест пройден! +${selectedLesson.xpReward} XP 🔥`);
-
-        // Complete the mission 'm-3' if this lesson quiz is solved
-        setMissions(prev => 
-          prev.map(m => m.id === 'm-3' ? { ...m, status: 'completed' } : m)
-        );
-      }
-    } else {
-      setQuizResult('wrong');
-      showNotificationMessage('Неверный ответ. Попробуйте еще раз! ❌');
-    }
-  };
-
-  const handleMissionComplete = (missionId: string, link: string) => {
-    const mission = missions.find(m => m.id === missionId);
-    if (!mission || mission.status === 'completed') return;
-
-    if (link.startsWith('http')) {
-      window.open(link, '_blank');
-    }
-
-    setMissions(prev => 
-      prev.map(m => m.id === missionId ? { ...m, status: 'pending' } : m)
-    );
-    showNotificationMessage(DICTIONARY[lang].missionPendingAlert);
-
-    setTimeout(() => {
-      setMissions(prev => 
-        prev.map(m => m.id === missionId ? { ...m, status: 'completed' } : m)
-      );
-      setUserXp(prev => prev + mission.xpReward);
-      showNotificationMessage(`${DICTIONARY[lang].missionCompletedAlert}${mission.xpReward} XP 🎉`);
-    }, 3500);
-  };
-
-  const handleSwapAmountChange = (
-    val: string, 
-    fromTokenOverride?: keyof typeof SWAP_TOKENS, 
-    toTokenOverride?: keyof typeof SWAP_TOKENS
-  ) => {
-    setSwapFromAmount(val);
-    if (!val || isNaN(Number(val))) {
-      setSwapToAmount('');
-      return;
-    }
-    const amount = Number(val);
-    const fromToken = fromTokenOverride || swapFromToken;
-    const toToken = toTokenOverride || swapToToken;
-    
-    const priceFrom = SWAP_TOKENS[fromToken].priceUsd;
-    const priceTo = SWAP_TOKENS[toToken].priceUsd;
-    const output = amount * (priceFrom / priceTo);
-    
-    // Use more decimals for tiny rates like NOT (Notcoin)
-    const decimals = (priceFrom / priceTo) < 0.01 ? 5 : 3;
-    setSwapToAmount(output.toFixed(decimals));
-  };
-
-  const handleSelectToken = (type: 'from' | 'to', token: keyof typeof SWAP_TOKENS) => {
-    if (type === 'from') {
-      if (token === swapToToken) {
-        setSwapToToken(swapFromToken);
-        setSwapFromToken(token);
-        handleSwapAmountChange(swapFromAmount, token, swapFromToken);
-      } else {
-        setSwapFromToken(token);
-        handleSwapAmountChange(swapFromAmount, token, swapToToken);
-      }
-    } else {
-      if (token === swapFromToken) {
-        setSwapFromToken(swapToToken);
-        setSwapToToken(token);
-        handleSwapAmountChange(swapFromAmount, swapToToken, token);
-      } else {
-        setSwapToToken(token);
-        handleSwapAmountChange(swapFromAmount, swapFromToken, token);
-      }
-    }
-    setActiveDropdown(null);
-  };
-
-  const getOmniTokenPrice = (chain: 'base' | 'polygon' | 'ton', tokenSymbol: string): number => {
-    if (chain === 'ton') {
-      return tokenSymbol === 'STON' ? stonPrice : 5.35;
-    }
-    if (chain === 'base') {
-      return tokenSymbol === 'ETH' ? 3450.00 : 1.00;
-    }
-    if (chain === 'polygon') {
-      return tokenSymbol === 'POL' ? 0.62 : 1.00;
-    }
-    return 1.00;
-  };
-
-  const handleOmniAmountChange = (amount: string, srcChain = omniSourceChain, srcTok = omniSourceToken, dstChain = omniDestChain, dstTok = omniDestToken) => {
-    setOmniSourceAmount(amount);
-    if (!amount || isNaN(Number(amount))) {
-      setOmniDestAmount('0.0');
-      return;
-    }
-    setOmniDestAmount('...');
-  };
-
-  const handleConnectEvmWallet = () => {
-    setEvmWalletAddress('0x71C...89f9');
-    showNotificationMessage(lang === 'ru' ? 'EVM Кошелек Base/Polygon подключен! 🔌' : 'EVM Base/Polygon Wallet connected! 🔌');
-  };
-
-  const handleDisconnectEvmWallet = () => {
-    setEvmWalletAddress('');
-    showNotificationMessage(lang === 'ru' ? 'EVM Кошелек отключен' : 'EVM Wallet disconnected');
-  };
-
-  // === Omniston SDK Integration ===
+  // === Omniston SDK Integration Hooks ===
   const omniston = useOmniston();
-  const inputAsset = getAssetId(omniSourceChain, omniSourceToken);
-  const outputAsset = getAssetId(omniDestChain, omniDestToken);
+  const inputAsset = getAssetId(srcChain, srcToken);
+  const outputAsset = getAssetId(dstChain, dstToken);
 
-  const quoteRequest: QuoteRequest | undefined = React.useMemo(() => {
-    if (!inputAsset || !outputAsset || !omniSourceAmount || Number(omniSourceAmount) <= 0) return undefined;
+  const quoteRequest: QuoteRequest | undefined = useMemo(() => {
+    if (!inputAsset || !outputAsset || !srcAmount || Number(srcAmount) <= 0) return undefined;
     return {
       inputAsset,
       outputAsset,
       amount: {
         $case: "inputUnits",
-        value: (Number(omniSourceAmount) * 1e9).toFixed(0),
+        value: (Number(srcAmount) * 1e9).toFixed(0),
       },
       settlementParams: [
         {
@@ -1571,650 +382,839 @@ export default function Home() {
         }
       ]
     } as QuoteRequest;
-  }, [inputAsset, outputAsset, omniSourceAmount]);
+  }, [inputAsset, outputAsset, srcAmount]);
 
   const { data: quoteEvent } = useRfq(quoteRequest as any);
   const activeQuote = quoteEvent?.$case === 'quoteUpdated' ? quoteEvent.value : null;
 
   useEffect(() => {
-    if (activeQuote && !isOmniSwapping) {
-      setOmniDestAmount((Number(activeQuote.expectedOutput) / 1e9).toFixed(4));
+    if (activeQuote && !showTxOverlay) {
+      setDstAmount((Number(activeQuote.expectedOutput) / 1e9).toFixed(4));
     } else if (quoteEvent?.$case === 'noQuote') {
-      setOmniDestAmount('No route');
+      setDstAmount('0.00');
     }
-  }, [activeQuote, quoteEvent, isOmniSwapping]);
+  }, [activeQuote, quoteEvent, showTxOverlay]);
 
-  const simulateMockSwap = () => {
-    setOmniSwapStep(2);
-    setTimeout(() => {
-      setOmniSwapStep(3);
-      const randomHash = '0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
-      setOmniTxHash(randomHash);
-      setTimeout(() => {
-        setOmniSwapStep(4);
-        setTimeout(() => {
-          setOmniSwapStep(5);
-          setUserXp(prev => Math.min(prev + 200, 5000));
-          showNotificationMessage(
-            lang === 'ru' 
-              ? 'Кросс-чейн обмен (Mock) выполнен! Получено +200 XP 🚀🌐' 
-              : 'Cross-Chain Swap (Mock) complete! Gained +200 XP 🚀🌐'
-          );
-          setTimeout(() => {
-            setIsOmniSwapping(false);
-            setOmniSwapStep(0);
-            setShowOmnistonModal(false);
-            setOmniSourceAmount('');
-            setOmniDestAmount('0.0');
-          }, 2500);
-        }, 1800);
-      }, 1800);
-    }, 1200);
-  };
-
-
-
-  const executeSwap = () => {
-    if (!walletAddress) {
-      showNotificationMessage(DICTIONARY[lang].walletAlert);
-      return;
-    }
-    if (!swapFromAmount || Number(swapFromAmount) <= 0) {
-      showNotificationMessage(DICTIONARY[lang].swapAmountAlert);
-      return;
-    }
-
-    setIsSwapping(true);
-    setTimeout(() => {
-      setIsSwapping(false);
-      setUserXp(prev => prev + 100);
-      showNotificationMessage(DICTIONARY[lang].swapSuccess);
-      setSwapFromAmount('');
-      setSwapToAmount('');
-      setShowSwapModal(false);
+  // Trigger dynamic selection side-effects to ensure valid pair choices
+  const handleChainChange = (type: 'src' | 'dst', chain: 'ton' | 'base' | 'polygon') => {
+    if (type === 'src') {
+      setSrcChain(chain);
+      const defaultToken = OMNISTON_TOKENS[chain][0].symbol;
+      setSrcToken(defaultToken);
+      setShowSrcChainDrop(false);
       
-      // Update swap mission
-      setMissions(prev => 
-        prev.map(m => m.id === 'm-4' ? { ...m, status: 'completed' } : m)
-      );
-    }, 2500);
+      // Prevent same destination
+      if (chain === dstChain) {
+        const otherChain = chain === 'ton' ? 'base' : 'ton';
+        setDstChain(otherChain);
+        setDstToken(OMNISTON_TOKENS[otherChain][0].symbol);
+      }
+    } else {
+      setDstChain(chain);
+      const defaultToken = OMNISTON_TOKENS[chain][0].symbol;
+      setDstToken(defaultToken);
+      setShowDstChainDrop(false);
+      
+      // Prevent same source
+      if (chain === srcChain) {
+        const otherChain = chain === 'ton' ? 'base' : 'ton';
+        setSrcChain(otherChain);
+        setSrcToken(OMNISTON_TOKENS[otherChain][0].symbol);
+      }
+    }
+    setSrcAmount('');
+    setDstAmount('');
   };
 
+  // === Local Simulated AI Parser & Action router ===
+  const handleSendChat = (text: string) => {
+    if (!text.trim()) return;
 
+    // 1. Add User Message
+    const userMsg: ChatMessage = {
+      id: Math.random().toString(),
+      sender: 'user',
+      text,
+      timestamp: new Date()
+    };
+    setChatMessages((prev) => [...prev, userMsg]);
+    setChatInput('');
+    setIsAiTyping(true);
 
-  // Filter lessons
-  const filteredLessons = videoFilter === 'guides' ? lessons : [];
+    // 2. Mock AI Parsing Delay
+    setTimeout(() => {
+      let replyText = '';
+      let parsedWidget: ChatMessage['widgetData'] = undefined;
 
+      const lowerText = text.toLowerCase();
+      
+      // Basic natural language parser for multi-chain intents
+      if (lowerText.includes('ton') && lowerText.includes('usdc') && (lowerText.includes('base') || lowerText.includes('бейс'))) {
+        replyText = lang === 'ru' 
+          ? "Отлично! Я подготовила кросс-чейн сделку для перевода TON из сети The Open Network в USDC на Base. Ниже представлен активный виджет Omniston. Вы можете настроить количество и подписать сделку."
+          : "Excellent! I have configured the cross-chain swap from TON on The Open Network to USDC on Base. The active Omniston widget is ready below. Feel free to adjust the amount and execute.";
+        parsedWidget = {
+          srcChain: 'ton',
+          srcToken: 'TON',
+          dstChain: 'base',
+          dstToken: 'USDC',
+          amount: '10'
+        };
+      } else if (lowerText.includes('usdc') && (lowerText.includes('polygon') || lowerText.includes('полигон')) && lowerText.includes('ton')) {
+        replyText = lang === 'ru'
+          ? "Хорошо. Я переключила терминал на кросс-чейн мост: USDC на Polygon в TON. Вы можете нажать кнопку ниже, чтобы запросить живую котировку RFQ."
+          : "Sure. I have configured the interface for a cross-chain swap: USDC on Polygon to TON. Click the execution button below to pull the live RFQ quote.";
+        parsedWidget = {
+          srcChain: 'polygon',
+          srcToken: 'USDC',
+          dstChain: 'ton',
+          dstToken: 'TON',
+          amount: '20'
+        };
+      } else if (lowerText.includes('eth') && (lowerText.includes('base') || lowerText.includes('бейс')) && (lowerText.includes('pol') || lowerText.includes('polygon') || lowerText.includes('полигон'))) {
+        replyText = lang === 'ru'
+          ? "Готово! Сконфигурирован обмен ETH из Base в Polygon экосистемный токен (POL). Виджет настроен на симуляцию котировки."
+          : "Done! Configured the exchange from ETH on Base to Polygon ecosystem token (POL). The live widget is set up below.";
+        parsedWidget = {
+          srcChain: 'base',
+          srcToken: 'ETH',
+          dstChain: 'polygon',
+          dstToken: 'POL',
+          amount: '0.02'
+        };
+      } else {
+        replyText = lang === 'ru'
+          ? "Я понимаю твой запрос! Давай подготовим стандартный обмен TON на USDC в Base, так как это наиболее частый и выгодный маршрут с низким газом. Вот виджет:"
+          : "I understand! Let's configure a cross-chain swap from TON to USDC on Base, as it represents our most optimized, low-gas route. Here is the active widget:";
+        parsedWidget = {
+          srcChain: 'ton',
+          srcToken: 'TON',
+          dstChain: 'base',
+          dstToken: 'USDC',
+          amount: '5'
+        };
+      }
+
+      const aiMsg: ChatMessage = {
+        id: Math.random().toString(),
+        sender: 'assistant',
+        text: replyText,
+        timestamp: new Date(),
+        widgetData: parsedWidget
+      };
+
+      setChatMessages((prev) => [...prev, aiMsg]);
+      setIsAiTyping(false);
+    }, 1500);
+  };
+
+  // Trigger swap from the chat widget
+  const handleExecuteWidgetSwap = (data: NonNullable<ChatMessage['widgetData']>) => {
+    setSrcChain(data.srcChain);
+    setSrcToken(data.srcToken);
+    setDstChain(data.dstChain);
+    setDstToken(data.dstToken);
+    setSrcAmount(data.amount);
+    
+    // Open transaction stepper directly
+    triggerTxWorkflow();
+  };
+
+  // === Cross-chain execution workflow stepper ===
+  const triggerTxWorkflow = () => {
+    setShowTxOverlay(true);
+    setTxStep(1);
+    setTxSuccess(null);
+
+    // Step 1: RFQ Lock
+    setTimeout(() => {
+      setTxStep(2);
+      
+      // Step 2: Signature
+      setTimeout(() => {
+        setTxStep(3);
+        
+        // Step 3: Relayer
+        setTimeout(() => {
+          setTxStep(4);
+          
+          // Step 4: Finalized
+          setTimeout(() => {
+            setTxStep(5);
+            setTxSuccess(true);
+          }, 2000);
+        }, 2200);
+      }, 1800);
+    }, 1500);
+  };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#060608] text-white flex flex-col font-sans select-none relative overflow-x-hidden">
       
-      {/* ========================================== */}
-      {/* === DESKTOP WRAPPER (Responsive Frame) === */}
-      {/* ========================================== */}
-      <div className="hidden sm:flex min-h-screen w-full items-center justify-center bg-black py-8">
-        {/* Smartphone Simulator Frame */}
-        <div className="w-[380px] h-[780px] rounded-[48px] border-[10px] border-neutral-800 bg-black relative shadow-[0_20px_50px_rgba(255,153,0,0.15)] flex flex-col overflow-hidden">
-          {/* Speaker & camera notch decoration */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-neutral-800 rounded-b-2xl z-50 flex items-center justify-center">
-            <div className="w-12 h-1 bg-black rounded-full mb-1" />
+      {/* Background Soft Gradients (Premium non-neon aesthetic) */}
+      <div className="absolute top-0 left-0 right-0 h-[300px] bg-gradient-to-b from-[#FF9900]/5 to-transparent pointer-events-none z-0" />
+      <div className="absolute top-[30%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-[#FF5500]/1 blur-[120px] pointer-events-none z-0" />
+      <div className="absolute bottom-[10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-[#FF9900]/1 blur-[120px] pointer-events-none z-0" />
+
+      {/* ========================================================================= */}
+      {/* 1. STARTING SPLASH SCREEN (GLUSHER) */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {showSplash && (
+          <motion.div 
+            className="fixed inset-0 bg-[#060608] z-50 flex flex-col items-center justify-center p-6"
+            exit={{ opacity: 0, scale: 1.05, transition: { duration: 0.5, ease: [0.43, 0.13, 0.23, 0.96] } }}
+          >
+            <div className="w-full max-w-sm flex flex-col items-center justify-center text-center space-y-8">
+              
+              {/* Spinning Premium Rings */}
+              <div className="relative w-28 h-28 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full border border-white/5 border-t-2 border-t-[#FF9900] animate-spin" style={{ animationDuration: '1.5s' }} />
+                <div className="absolute w-20 h-20 rounded-full border border-white/5 border-r-2 border-r-[#FF5500] animate-spin" style={{ animationDuration: '2.5s', animationDirection: 'reverse' }} />
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-950 border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(255,153,0,0.15)] z-10 glossy-reflection">
+                  <span className="text-xl font-black text-[#FF9900]">SH</span>
+                </div>
+              </div>
+
+              {/* Title & Brand */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-1.5">
+                  <span className="text-3xl font-black tracking-tighter text-white">STON</span>
+                  <span className="bg-[#FF9900] text-black text-sm font-black px-2 py-0.5 rounded uppercase tracking-wider">HUB</span>
+                </div>
+                <p className="text-[10px] tracking-[0.25em] text-[#8C8C96] uppercase font-bold">
+                  {t.appSubName}
+                </p>
+              </div>
+
+              {/* Progress and Action Button */}
+              <div className="w-full space-y-4">
+                {splashPercent < 100 ? (
+                  <div className="space-y-2">
+                    <div className="text-xs text-neutral-500 font-medium tracking-wide animate-pulse">
+                      {t.loading}
+                    </div>
+                    <div className="relative w-48 h-[2px] bg-neutral-900 rounded-full overflow-hidden mx-auto">
+                      <motion.div 
+                        className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-[#FF9900] to-[#FF5500]"
+                        style={{ width: `${splashPercent}%` }}
+                      />
+                    </div>
+                    <div className="text-[10px] font-black text-neutral-600 tracking-wider">
+                      {splashPercent}%
+                    </div>
+                  </div>
+                ) : (
+                  <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={() => setShowSplash(false)}
+                    className="px-8 py-3 rounded-full bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black font-black text-sm tracking-wider shadow-[0_4px_25px_rgba(255,153,0,0.3)] hover:shadow-[0_4px_30px_rgba(255,153,0,0.45)] transition-all cursor-pointer select-none"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {t.letsGo}
+                  </motion.button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================================= */}
+      {/* 2. WELCOME ONBOARDING DIALOGUE */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <div className="fixed inset-0 bg-black/75 z-40 flex items-center justify-center p-4 backdrop-blur-md">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md liquid-glass-card rounded-2xl p-6 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FF9900] to-[#FF5500]" />
+              
+              {/* AI Co-Pilot Mascot Header */}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF9900] to-[#FF5500] flex items-center justify-center shadow-lg relative shrink-0">
+                  <span className="text-xl font-bold text-black">M</span>
+                  <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-[#060608]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-1.5">
+                    Mira <span className="bg-white/10 text-neutral-300 text-[9px] font-black px-1.5 py-0.5 rounded tracking-wide">CO-PILOT</span>
+                  </h3>
+                  <p className="text-[10px] text-neutral-400 font-medium">STONHub Cross-chain Assistant</p>
+                </div>
+              </div>
+
+              {/* Steps Progress dots */}
+              <div className="flex items-center gap-1 mb-4">
+                {[0, 1, 2].map((idx) => (
+                  <div 
+                    key={idx} 
+                    className={`h-[3px] rounded-full transition-all duration-300 ${idx === onboardingStep ? 'w-6 bg-[#FF9900]' : 'w-2 bg-neutral-800'}`}
+                  />
+                ))}
+              </div>
+
+              {/* Chat Bubble Step Content */}
+              <div className="bg-black/30 border border-white/5 rounded-xl p-4 min-h-[120px] flex flex-col justify-center mb-6 relative">
+                <p className="text-sm font-medium leading-relaxed text-neutral-200">
+                  {onboardingStep === 0 && t.onboardingStep1}
+                  {onboardingStep === 1 && t.onboardingStep2}
+                  {onboardingStep === 2 && t.onboardingStep3}
+                </p>
+              </div>
+
+              {/* Onboarding buttons */}
+              <div className="flex items-center justify-between">
+                <button 
+                  onClick={completeOnboarding}
+                  className="text-xs text-neutral-500 hover:text-white font-black tracking-wide"
+                >
+                  {t.skip}
+                </button>
+                
+                {onboardingStep < 2 ? (
+                  <button
+                    onClick={() => setOnboardingStep((p) => p + 1)}
+                    className="px-5 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-black tracking-wide transition-all"
+                  >
+                    {t.next}
+                  </button>
+                ) : (
+                  <button
+                    onClick={completeOnboarding}
+                    className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black font-black text-xs tracking-wider shadow-lg"
+                  >
+                    {t.onboardingStartBtn}
+                  </button>
+                )}
+              </div>
+            </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================================= */}
+      {/* 3. APP HEADER (CONNECT BUTTONS & TABS) */}
+      {/* ========================================================================= */}
+      <header className="w-full max-w-4xl mx-auto px-4 pt-6 pb-2 z-10 relative">
+        <div className="flex items-center justify-between gap-4 mb-6">
           
-          {/* Screen Content */}
-          <div className="flex-1 flex flex-col relative pt-4 overflow-y-auto no-scrollbar pb-20">
-            <MobileAppContent />
+          {/* Brand Logo */}
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('copilot')}>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF9900] to-[#FF5500] flex items-center justify-center shadow-lg relative">
+              <span className="text-sm font-black text-black">S</span>
+              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#060608]" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-base font-black tracking-tighter text-white">STONHub</span>
+              <span className="text-[8px] tracking-[0.18em] text-[#8C8C96] font-bold uppercase">{t.appSubName}</span>
+            </div>
+          </div>
+
+          {/* Action Header Items */}
+          <div className="flex items-center gap-2">
+            
+            {/* Language toggle */}
+            <button 
+              onClick={toggleLang}
+              className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center transition-all cursor-pointer"
+            >
+              <Languages className="w-4 h-4 text-neutral-400 hover:text-white" />
+            </button>
+
+            {/* EVM Rainbow Wallet Connect */}
+            <div className="scale-90 origin-right">
+              <ConnectButton 
+                label={t.walletConnectEvm}
+                accountStatus="avatar"
+                chainStatus="icon"
+                showBalance={false}
+              />
+            </div>
+
+            {/* TON Connect button */}
+            <div className="scale-90 origin-right">
+              <TonConnectButton />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* ========================================================= */}
-      {/* === MOBILE INTERFACE (TMA View / Fullscreen fallback) === */}
-      {/* ========================================================= */}
-      <div className="block sm:hidden w-full min-h-screen flex flex-col pb-20 overflow-y-auto no-scrollbar">
-        <MobileAppContent />
-      </div>
+        {/* ========================================================================= */}
+        {/* PREMIUM TABS BAR */}
+        {/* ========================================================================= */}
+        <div className="w-full max-w-sm mx-auto mb-4 bg-black/40 border border-white/5 p-1 rounded-xl flex">
+          <button
+            onClick={() => setActiveTab('copilot')}
+            className={`flex-1 py-2.5 rounded-lg text-xs font-black tracking-wide flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeTab === 'copilot' ? 'bg-[#FF9900] text-black shadow-md' : 'text-neutral-400 hover:text-white'}`}
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            {t.tabCoPilot}
+          </button>
+          <button
+            onClick={() => setActiveTab('pro')}
+            className={`flex-1 py-2.5 rounded-lg text-xs font-black tracking-wide flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeTab === 'pro' ? 'bg-[#FF9900] text-black shadow-md' : 'text-neutral-400 hover:text-white'}`}
+          >
+            <SwapIcon className="w-3.5 h-3.5" />
+            {t.tabProSwap}
+          </button>
+        </div>
+      </header>
 
-      {/* ========================================== */}
-      {/* === GLOBAL FLOATING SWAP OVERLAY MODAL === */}
-      {/* ========================================== */}
-      <AnimatePresence>
-        {showSwapModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      {/* ========================================================================= */}
+      {/* 4. MAIN CONTENT TABS WITH ANIMATIONS */}
+      {/* ========================================================================= */}
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 pb-24 z-10 relative flex flex-col items-center">
+        <AnimatePresence mode="wait">
+          
+          {/* TAB 1: CO-PILOT AI CHAT */}
+          {activeTab === 'copilot' && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="w-full max-w-sm glass-panel rounded-2xl p-5 border-[#FF9900]/30 space-y-4 relative"
+              key="copilot"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 20, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 180 }}
+              className="w-full max-w-xl flex flex-col h-[65vh] liquid-glass-card rounded-2xl overflow-hidden"
             >
-              {/* Modal Header */}
-              <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                <div className="flex items-center gap-1.5">
-                  <ArrowLeftRight className="w-5 h-5 text-[#FF9900]" />
-                  <span className="font-black text-sm uppercase tracking-wider text-white">SWAP 🔄</span>
+              
+              {/* Chat Header banner */}
+              <div className="px-4 py-3 bg-black/35 border-b border-white/5 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-xs font-black tracking-wider text-neutral-300">MIRA CO-PILOT IS ONLINE</span>
                 </div>
-                <button
-                  onClick={() => {
-                    setShowSwapModal(false);
-                    setActiveDropdown(null);
-                  }}
-                  className="text-xs text-neutral-500 hover:text-white"
-                >
-                  {DICTIONARY[lang].close}
-                </button>
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#FF9900]">
+                  <Sparkles className="w-3 h-3" />
+                  Omniston Aggregator
+                </div>
               </div>
 
-              {/* Swap Input From */}
-              <div className="bg-neutral-900/60 p-4 rounded-xl border border-white/5 relative">
-                <div className="flex justify-between items-center text-[10px] text-neutral-400 mb-2 font-medium">
-                  <span>{DICTIONARY[lang].swapSend}</span>
-                  <span>{DICTIONARY[lang].swapBalance} {SWAP_TOKENS[swapFromToken].balance} {swapFromToken}</span>
-                </div>
-                <div className="flex justify-between items-center gap-3">
-                  <input 
-                    type="number"
-                    placeholder="0.0"
-                    value={swapFromAmount}
-                    onChange={(e) => handleSwapAmountChange(e.target.value)}
-                    className="bg-transparent text-white font-black text-lg outline-none w-1/2"
-                  />
-                  <button 
-                    onClick={() => setActiveDropdown(activeDropdown === 'from' ? null : 'from')}
-                    className="bg-black hover:bg-neutral-900 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 text-white active:scale-95 transition"
+              {/* Chat History Flow */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar bg-neutral-950/20">
+                {chatMessages.map((msg) => (
+                  <div 
+                    key={msg.id} 
+                    className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
                   >
-                    <TokenLogo symbol={swapFromToken} className="w-4 h-4 rounded-full shrink-0" />
-                    <span>{swapFromToken}</span>
-                    <span className="text-[8px] text-neutral-500">▼</span>
-                  </button>
-                </div>
+                    
+                    {/* Chat Bubble */}
+                    <div 
+                      className={`max-w-[85%] rounded-xl p-3 text-sm leading-relaxed ${msg.sender === 'user' ? 'bg-gradient-to-br from-[#FF9900]/20 to-[#FF5500]/10 border border-[#FF9900]/20 text-white' : 'bg-white/5 border border-white/5 text-neutral-200'}`}
+                    >
+                      {msg.text}
+                    </div>
 
-                {/* Dropdown From */}
-                {activeDropdown === 'from' && (
-                  <div className="absolute right-4 top-14 z-50 bg-[#141416] border border-white/10 p-1.5 rounded-xl shadow-2xl space-y-1 w-44 max-h-64 overflow-y-auto no-scrollbar animate-fade-in">
-                    {Object.keys(SWAP_TOKENS).map((sym) => {
-                      const t = SWAP_TOKENS[sym as keyof typeof SWAP_TOKENS];
-                      return (
-                        <button
-                          key={sym}
-                          onClick={() => handleSelectToken('from', sym as keyof typeof SWAP_TOKENS)}
-                          className="w-full flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg text-left text-xs font-bold transition text-white"
-                        >
-                          <TokenLogo symbol={sym} className="w-4.5 h-4.5 rounded-full shrink-0" />
-                          <div className="flex flex-col">
-                            <span className="leading-tight">{sym}</span>
-                            <span className="text-[8px] text-neutral-500 leading-none">{t.name}</span>
+                    {/* Inline active widget if returned by Co-Pilot */}
+                    {msg.widgetData && (
+                      <div className="w-full max-w-sm mt-3 liquid-glass-card border border-[#FF9900]/20 rounded-xl p-4 space-y-3 bg-black/40">
+                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                          <span className="text-[10px] font-black text-neutral-400 tracking-wider uppercase">{t.aiWidgetTitle}</span>
+                          <span className="text-[10px] font-black text-[#FF9900] bg-[#FF9900]/10 px-1.5 py-0.5 rounded">LIVE RFQ</span>
+                        </div>
+
+                        {/* Route mapping */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs font-black">{msg.widgetData.srcToken}</span>
+                            <span className="text-[10px] text-neutral-500">({msg.widgetData.srcChain.toUpperCase()})</span>
                           </div>
+                          <ArrowRight className="w-3.5 h-3.5 text-neutral-600 animate-pulse" />
+                          <div className="flex items-center gap-1 text-right">
+                            <span className="text-xs font-black">{msg.widgetData.dstToken}</span>
+                            <span className="text-[10px] text-neutral-500">({msg.widgetData.dstChain.toUpperCase()})</span>
+                          </div>
+                        </div>
+
+                        {/* Amount configured */}
+                        <div className="flex items-center justify-between bg-black/40 rounded-lg p-2 border border-white/5">
+                          <span className="text-[10px] text-neutral-500 font-bold">{t.sendLabel}:</span>
+                          <span className="text-xs font-black text-[#FF9900]">{msg.widgetData.amount} {msg.widgetData.srcToken}</span>
+                        </div>
+
+                        <button 
+                          onClick={() => handleExecuteWidgetSwap(msg.widgetData!)}
+                          className="w-full py-2.5 rounded-lg bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black font-black text-xs tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer"
+                        >
+                          {t.swapBtnActive}
                         </button>
-                      );
-                    })}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* Typing status indicator */}
+                {isAiTyping && (
+                  <div className="flex items-center gap-1.5 p-3 rounded-xl bg-white/5 border border-white/5 max-w-[120px]">
+                    <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 )}
+                <div ref={messagesEndRef} />
               </div>
 
-              {/* Swap Swap direction arrow */}
-              <div className="flex justify-center -my-6 relative z-10">
+              {/* Quick Prompt Suggesters */}
+              {chatMessages.length === 1 && (
+                <div className="p-3 bg-black/20 border-t border-white/5 flex flex-wrap gap-2 justify-center shrink-0">
+                  <button 
+                    onClick={() => handleSendChat(t.quickQuery1)}
+                    className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-[#FF9900]/10 border border-white/5 hover:border-[#FF9900]/20 text-[10px] text-neutral-400 hover:text-white font-bold transition-all cursor-pointer"
+                  >
+                    {t.quickQuery1}
+                  </button>
+                  <button 
+                    onClick={() => handleSendChat(t.quickQuery2)}
+                    className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-[#FF9900]/10 border border-white/5 hover:border-[#FF9900]/20 text-[10px] text-neutral-400 hover:text-white font-bold transition-all cursor-pointer"
+                  >
+                    {t.quickQuery2}
+                  </button>
+                  <button 
+                    onClick={() => handleSendChat(t.quickQuery3)}
+                    className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-[#FF9900]/10 border border-white/5 hover:border-[#FF9900]/20 text-[10px] text-neutral-400 hover:text-white font-bold transition-all cursor-pointer"
+                  >
+                    {t.quickQuery3}
+                  </button>
+                </div>
+              )}
+
+              {/* Chat Input panel */}
+              <div className="p-3 bg-black/35 border-t border-white/5 flex gap-2 shrink-0">
+                <input 
+                  type="text" 
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendChat(chatInput)}
+                  placeholder={t.chatPlaceholder}
+                  className="flex-1 bg-black/45 border border-white/5 rounded-xl px-4 text-xs focus:border-[#FF9900]/40 outline-none transition-all placeholder-neutral-600"
+                />
+                <button 
+                  onClick={() => handleSendChat(chatInput)}
+                  className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF9900] to-[#FF5500] text-black flex items-center justify-center transition-all hover:scale-105 active:scale-95 shrink-0 cursor-pointer"
+                >
+                  <SendIcon className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* TAB 2: PRO SWAP WIDGET */}
+          {activeTab === 'pro' && (
+            <motion.div
+              key="pro"
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -20, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 180 }}
+              className="w-full max-w-md liquid-glass-card rounded-2xl p-6 space-y-6 relative overflow-hidden"
+            >
+              
+              {/* Asset Box 1: SOURCE */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs font-bold text-neutral-400">
+                  <span>{t.sendLabel}</span>
+                  <span>{t.balanceLabel} 12.45</span>
+                </div>
+                
+                <div className="bg-black/45 border border-white/5 rounded-xl p-4 flex items-center justify-between gap-4">
+                  <input 
+                    type="text" 
+                    value={srcAmount}
+                    onChange={(e) => {
+                      setSrcAmount(e.target.value);
+                      if (activeQuote) setDstAmount('...');
+                    }}
+                    placeholder="0.0"
+                    className="flex-1 bg-transparent border-none text-2xl font-black focus:outline-none placeholder-neutral-700 min-w-0"
+                  />
+                  
+                  {/* Select Source Chain / Asset */}
+                  <div className="flex gap-1.5 shrink-0">
+                    
+                    {/* Chain Dropdown */}
+                    <div className="relative">
+                      <button 
+                        onClick={() => setShowSrcChainDrop(!showSrcChainDrop)}
+                        className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1 text-[10px] font-black tracking-wide cursor-pointer transition-all"
+                      >
+                        <span>{OMNISTON_CHAINS[srcChain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
+                        <span className="uppercase">{srcChain}</span>
+                        <ChevronDown className="w-3 h-3 text-neutral-500" />
+                      </button>
+
+                      {showSrcChainDrop && (
+                        <div className="absolute right-0 mt-1 w-32 bg-[#121215] border border-white/10 rounded-lg p-1 shadow-2xl z-20">
+                          {(['ton', 'base', 'polygon'] as const).map((chain) => (
+                            <button
+                              key={chain}
+                              onClick={() => handleChainChange('src', chain)}
+                              className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <span>{OMNISTON_CHAINS[chain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
+                              {chain}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Token Dropdown */}
+                    <div className="relative">
+                      <button 
+                        onClick={() => setShowSrcTokenDrop(!showSrcTokenDrop)}
+                        className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-xs font-black cursor-pointer transition-all"
+                      >
+                        <TokenLogo symbol={srcToken} className="w-3.5 h-3.5" />
+                        <span>{srcToken}</span>
+                        <ChevronDown className="w-3 h-3 text-neutral-500" />
+                      </button>
+
+                      {showSrcTokenDrop && (
+                        <div className="absolute right-0 mt-1 w-28 bg-[#121215] border border-white/10 rounded-lg p-1 shadow-2xl z-20">
+                          {OMNISTON_TOKENS[srcChain].map((tkn) => (
+                            <button
+                              key={tkn.symbol}
+                              onClick={() => {
+                                setSrcToken(tkn.symbol);
+                                setShowSrcTokenDrop(false);
+                              }}
+                              className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-xs font-black flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <TokenLogo symbol={tkn.symbol} className="w-3.5 h-3.5" />
+                              {tkn.symbol}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Centered Swapper Switcher Button */}
+              <div className="flex justify-center -my-3 relative z-10">
                 <button 
                   onClick={() => {
-                    setSwapFromToken(swapToToken);
-                    setSwapToToken(swapFromToken);
-                    handleSwapAmountChange(swapFromAmount, swapToToken, swapFromToken);
+                    const tempChain = srcChain;
+                    const tempToken = srcToken;
+                    setSrcChain(dstChain);
+                    setSrcToken(dstToken);
+                    setDstChain(tempChain);
+                    setDstToken(tempToken);
+                    setSrcAmount('');
+                    setDstAmount('');
                   }}
-                  className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FF9900] to-[#FF5500] p-0.5 shadow-lg active:rotate-180 transition-all duration-300"
+                  className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF9900] to-[#FF5500] border border-white/10 text-black flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-lg cursor-pointer"
                 >
-                  <div className="w-full h-full rounded-full bg-neutral-950 flex items-center justify-center">
-                    <ArrowLeftRight className="w-3.5 h-3.5 text-[#FF9900]" />
-                  </div>
+                  <SwapIcon className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Swap Input To */}
-              <div className="bg-neutral-900/60 p-4 rounded-xl border border-white/5 relative mt-1">
-                <div className="flex justify-between items-center text-[10px] text-neutral-400 mb-2 font-medium">
-                  <span>{DICTIONARY[lang].swapReceive}</span>
-                  <span>{DICTIONARY[lang].swapBalance} {SWAP_TOKENS[swapToToken].balance} {swapToToken}</span>
+              {/* Asset Box 2: DESTINATION */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs font-bold text-neutral-400">
+                  <span>{t.receiveLabel}</span>
+                  <span>{t.balanceLabel} 0.00</span>
                 </div>
-                <div className="flex justify-between items-center gap-3">
-                  <input 
-                    type="number" 
-                    placeholder="0.0"
-                    readOnly
-                    value={swapToAmount}
-                    className="bg-transparent text-white/70 font-black text-lg outline-none w-1/2"
-                  />
-                  <button 
-                    onClick={() => setActiveDropdown(activeDropdown === 'to' ? null : 'to')}
-                    className="bg-black hover:bg-neutral-900 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 text-white active:scale-95 transition"
-                  >
-                    <TokenLogo symbol={swapToToken} className="w-4 h-4 rounded-full shrink-0" />
-                    <span>{swapToToken}</span>
-                    <span className="text-[8px] text-neutral-500">▼</span>
-                  </button>
-                </div>
-
-                {/* Dropdown To */}
-                {activeDropdown === 'to' && (
-                  <div className="absolute right-4 top-14 z-50 bg-[#141416] border border-white/10 p-1.5 rounded-xl shadow-2xl space-y-1 w-44 max-h-64 overflow-y-auto no-scrollbar animate-fade-in">
-                    {Object.keys(SWAP_TOKENS).map((sym) => {
-                      const t = SWAP_TOKENS[sym as keyof typeof SWAP_TOKENS];
-                      return (
-                        <button
-                          key={sym}
-                          onClick={() => handleSelectToken('to', sym as keyof typeof SWAP_TOKENS)}
-                          className="w-full flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg text-left text-xs font-bold transition text-white"
-                        >
-                          <TokenLogo symbol={sym} className="w-4.5 h-4.5 rounded-full shrink-0" />
-                          <div className="flex flex-col">
-                            <span className="leading-tight">{sym}</span>
-                            <span className="text-[8px] text-neutral-500 leading-none">{t.name}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
+                
+                <div className="bg-black/45 border border-white/5 rounded-xl p-4 flex items-center justify-between gap-4">
+                  <div className="flex-1 bg-transparent text-2xl font-black text-neutral-300">
+                    {dstAmount || '0.0'}
                   </div>
-                )}
+                  
+                  <div className="flex gap-1.5 shrink-0">
+                    
+                    {/* Destination Chain Dropdown */}
+                    <div className="relative">
+                      <button 
+                        onClick={() => setShowDstChainDrop(!showDstChainDrop)}
+                        className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1 text-[10px] font-black tracking-wide cursor-pointer transition-all"
+                      >
+                        <span>{OMNISTON_CHAINS[dstChain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
+                        <span className="uppercase">{dstChain}</span>
+                        <ChevronDown className="w-3 h-3 text-neutral-500" />
+                      </button>
+
+                      {showDstChainDrop && (
+                        <div className="absolute right-0 mt-1 w-32 bg-[#121215] border border-white/10 rounded-lg p-1 shadow-2xl z-20">
+                          {(['ton', 'base', 'polygon'] as const).map((chain) => (
+                            <button
+                              key={chain}
+                              onClick={() => handleChainChange('dst', chain)}
+                              className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <span>{OMNISTON_CHAINS[chain.toUpperCase() as keyof typeof OMNISTON_CHAINS].icon}</span>
+                              {chain}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Destination Token Dropdown */}
+                    <div className="relative">
+                      <button 
+                        onClick={() => setShowDstTokenDrop(!showDstTokenDrop)}
+                        className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-xs font-black cursor-pointer transition-all"
+                      >
+                        <TokenLogo symbol={dstToken} className="w-3.5 h-3.5" />
+                        <span>{dstToken}</span>
+                        <ChevronDown className="w-3 h-3 text-neutral-500" />
+                      </button>
+
+                      {showDstTokenDrop && (
+                        <div className="absolute right-0 mt-1 w-28 bg-[#121215] border border-white/10 rounded-lg p-1 shadow-2xl z-20">
+                          {OMNISTON_TOKENS[dstChain].map((tkn) => (
+                            <button
+                              key={tkn.symbol}
+                              onClick={() => {
+                                setDstToken(tkn.symbol);
+                                setShowDstTokenDrop(false);
+                              }}
+                              className="w-full text-left px-2.5 py-1.5 rounded hover:bg-white/5 text-xs font-black flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <TokenLogo symbol={tkn.symbol} className="w-3.5 h-3.5" />
+                              {tkn.symbol}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Swap details info card */}
-              <div className="p-3 text-[11px] text-neutral-400 space-y-1 bg-black/40 rounded-xl border border-white/5">
-                <div className="flex justify-between">
-                  <span>{DICTIONARY[lang].swapRate}</span>
-                  <span className="text-white font-semibold">
-                    1 {swapFromToken} = {(SWAP_TOKENS[swapFromToken].priceUsd / SWAP_TOKENS[swapToToken].priceUsd).toFixed(swapToToken === 'NOT' ? 4 : 3)} {swapToToken}
-                  </span>
+              {/* RFQ Quote Details Box */}
+              {activeQuote && (
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3 space-y-2 text-xs font-medium">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">{t.rateLabel}</span>
+                    <span className="text-neutral-300 font-bold">1 {srcToken} ≈ {(Number(activeQuote.expectedOutput) / Number(activeQuote.expectedInput)).toFixed(4)} {dstToken}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">{t.slippageLabel}</span>
+                    <span className="text-neutral-300 font-bold">1.0%</span>
+                  </div>
+                  <div className="flex justify-between border-t border-white/5 pt-2">
+                    <span className="text-neutral-500">{t.routeLabel}</span>
+                    <span className="text-[#FF9900] font-black uppercase tracking-wider flex items-center gap-1">
+                      <Zap className="w-3 h-3" />
+                      Omniston Multi-Bridge
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>{DICTIONARY[lang].swapBonus}</span>
-                  <span className="text-[#FF9900] font-semibold flex items-center gap-1">⚡ +100 XP</span>
-                </div>
-              </div>
+              )}
 
-              {/* Action swap button */}
+              {/* Main Submit Action */}
               <button
-                onClick={executeSwap}
-                disabled={isSwapping}
-                className="w-full bg-[#FF9900] text-black font-black p-3.5 rounded-xl shadow-lg hover:shadow-[#FF9900]/10 active:scale-[0.99] transition-all duration-300 disabled:opacity-75 flex items-center justify-center gap-2"
+                onClick={triggerTxWorkflow}
+                disabled={!tonAddress || !evmAddress || !srcAmount}
+                className={`w-full py-4 rounded-xl font-black text-sm tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${(!tonAddress || !evmAddress) ? 'bg-white/5 border border-white/5 text-neutral-500 cursor-not-allowed' : !srcAmount ? 'bg-white/10 text-neutral-300' : 'bg-gradient-to-r from-[#FF9900] to-[#FF5500] text-black shadow-[0_4px_20px_rgba(255,153,0,0.2)] hover:scale-[1.01]'}`}
               >
-                {isSwapping ? (
+                {(!tonAddress || !evmAddress) ? (
                   <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>{DICTIONARY[lang].swappingProgress}</span>
+                    <WalletIcon className="w-4 h-4" />
+                    {t.swapBtnConnect}
                   </>
+                ) : !srcAmount ? (
+                  t.swapBtnAmount
                 ) : (
                   <>
-                    <ArrowLeftRight className="w-4 h-4" />
-                    <span>{walletAddress ? DICTIONARY[lang].swapButtonActive : DICTIONARY[lang].swapButtonInactive}</span>
+                    <Zap className="w-4 h-4" />
+                    {t.swapBtnActive}
                   </>
                 )}
               </button>
             </motion.div>
-          </div>
-        )}
+          )}
 
-        {/* OMNISTON CROSS-CHAIN SWAP MODAL */}
-        {showOmnistonModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="w-full max-w-sm glass-panel rounded-2xl p-5 border-purple-500/30 space-y-4 relative"
+        </AnimatePresence>
+      </main>
+
+      {/* ========================================================================= */}
+      {/* 5. PHYSICAL STEPS TRANSACTION OVERLAY */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {showTxOverlay && (
+          <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full max-w-sm liquid-glass-card rounded-2xl p-6 relative text-center space-y-6"
             >
-              {/* Modal Header */}
-              <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                <div className="flex items-center gap-1.5 font-sans">
-                  <Globe className="w-5 h-5 text-purple-400 animate-spin-slow" />
-                  <span className="font-black text-xs uppercase tracking-wider bg-gradient-to-r from-purple-400 to-amber-400 bg-clip-text text-transparent">
-                    OMNISTON CROSS-CHAIN 🌐
-                  </span>
+              
+              {/* Stepper Header */}
+              <div className="space-y-1">
+                <h4 className="text-base font-black text-white">{t.swappingProgress}</h4>
+                <p className="text-[10px] text-neutral-500 font-bold tracking-wider uppercase">Powered by Cocoon Relayer</p>
+              </div>
+
+              {/* Active Loading Ring */}
+              {txSuccess === null && (
+                <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full border-2 border-white/5 border-t-2 border-t-[#FF9900] animate-spin" />
+                  <TokenLogo symbol={srcToken} className="w-12 h-12" />
                 </div>
+              )}
+
+              {/* Success Checkmark */}
+              {txSuccess === true && (
+                <motion.div 
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="w-20 h-20 rounded-full bg-green-500/10 border-2 border-green-500 flex items-center justify-center mx-auto"
+                >
+                  <CheckCircle2 className="w-10 h-10 text-green-500" />
+                </motion.div>
+              )}
+
+              {/* Step checklist blocks */}
+              <div className="space-y-3 text-left">
+                {[
+                  { step: 1, label: t.step1 },
+                  { step: 2, label: t.step2 },
+                  { step: 3, label: t.step3 },
+                  { step: 4, label: t.step4 }
+                ].map((item) => {
+                  const isActive = txStep === item.step;
+                  const isCompleted = txStep > item.step || txSuccess;
+                  return (
+                    <div 
+                      key={item.step} 
+                      className={`flex items-center justify-between p-2.5 rounded-lg border transition-all duration-300 ${isCompleted ? 'bg-green-500/5 border-green-500/20 text-neutral-300' : isActive ? 'bg-[#FF9900]/5 border-[#FF9900]/30 text-white' : 'bg-black/20 border-white/5 text-neutral-600'}`}
+                    >
+                      <span className="text-xs font-bold">{item.label}</span>
+                      {isCompleted ? (
+                        <Check className="w-4 h-4 text-green-500" />
+                      ) : isActive ? (
+                        <div className="w-3.5 h-3.5 rounded-full border border-t-2 border-t-[#FF9900] animate-spin" />
+                      ) : (
+                        <div className="w-3.5 h-3.5 rounded-full bg-neutral-800" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Complete Action Button */}
+              {txSuccess === true && (
                 <button
                   onClick={() => {
-                    if (!isOmniSwapping) {
-                      setShowOmnistonModal(false);
-                      setOmniActiveDropdown(null);
-                    }
+                    setShowTxOverlay(false);
+                    setSrcAmount('');
+                    setDstAmount('');
                   }}
-                  disabled={isOmniSwapping}
-                  className="text-xs text-neutral-500 hover:text-white disabled:opacity-50"
+                  className="w-full py-3 rounded-lg bg-green-500 text-black font-black text-xs tracking-wider shadow-lg shadow-green-500/20 cursor-pointer"
                 >
-                  {DICTIONARY[lang].close}
-                </button>
-              </div>
-
-              {/* Wallet connection panel */}
-              <div className="bg-neutral-950/80 p-3 rounded-xl border border-white/5 space-y-2 text-left">
-                <div className="flex justify-between items-center text-[9px] text-neutral-400 uppercase font-black tracking-widest">
-                  <span>{lang === 'ru' ? 'Связь кошельков' : 'Wallet Connections'}</span>
-                  <span className="text-purple-400 font-bold">Omni-Link</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-1.5 p-1.5 bg-neutral-900 border border-white/5 rounded-lg">
-                    <span className="text-xs">💎</span>
-                    <div className="text-left overflow-hidden">
-                      <p className="text-[8px] text-neutral-500 font-bold leading-tight">TON Network</p>
-                      <p className="text-[8px] text-emerald-400 font-mono truncate leading-none">
-                        {walletAddress ? `${walletAddress.slice(0, 5)}...${walletAddress.slice(-4)}` : (lang === 'ru' ? 'Не подключен' : 'Disconnected')}
-                      </p>
-                    </div>
-                  </div>
-                  <ConnectButton.Custom>
-                    {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
-                      const ready = mounted;
-                      const connected = ready && account && chain;
-
-                      return (
-                        <div
-                          {...(!ready && {
-                            'aria-hidden': true,
-                            style: { opacity: 0, pointerEvents: 'none', userSelect: 'none' },
-                          })}
-                        >
-                          {(() => {
-                            if (!connected) {
-                              return (
-                                <button
-                                  onClick={openConnectModal}
-                                  className="flex items-center justify-center gap-1.5 p-1.5 bg-purple-950/20 border border-purple-500/40 rounded-lg hover:bg-purple-950/30 transition text-white active:scale-95 cursor-pointer h-full w-full"
-                                >
-                                  <span className="text-[8px] font-black uppercase tracking-wider text-purple-300 whitespace-nowrap">Connect EVM 🔌</span>
-                                </button>
-                              );
-                            }
-                            return (
-                              <div
-                                onClick={openAccountModal}
-                                className="flex items-center gap-1.5 p-1.5 bg-neutral-900 border border-purple-500/30 rounded-lg cursor-pointer hover:bg-neutral-800 transition"
-                              >
-                                <span className="text-xs">🔵</span>
-                                <div className="text-left overflow-hidden">
-                                  <p className="text-[8px] text-neutral-400 font-bold leading-tight">EVM Connected</p>
-                                  <p className="text-[8px] text-purple-400 font-mono truncate leading-none">{account.displayName}</p>
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      );
-                    }}
-                  </ConnectButton.Custom>
-                </div>
-              </div>
-
-              {/* Source Chain & Asset */}
-              <div className="bg-neutral-900/60 p-4 rounded-xl border border-white/5 relative text-left">
-                <div className="flex justify-between items-center text-[10px] text-neutral-400 mb-2 font-medium">
-                  <span>{lang === 'ru' ? 'Вы отдаете из сети:' : 'You send from network:'}</span>
-                  <button 
-                    onClick={() => !isOmniSwapping && setOmniActiveDropdown(omniActiveDropdown === 'sourceChain' ? null : 'sourceChain')}
-                    disabled={isOmniSwapping}
-                    className="text-[9px] font-black uppercase text-[#FF9900] hover:underline flex items-center gap-0.5 cursor-pointer"
-                  >
-                    <span>{omniSourceChain.toUpperCase()}</span>
-                    <span>▼</span>
-                  </button>
-                </div>
-
-                <div className="flex justify-between items-center gap-3">
-                  <input 
-                    type="number"
-                    placeholder="0.0"
-                    disabled={isOmniSwapping}
-                    value={omniSourceAmount}
-                    onChange={(e) => handleOmniAmountChange(e.target.value)}
-                    className="bg-transparent text-white font-black text-lg outline-none w-1/2 disabled:opacity-50"
-                  />
-                  <button 
-                    onClick={() => !isOmniSwapping && setOmniActiveDropdown(omniActiveDropdown === 'sourceToken' ? null : 'sourceToken')}
-                    disabled={isOmniSwapping}
-                    className="bg-black hover:bg-neutral-900 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 text-white active:scale-95 transition disabled:opacity-50 cursor-pointer"
-                  >
-                    <img 
-                      src={(OMNISTON_TOKENS[omniSourceChain] as Record<string, any>)[omniSourceToken].icon} 
-                      className="w-4 h-4 rounded-full shrink-0" 
-                    />
-                    <span>{omniSourceToken}</span>
-                    <span className="text-[8px] text-neutral-500">▼</span>
-                  </button>
-                </div>
-
-                {omniActiveDropdown === 'sourceChain' && (
-                  <div className="absolute left-4 top-10 z-50 bg-[#141416] border border-white/10 p-1.5 rounded-xl shadow-2xl space-y-1 w-44 animate-fade-in">
-                    {Object.keys(OMNISTON_CHAINS).map((chainKey) => {
-                      const c = OMNISTON_CHAINS[chainKey as keyof typeof OMNISTON_CHAINS];
-                      return (
-                        <button
-                          key={c.id}
-                          onClick={() => {
-                            setOmniSourceChain(c.id);
-                            const defaultTok = Object.keys(OMNISTON_TOKENS[c.id])[0];
-                            setOmniSourceToken(defaultTok);
-                            setOmniActiveDropdown(null);
-                            handleOmniAmountChange(omniSourceAmount, c.id, defaultTok);
-                          }}
-                          className="w-full flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg text-left text-xs font-bold transition text-white cursor-pointer"
-                        >
-                          <span className="text-sm">{c.icon}</span>
-                          <span className="leading-tight">{c.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {omniActiveDropdown === 'sourceToken' && (
-                  <div className="absolute right-4 top-14 z-50 bg-[#141416] border border-white/10 p-1.5 rounded-xl shadow-2xl space-y-1 w-44 animate-fade-in font-sans">
-                    {Object.keys(OMNISTON_TOKENS[omniSourceChain]).map((tok) => {
-                      const tokenData = (OMNISTON_TOKENS[omniSourceChain] as Record<string, any>)[tok];
-                      return (
-                        <button
-                          key={tok}
-                          onClick={() => {
-                            setOmniSourceToken(tok);
-                            setOmniActiveDropdown(null);
-                            handleOmniAmountChange(omniSourceAmount, omniSourceChain, tok);
-                          }}
-                          className="w-full flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg text-left text-xs font-bold transition text-white cursor-pointer"
-                        >
-                          <img src={tokenData.icon} className="w-4.5 h-4.5 rounded-full shrink-0" />
-                          <div className="flex flex-col font-sans">
-                            <span className="leading-tight">{tok}</span>
-                            <span className="text-[8px] text-neutral-500 leading-none">{tokenData.name}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Cross-chain separator */}
-              <div className="flex justify-center -my-6 relative z-10 font-sans">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-600 to-amber-500 p-0.5 shadow-lg relative">
-                  <div className="w-full h-full rounded-full bg-neutral-950 flex items-center justify-center">
-                    <Globe className="w-3.5 h-3.5 text-purple-400 animate-spin-slow" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Destination Chain & Asset */}
-              <div className="bg-neutral-900/60 p-4 rounded-xl border border-white/5 relative text-left mt-1">
-                <div className="flex justify-between items-center text-[10px] text-neutral-400 mb-2 font-medium">
-                  <span>{lang === 'ru' ? 'Вы получаете в сеть:' : 'You receive to network:'}</span>
-                  <button 
-                    onClick={() => !isOmniSwapping && setOmniActiveDropdown(omniActiveDropdown === 'destChain' ? null : 'destChain')}
-                    disabled={isOmniSwapping}
-                    className="text-[9px] font-black uppercase text-purple-400 hover:underline flex items-center gap-0.5 cursor-pointer"
-                  >
-                    <span>{omniDestChain.toUpperCase()}</span>
-                    <span>▼</span>
-                  </button>
-                </div>
-
-                <div className="flex justify-between items-center gap-3">
-                  <input 
-                    type="number"
-                    placeholder="0.0"
-                    readOnly
-                    value={omniDestAmount}
-                    className="bg-transparent text-white/70 font-black text-lg outline-none w-1/2"
-                  />
-                  <button 
-                    onClick={() => !isOmniSwapping && setOmniActiveDropdown(omniActiveDropdown === 'destToken' ? null : 'destToken')}
-                    disabled={isOmniSwapping}
-                    className="bg-black hover:bg-neutral-900 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 text-white active:scale-95 transition disabled:opacity-50 cursor-pointer"
-                  >
-                    <img 
-                      src={(OMNISTON_TOKENS[omniDestChain] as Record<string, any>)[omniDestToken].icon} 
-                      className="w-4 h-4 rounded-full shrink-0" 
-                    />
-                    <span>{omniDestToken}</span>
-                    <span className="text-[8px] text-neutral-500">▼</span>
-                  </button>
-                </div>
-
-                {omniActiveDropdown === 'destChain' && (
-                  <div className="absolute left-4 top-10 z-50 bg-[#141416] border border-white/10 p-1.5 rounded-xl shadow-2xl space-y-1 w-44 animate-fade-in">
-                    {Object.keys(OMNISTON_CHAINS).map((chainKey) => {
-                      const c = OMNISTON_CHAINS[chainKey as keyof typeof OMNISTON_CHAINS];
-                      return (
-                        <button
-                          key={c.id}
-                          onClick={() => {
-                            setOmniDestChain(c.id);
-                            const defaultTok = Object.keys(OMNISTON_TOKENS[c.id])[0];
-                            setOmniDestToken(defaultTok);
-                            setOmniActiveDropdown(null);
-                            handleOmniAmountChange(omniSourceAmount, omniSourceChain, omniSourceToken, c.id, defaultTok);
-                          }}
-                          className="w-full flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg text-left text-xs font-bold transition text-white cursor-pointer"
-                        >
-                          <span className="text-sm">{c.icon}</span>
-                          <span className="leading-tight">{c.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {omniActiveDropdown === 'destToken' && (
-                  <div className="absolute right-4 top-14 z-50 bg-[#141416] border border-white/10 p-1.5 rounded-xl shadow-2xl space-y-1 w-44 animate-fade-in font-sans font-sans">
-                    {Object.keys(OMNISTON_TOKENS[omniDestChain]).map((tok) => {
-                      const tokenData = (OMNISTON_TOKENS[omniDestChain] as Record<string, any>)[tok];
-                      return (
-                        <button
-                          key={tok}
-                          onClick={() => {
-                            setOmniDestToken(tok);
-                            setOmniActiveDropdown(null);
-                            handleOmniAmountChange(omniSourceAmount, omniSourceChain, omniSourceToken, omniDestChain, tok);
-                          }}
-                          className="w-full flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg text-left text-xs font-bold transition text-white cursor-pointer"
-                        >
-                          <img src={tokenData.icon} className="w-4.5 h-4.5 rounded-full shrink-0" />
-                          <div className="flex flex-col font-sans font-sans">
-                            <span className="leading-tight">{tok}</span>
-                            <span className="text-[8px] text-neutral-500 leading-none">{tokenData.name}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {isOmniSwapping ? (
-                <div className="p-4 bg-black/50 border border-purple-500/20 rounded-xl space-y-3 text-left animate-fade-in">
-                  <div className="flex justify-between items-center text-[10px] text-purple-400 font-black tracking-widest uppercase">
-                    <span>Omniston HTLC atomic swap pipeline</span>
-                    <RefreshCw className="w-3 h-3 animate-spin" />
-                  </div>
-                  
-                  <div className="space-y-2 text-[10px] font-sans text-neutral-300">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold ${
-                        omniSwapStep >= 1 ? 'bg-purple-600 text-white' : 'bg-neutral-800 text-neutral-600'
-                      }`}>
-                        {omniSwapStep > 1 ? '✓' : '1'}
-                      </span>
-                      <span className={omniSwapStep === 1 ? 'text-white font-bold animate-pulse' : 'text-neutral-500'}>
-                        {lang === 'ru' ? 'Получение котировки от WS-резолверов...' : 'Requesting quote from WS Resolvers...'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold ${
-                        omniSwapStep >= 2 ? 'bg-purple-600 text-white' : 'bg-neutral-800 text-neutral-600'
-                      }`}>
-                        {omniSwapStep > 2 ? '✓' : '2'}
-                      </span>
-                      <span className={omniSwapStep === 2 ? 'text-white font-bold animate-pulse' : 'text-neutral-500'}>
-                        {lang === 'ru' ? 'Блокировка активов в HTLC смарт-контракте...' : 'Locking assets in HTLC Smart Contract...'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold ${
-                        omniSwapStep >= 3 ? 'bg-purple-600 text-white' : 'bg-neutral-800 text-neutral-600'
-                      }`}>
-                        {omniSwapStep > 3 ? '✓' : '3'}
-                      </span>
-                      <span className={omniSwapStep === 3 ? 'text-white font-bold animate-pulse' : 'text-neutral-500'}>
-                        {lang === 'ru' ? 'Ожидание кросс-чейн валидаторов...' : 'Awaiting cross-chain block confirmation...'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold ${
-                        omniSwapStep >= 4 ? 'bg-purple-600 text-white' : 'bg-neutral-800 text-neutral-600'
-                      }`}>
-                        {omniSwapStep > 4 ? '✓' : '4'}
-                      </span>
-                      <span className={omniSwapStep === 4 ? 'text-white font-bold animate-pulse' : 'text-neutral-500'}>
-                        {lang === 'ru' ? 'Разблокировка и выплата в целевой сети...' : 'Releasing assets in target network...'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {omniTxHash && (
-                    <div className="border-t border-white/5 pt-2 text-[8px] text-neutral-500 font-mono flex justify-between items-center">
-                      <span>TX Hash:</span>
-                      <span className="text-purple-400 select-all cursor-pointer truncate w-3/4 text-right">{omniTxHash}</span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="p-3 text-[11px] text-neutral-400 space-y-1 bg-black/40 rounded-xl border border-white/5 text-left font-sans font-sans">
-                  <div className="flex justify-between">
-                    <span>{lang === 'ru' ? 'Кросс-чейн курс:' : 'Cross-Chain Rate:'}</span>
-                    <span className="text-white font-semibold">
-                      1 {omniSourceToken} = {(getOmniTokenPrice(omniSourceChain, omniSourceToken) / getOmniTokenPrice(omniDestChain, omniDestToken)).toFixed(omniDestToken === 'STON' ? 3 : 5)} {omniDestToken}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>{lang === 'ru' ? 'Гарант атомарности:' : 'Atomic Escrow:'}</span>
-                    <span className="text-purple-400 font-bold">Omniston HTLC</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>{lang === 'ru' ? 'Вайб-Бонус за сделку:' : 'Swap Bonus Reward:'}</span>
-                    <span className="text-[#FF9900] font-semibold">⚡ +200 XP</span>
-                  </div>
-                </div>
-              )}
-
-              {!isOmniSwapping && (
-                <button
-                  onClick={executeOmniSwap}
-                  className="w-full bg-gradient-to-r from-purple-600 to-amber-500 text-white font-black p-3.5 rounded-xl shadow-lg hover:shadow-purple-500/10 active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer font-sans"
-                >
-                  <Globe className="w-4 h-4" />
-                  <span>
-                    {omniSourceChain !== 'ton' && !evmWalletAddress 
-                      ? (lang === 'ru' ? 'Сначала подключите EVM кошелек' : 'Connect EVM wallet first')
-                      : (omniDestChain === 'ton' && !walletAddress
-                          ? (lang === 'ru' ? 'Подключите кошелек TON' : 'Connect TON wallet')
-                          : (lang === 'ru' ? 'Выполнить кросс-чейн обмен' : 'Execute Cross-Chain Swap'))}
-                  </span>
+                  {t.letsGo}
                 </button>
               )}
+
             </motion.div>
           </div>
         )}
@@ -2222,1048 +1222,4 @@ export default function Home() {
 
     </div>
   );
-
-  // ===============================================
-  // ===============================================
-  // === INNER CORE MOBILE CONTENT COMPONENT ===
-  // ===============================================
-  // ===============================================
-  function MobileAppContent() {
-    return (
-      <div className="flex flex-col flex-1 bg-black min-h-full pb-20 relative">
-        
-        {/* === HEADER === */}
-        <header className="p-4 flex items-center justify-between border-b border-white/5 sticky top-0 bg-black/80 backdrop-blur-md z-40">
-          <div className="flex items-center gap-2" onClick={() => { setActiveTab('home'); setShowLeaderboard(false); }}>
-            <img 
-              src="/logo.png" 
-              alt="STON Hub Logo" 
-              className="w-8 h-8 rounded-full object-cover border border-[#FF9900]/30 shadow-md shadow-[#FF9900]/5"
-            />
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-black tracking-tighter text-white">STON</span>
-              <span className="ph-badge text-[10px] py-[1px] px-[4px]">Hub</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            {/* Premium segmented language toggle */}
-            <div className="flex items-center p-0.5 bg-neutral-900/60 backdrop-blur border border-white/10 rounded-xl relative overflow-hidden h-[30px] w-[70px]">
-              <div 
-                className={`absolute top-0.5 bottom-0.5 w-[31px] rounded-lg bg-[#FF9900] shadow-md shadow-[#FF9900]/20 transition-all duration-300 ${
-                  lang === 'en' ? 'left-[36px]' : 'left-0.5'
-                }`}
-              />
-              <button 
-                onClick={() => lang !== 'ru' && toggleLang()}
-                className={`flex-1 text-[10px] font-black z-10 text-center transition-colors duration-200 ${
-                  lang === 'ru' ? 'text-black' : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                RU
-              </button>
-              <button 
-                onClick={() => lang !== 'en' && toggleLang()}
-                className={`flex-1 text-[10px] font-black z-10 text-center transition-colors duration-200 ${
-                  lang === 'en' ? 'text-black' : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                EN
-              </button>
-            </div>
-
-            <div className="scale-[0.9] origin-right">
-              {walletAddress ? (
-                <button 
-                  onClick={() => tonConnectUI.disconnect()}
-                  className="bg-neutral-900 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-[10px] font-black text-emerald-400 flex items-center gap-1.5 shadow-sm active:scale-95 transition whitespace-nowrap"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>{walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}</span>
-                </button>
-              ) : (
-                <button 
-                  onClick={() => tonConnectUI.openModal()}
-                  className="bg-gradient-to-tr from-[#FF9900] to-[#FF5500] hover:from-[#FF5500] hover:to-[#FF9900] text-black px-3.5 py-1.5 rounded-xl text-[10px] font-black shadow-lg shadow-[#FF9900]/10 hover:shadow-[#FF9900]/25 active:scale-95 transition whitespace-nowrap"
-                >
-                  {DICTIONARY[lang].connectWalletBtn}
-                </button>
-              )}
-            </div>
-          </div>
-        </header>
-
-        {/* === Live Price Bar === */}
-        <div className="px-4 py-2 bg-neutral-950 border-b border-white/5 flex items-center justify-between text-[11px] font-sans">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FF9900] animate-ping" />
-            <span className="text-neutral-400 font-medium">{lang === 'ru' ? 'Цена STON.fi:' : 'STON.fi Price:'}</span>
-            <motion.span 
-              key={stonPrice}
-              initial={{ opacity: 0.5, y: -2 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`font-bold tracking-wider ${priceDirection === 'up' ? 'text-[#FF9900]' : 'text-rose-500'}`}
-            >
-              ${stonPrice.toFixed(3)}
-            </motion.span>
-          </div>
-          <div className="flex items-center gap-1 text-[9px] text-neutral-400 bg-white/5 px-2 py-0.5 rounded-full">
-            <TrendingUp className="w-3 h-3 text-[#FF9900]" />
-            <span>+4.25% 24h</span>
-          </div>
-        </div>
-
-        {/* === GLOBAL NOTIFICATION === */}
-        <AnimatePresence>
-          {notification && (
-            <motion.div 
-              initial={{ opacity: 0, y: -40, scale: 0.95 }}
-              animate={{ opacity: 1, y: 12, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="fixed top-12 left-4 right-4 z-50 p-3 rounded-xl glass-panel text-center text-xs font-bold flex items-center justify-center gap-2 text-[#FF9900] border-[#FF9900]/30 shadow-[0_5px_20px_rgba(0,0,0,0.8)]"
-            >
-              <Sparkles className="w-4 h-4 text-[#FF9900]" />
-              {notification}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* === MAIN TAB CONTAINER === */}
-        <main className="flex-1 p-4 overflow-y-auto">
-          <AnimatePresence mode="wait">
-            
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {/* === TAB 1: ГЛАВНАЯ (HOME DASHBOARD) === */}
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {activeTab === 'home' && (
-              <motion.div
-                key="home"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-4 text-left"
-              >
-                {/* Ambassador Card (Welcome) */}
-                <div className="glass-panel rounded-2xl p-5 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#FF9900]/10 to-transparent rounded-full blur-2xl pointer-events-none" />
-                  
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#FF9900] to-[#FF5500] p-0.5 shadow-xl animate-pulse">
-                        <div className="w-full h-full rounded-full bg-neutral-900 flex items-center justify-center overflow-hidden">
-                          {tgUser?.photoUrl ? (
-                            <img 
-                              src={tgUser.photoUrl} 
-                              alt="Profile" 
-                              className="w-full h-full object-cover" 
-                            />
-                          ) : (
-                            <img src="/logo.png" className="w-full h-full object-cover" />
-                          )}
-                        </div>
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 bg-[#FF9900] text-black w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black border-2 border-neutral-900 shadow-md">
-                        <Flame className="w-3 h-3" />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h2 className="font-bold text-sm text-white leading-tight">
-                          {tgUser 
-                            ? `${DICTIONARY[lang].hiUser}${tgUser.username ? `@${tgUser.username}` : tgUser.firstName}` 
-                            : DICTIONARY[lang].hiAmbassador}
-                        </h2>
-                        <span className="bg-[#FF9900]/10 text-[#FF9900] text-[8px] font-black tracking-wider px-2 py-0.5 rounded-full uppercase border border-[#FF9900]/20 shrink-0">ACTIVE</span>
-                      </div>
-                      <p className="text-[11px] text-neutral-400 flex items-center gap-1">
-                        <Award className="w-3.5 h-3.5 text-[#FF9900]" />
-                        <span className="text-neutral-400 font-medium">{DICTIONARY[lang].rankLabel}</span><span className="text-white font-semibold">{userRank}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Progress bar to next rank */}
-                  <div className="mt-5 space-y-2">
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-neutral-400 font-medium">{DICTIONARY[lang].progressLabel}</span>
-                      <span className="text-[#FF9900] font-black">{userXp} / 5000 XP</span>
-                    </div>
-                    <div className="h-2 w-full bg-neutral-900 rounded-full overflow-hidden p-0.5 border border-white/5">
-                      <motion.div 
-                        className="h-full bg-gradient-to-r from-[#FF5500] to-[#FF9900] rounded-full shadow-lg"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min((userXp / 5000) * 100, 100)}%` }}
-                        transition={{ duration: 1 }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-[9px] text-neutral-500">
-                      <span>{lang === 'ru' ? 'Уровень 12' : 'Level 12'}</span>
-                      <span className="italic font-medium">+{5000 - userXp} XP {DICTIONARY[lang].nextRankText}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Balance $STON with dynamic drift chart */}
-                <div className="glass-panel rounded-2xl p-4 space-y-3 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-500/5 to-transparent rounded-full blur-2xl" />
-                  
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-0.5">
-                      <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider">{DICTIONARY[lang].balanceLabel}</span>
-                      <h3 className="text-2xl font-black text-white flex items-center gap-1">
-                        <span>1,250.75</span>
-                        <span className="text-xs text-[#FF9900] font-black bg-[#FF9900]/10 py-0.5 px-2 rounded-full ml-1">STON</span>
-                      </h3>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs text-neutral-400 font-medium">~${(1250.75 * stonPrice).toLocaleString('en-US', {maximumFractionDigits: 2})}</span>
-                      <p className="text-[10px] text-emerald-400 font-bold flex items-center justify-end gap-0.5 mt-0.5">
-                        <TrendingUp className="w-3 h-3" /> +12.5% {DICTIONARY[lang].sevenDaysText}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Gorgeous simulated chart line in orange gradient */}
-                  <div className="h-12 w-full mt-2 relative flex items-end">
-                    <svg className="w-full h-full overflow-visible" viewBox="0 0 100 30" preserveAspectRatio="none">
-                      <defs>
-                        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#FF9900" stopOpacity="0.4" />
-                          <stop offset="100%" stopColor="#FF9900" stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
-                      {/* Grid line helper */}
-                      <line x1="0" y1="25" x2="100" y2="25" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
-                      <line x1="0" y1="15" x2="100" y2="15" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
-                      <line x1="0" y1="5" x2="100" y2="5" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
-                      {/* Chart area fill */}
-                      <path d="M 0 25 Q 15 28, 30 18 T 60 12 T 85 8 T 100 5 L 100 30 L 0 30 Z" fill="url(#chartGrad)" />
-                      {/* Chart path stroke */}
-                      <path d="M 0 25 Q 15 28, 30 18 T 60 12 T 85 8 T 100 5" fill="none" stroke="#FF9900" strokeWidth="2" strokeLinecap="round" />
-                      {/* Glow dot indicator */}
-                      <circle cx="100" cy="5" r="2.5" fill="#FFFFFF" className="orange-glow animate-ping" />
-                      <circle cx="100" cy="5" r="1.5" fill="#FF9900" />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* OMNISTON CROSS-CHAIN HACKATHON FEATURE CARD - PREMIUM */}
-                <motion.div 
-                  whileHover={{ scale: 1.01 }}
-                  className="relative overflow-hidden rounded-2xl p-[1px] group text-left cursor-pointer mt-4 shadow-xl"
-                  onClick={() => setShowOmnistonModal(true)}
-                >
-                  {/* Animated gradient border */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-[#FF9900] to-emerald-500 rounded-2xl opacity-50 group-hover:opacity-100 transition-opacity duration-500 animate-gradient-xy" />
-                  
-                  <div className="relative h-full w-full bg-[#0a0a0c] rounded-2xl p-4 flex flex-col gap-3.5 border border-white/5 z-10 overflow-hidden">
-                    {/* Background glow */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-purple-500/20 transition-colors duration-700" />
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#FF9900]/10 rounded-full blur-[30px] pointer-events-none group-hover:bg-[#FF9900]/20 transition-colors duration-700" />
-                    
-                    <div className="flex justify-between items-start relative z-10">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-500 to-[#FF9900] text-white text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded-full uppercase shadow-[0_0_10px_rgba(255,153,0,0.3)] border border-white/10">
-                            <Sparkles className="w-2.5 h-2.5" />
-                            OMNISTON V1BETA8
-                          </span>
-                          <span className="text-[8px] bg-emerald-500/15 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            LIVE
-                          </span>
-                        </div>
-                        
-                        <h3 className="font-black text-[15px] text-white flex items-center gap-2 mt-1">
-                          Cross-Chain Swap <ArrowLeftRight className="w-3.5 h-3.5 text-[#FF9900]" />
-                        </h3>
-                        
-                        <p className="text-[10px] text-neutral-400 leading-relaxed max-w-[250px] font-medium">
-                          {lang === 'ru'
-                            ? 'Мгновенный обмен активов между Base 🔵, Polygon 🟣 и TON 💎 через унифицированную ликвидность.'
-                            : 'Instant atomic swaps between Base 🔵, Polygon 🟣 and TON 💎 via unified liquidity layers.'}
-                        </p>
-                      </div>
-                      
-                      <div className="w-11 h-11 rounded-full bg-black/50 border border-purple-500/40 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.2)] transform group-hover:rotate-180 transition-transform duration-700 backdrop-blur-md shrink-0">
-                        <Globe className="w-5 h-5 text-purple-400 animate-pulse" />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-white/5 relative z-10 mt-1">
-                      <div className="flex items-center gap-1">
-                        <div className="flex -space-x-2">
-                          <div className="w-6 h-6 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center z-30 backdrop-blur-md shadow-lg">
-                            <span className="text-[10px]">🔵</span>
-                          </div>
-                          <div className="w-6 h-6 rounded-full bg-purple-500/20 border border-purple-500/50 flex items-center justify-center z-20 backdrop-blur-md shadow-lg">
-                            <span className="text-[10px]">🟣</span>
-                          </div>
-                          <div className="w-6 h-6 rounded-full bg-blue-400/20 border border-blue-400/50 flex items-center justify-center z-10 backdrop-blur-md shadow-lg">
-                            <span className="text-[10px]">💎</span>
-                          </div>
-                        </div>
-                        <span className="text-[9px] font-bold text-neutral-500 ml-2">Any-to-Any</span>
-                      </div>
-                      
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setShowOmnistonModal(true); }}
-                        className="bg-white text-black hover:bg-neutral-200 font-black text-[10px] uppercase tracking-wider px-4 py-2 rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] transition-all active:scale-95 flex items-center gap-1.5"
-                      >
-                        <span>{lang === 'ru' ? 'Открыть мост' : 'Open Bridge'}</span>
-                        <ChevronRight className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-
-
-                {/* Quick Actions Grid */}
-                <div>
-                  <h4 className="text-[10px] text-neutral-500 uppercase font-black tracking-widest pl-1 mb-2">{DICTIONARY[lang].quickActions}</h4>
-                  <div className="grid grid-cols-4 gap-2.5">
-                    <button 
-                      onClick={() => setActiveTab('missions')}
-                      className="p-3 bg-neutral-900 border border-white/5 rounded-xl hover:border-[#FF9900]/30 transition-all flex flex-col items-center justify-center gap-1.5 active:scale-95"
-                    >
-                      <Target className="w-5 h-5 text-[#FF9900]" />
-                      <span className="text-[9px] font-bold text-white uppercase">{lang === 'ru' ? 'Миссии' : 'Missions'}</span>
-                    </button>
-                    <button 
-                      onClick={() => setActiveTab('videos')}
-                      className="p-3 bg-neutral-900 border border-white/5 rounded-xl hover:border-[#FF9900]/30 transition-all flex flex-col items-center justify-center gap-1.5 active:scale-95"
-                    >
-                      <BookOpen className="w-5 h-5 text-[#FF9900]" />
-                      <span className="text-[9px] font-bold text-white uppercase">{lang === 'ru' ? 'Академия' : 'Academy'}</span>
-                    </button>
-                    <button 
-                      onClick={() => setShowSwapModal(true)}
-                      className="p-3 bg-neutral-900 border border-white/5 rounded-xl hover:border-[#FF9900]/30 transition-all flex flex-col items-center justify-center gap-1.5 active:scale-95"
-                    >
-                      <ArrowLeftRight className="w-5 h-5 text-[#FF9900]" />
-                      <span className="text-[9px] font-bold text-white uppercase">{DICTIONARY[lang].swapActionBtn}</span>
-                    </button>
-                    <button 
-                      onClick={handleDailyClaim}
-                      disabled={dailyClaimed}
-                      className={`p-3 border rounded-xl transition-all flex flex-col items-center justify-center gap-1.5 active:scale-95 ${
-                        dailyClaimed 
-                          ? 'bg-neutral-950 border-neutral-900 text-neutral-600'
-                          : 'bg-neutral-900 border-white/5 hover:border-[#FF9900]/30 text-[#FF9900]'
-                      }`}
-                    >
-                      <Flame className={`w-5 h-5 ${dailyClaimed ? 'text-neutral-600' : 'animate-pulse'}`} />
-                      <span className="text-[9px] font-bold text-white uppercase">{DICTIONARY[lang].dailyClaimBtn}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Welcome Info Box */}
-                <div className="glass-panel rounded-xl p-4 space-y-3 relative overflow-hidden">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#FF9900]" />
-                    <h3 className="font-bold text-xs text-white">{DICTIONARY[lang].welcomeTitle}</h3>
-                  </div>
-                  <p className="text-[11px] text-neutral-400 leading-relaxed">
-                    {DICTIONARY[lang].welcomeDesc}
-                  </p>
-                  <div className="pt-1 flex items-center justify-between text-xs text-[#FF9900] font-bold cursor-pointer" onClick={() => setActiveTab('videos')}>
-                    <span>{DICTIONARY[lang].goToAcademy}</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </div>
-                </div>
-
-                {/* Ecosystem Quick Stats */}
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="p-3 bg-[#141416]/50 border border-white/5 rounded-xl text-center">
-                    <p className="text-[8px] text-neutral-500 uppercase font-black">{DICTIONARY[lang].completedQuests}</p>
-                    <p className="text-xs font-black mt-1 text-white">4 / 5</p>
-                  </div>
-                  <div className="p-3 bg-[#141416]/50 border border-white/5 rounded-xl text-center">
-                    <p className="text-[8px] text-neutral-500 uppercase font-black">{DICTIONARY[lang].completedLessons}</p>
-                    <p className="text-xs font-black mt-1 text-white">2 / 3</p>
-                  </div>
-                  <div className="p-3 bg-[#141416]/50 border border-white/5 rounded-xl text-center">
-                    <p className="text-[8px] text-neutral-500 uppercase font-black">{DICTIONARY[lang].savingApy}</p>
-                    <p className="text-xs font-black mt-1 text-emerald-400">78.5%</p>
-                  </div>
-                </div>
-
-              </motion.div>
-            )}
-
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {/* === TAB 2: ВИДЕО (ACADEMY VIDEO HUB) === */}
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {activeTab === 'videos' && (
-              <motion.div
-                key="videos"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-4 text-left"
-              >
-                {selectedLesson ? (
-                  // --- Detailed Text Guide View ---
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="glass-panel rounded-2xl p-5 space-y-5 border-[#FF9900]/20 text-left"
-                  >
-                    {/* Back Button */}
-                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                      <span className="text-[9px] font-black text-[#FF9900] uppercase bg-[#FF9900]/10 px-2.5 py-0.5 rounded-full border border-[#FF9900]/20">
-                        {selectedLesson.category}
-                      </span>
-                      <button 
-                        onClick={() => setSelectedLesson(null)}
-                        className="text-xs text-neutral-400 hover:text-white flex items-center gap-0.5 font-bold"
-                      >
-                        {DICTIONARY[lang].backToList}
-                      </button>
-                    </div>
-
-                    {/* Elegant Header Banner */}
-                    <div className="w-full rounded-xl bg-gradient-to-br from-amber-950/20 via-neutral-900/80 to-black p-5 border border-white/5 relative overflow-hidden shadow-inner">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#FF9900]/5 to-transparent rounded-full blur-2xl pointer-events-none" />
-                      <div className="flex items-center gap-2 text-[10px] text-[#FF9900] font-bold uppercase tracking-wider mb-2">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>{DICTIONARY[lang].studyMaterial}</span>
-                      </div>
-                      <h2 className="text-sm font-black text-white leading-snug mb-3">
-                        {selectedLesson.title}
-                      </h2>
-                      <div className="flex gap-4 text-[10px] text-neutral-400">
-                        <span className="flex items-center gap-1 font-semibold">
-                          <BookOpen className="w-3.5 h-3.5 text-[#FF9900]" />
-                          {DICTIONARY[lang].readTime} {selectedLesson.readTime}
-                        </span>
-                        <span>•</span>
-                        <span>{selectedLesson.views}</span>
-                      </div>
-                    </div>
-
-                    {/* Reading Content Pane */}
-                    <div className="text-xs text-neutral-300 space-y-4 leading-relaxed font-sans border-b border-white/5 pb-4">
-                      {selectedLesson.content ? (
-                        selectedLesson.content.map((paragraph, index) => (
-                          <p key={index} className="text-neutral-300">
-                            {paragraph}
-                          </p>
-                        ))
-                      ) : (
-                        <p className="text-neutral-300">
-                          {selectedLesson.description}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Interactive Lesson Quiz */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 text-xs font-black text-white">
-                        <HelpCircle className="w-4 h-4 text-[#FF9900]" />
-                        <span>{DICTIONARY[lang].quizPrompt}{selectedLesson.xpReward} XP:</span>
-                      </div>
-                      
-                      <p className="text-xs text-white font-bold bg-neutral-900/60 p-4 rounded-xl border border-white/5 leading-snug">
-                        {selectedLesson.quiz.question}
-                      </p>
-
-                      <div className="space-y-2.5">
-                        {selectedLesson.quiz.options.map((opt, idx) => (
-                          <button
-                            key={idx}
-                            disabled={quizResult === 'correct'}
-                            onClick={() => handleLessonQuizSubmit(idx)}
-                            className={`w-full text-left text-xs p-3.5 rounded-xl border flex items-center justify-between transition-all duration-300 ${
-                              quizAnswer === idx
-                                ? quizResult === 'correct'
-                                  ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400 font-bold'
-                                  : 'bg-rose-500/10 border-rose-500 text-rose-500 font-bold'
-                                : 'bg-neutral-900 border-white/5 text-white hover:border-[#FF9900]/30 active:scale-[0.99]'
-                            }`}
-                          >
-                            <span>{opt}</span>
-                            {quizAnswer === idx && (
-                              quizResult === 'correct' 
-                                ? <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 ml-2" /> 
-                                : <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 ml-2" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-
-                      {quizResult === 'correct' && (
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-xl flex items-center gap-2 text-xs text-emerald-400 font-bold">
-                          <CheckCircle2 className="w-4 h-4 shrink-0" />
-                          <span>{DICTIONARY[lang].quizSuccess}</span>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                ) : (
-                  // --- Academy Section Main View ---
-                  <div className="space-y-4">
-                    {/* Header titles */}
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <h2 className="text-base font-black text-white">{DICTIONARY[lang].academyTitle}</h2>
-                        <p className="text-[11px] text-neutral-400">{DICTIONARY[lang].academyDesc}</p>
-                      </div>
-                      <span className="text-[10px] text-neutral-500 font-bold">
-                        {videoFilter === 'guides' ? `${DICTIONARY[lang].totalGuides} ${filteredLessons.length}` : (lang === 'ru' ? 'Скоро' : 'Soon')}
-                      </span>
-                    </div>
-
-                    {/* Horizontal Categories Scroll */}
-                    <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar select-none">
-                      {[
-                        { key: 'guides', label: lang === 'ru' ? 'Гайды' : 'Guides' },
-                        { key: 'videos', label: lang === 'ru' ? 'Видео' : 'Videos' }
-                      ].map(cat => (
-                        <button
-                          key={cat.key}
-                          onClick={() => setVideoFilter(cat.key)}
-                          className={`text-[10px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full border shrink-0 transition-all ${
-                            videoFilter === cat.key
-                              ? 'bg-[#FF9900] text-black border-[#FF9900] shadow-sm'
-                              : 'bg-neutral-900 text-neutral-400 border-white/5 hover:border-white/10'
-                          }`}
-                        >
-                          {cat.label}
-                        </button>
-                      ))}
-                    </div>
-
-                    {videoFilter === 'videos' ? (
-                      /* Coming Soon Video Empty State */
-                      <div className="glass-panel rounded-2xl p-8 text-center space-y-4 border-white/5 my-4">
-                        <div className="w-16 h-16 rounded-full bg-neutral-900 border border-[#FF9900]/30 flex items-center justify-center mx-auto shadow-lg relative">
-                          <Play className="w-6 h-6 text-[#FF9900] animate-pulse" />
-                          <div className="absolute inset-0 rounded-full border border-[#FF9900]/20 animate-ping opacity-70" />
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="text-sm font-black text-white">{DICTIONARY[lang].videoAcademyTitle}</h3>
-                          <p className="text-[11px] text-neutral-400 leading-relaxed max-w-xs mx-auto">
-                            {DICTIONARY[lang].videoAcademyDesc}
-                          </p>
-                        </div>
-                        <span className="inline-block bg-[#FF9900]/10 text-[#FF9900] text-[8px] font-black tracking-widest px-3 py-1 rounded-full uppercase border border-[#FF9900]/20">
-                          COMING SOON
-                        </span>
-                      </div>
-                    ) : (
-                      /* Elegant list of Text Guides */
-                      <div className="space-y-3.5">
-                        {filteredLessons.map(lesson => {
-                          const isCompleted = completedLessonIds.includes(lesson.id);
-                          return (
-                            <div 
-                              key={lesson.id}
-                              onClick={() => setSelectedLesson(lesson)}
-                              className="glass-panel-interactive rounded-xl p-4 cursor-pointer border border-white/5 relative group text-left transition-all duration-300 hover:border-[#FF9900]/30 hover:shadow-[0_4px_20px_rgba(255,153,0,0.05)]"
-                            >
-                              <div className="flex justify-between items-center mb-2.5">
-                                <span className="text-[8px] font-black text-[#FF9900] uppercase bg-[#FF9900]/10 border border-[#FF9900]/20 px-2.5 py-0.5 rounded-full">
-                                  {lesson.category}
-                                </span>
-                                <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
-                                  ⚡ +{lesson.xpReward} XP
-                                </span>
-                              </div>
-                              
-                              <h3 className="font-black text-xs text-white group-hover:text-[#FF9900] transition duration-200 line-clamp-2 leading-snug mb-1.5">
-                                {lesson.title}
-                              </h3>
-                              
-                              <p className="text-[11px] text-neutral-400 line-clamp-2 leading-relaxed mb-3">
-                                {lesson.description}
-                              </p>
-                              
-                              <div className="flex justify-between items-center text-[10px] text-neutral-500 border-t border-white/5 pt-2.5">
-                                <div className="flex items-center gap-3">
-                                  <span className="flex items-center gap-1">
-                                    <BookOpen className="w-3.5 h-3.5 text-neutral-500" />
-                                    {lesson.readTime}
-                                  </span>
-                                  <span>{lesson.views}</span>
-                                </div>
-                                
-                                <div className="flex items-center gap-1.5 font-bold text-[#FF9900] group-hover:translate-x-0.5 transition-transform duration-200">
-                                  {isCompleted ? (
-                                    <span className="text-emerald-400 flex items-center gap-0.5 text-[9px] font-black uppercase">
-                                      <CheckCircle2 className="w-3.5 h-3.5" /> {DICTIONARY[lang].completed}
-                                    </span>
-                                  ) : (
-                                    <>
-                                      <span>{DICTIONARY[lang].readGuide}</span>
-                                      <ChevronRight className="w-3.5 h-3.5" />
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {/* === TAB 3: МИССИИ (MISSIONS HUB) === */}
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {activeTab === 'missions' && (
-              <motion.div
-                key="missions"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-4 text-left"
-              >
-                <div>
-                  <h2 className="text-base font-black text-white">{DICTIONARY[lang].missionsTitle}</h2>
-                  <p className="text-[11px] text-neutral-400">{DICTIONARY[lang].missionsDesc}</p>
-                </div>
-
-                {/* Quests Lists */}
-                <div className="space-y-3">
-                  {missions.map(mission => (
-                    <div 
-                      key={mission.id}
-                      className={`glass-panel rounded-xl p-4 border transition-all duration-300 relative ${
-                        mission.status === 'completed' 
-                          ? 'border-emerald-500/25 bg-emerald-500/[0.02]' 
-                          : 'border-white/5 hover:border-[#FF9900]/20'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-1 text-left">
-                          <div className="flex items-center gap-2">
-                            <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${
-                              mission.type === 'web3' 
-                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                                : 'bg-[#FF9900]/10 text-[#FF9900] border-[#FF9900]/20'
-                            }`}>
-                              {mission.type}
-                            </span>
-                            <span className="text-[10px] font-bold text-[#FF9900]">⚡ +{mission.xpReward} XP</span>
-                          </div>
-                          <h3 className="font-bold text-xs text-white mt-1.5">{mission.title}</h3>
-                          <p className="text-[10px] text-neutral-400 leading-snug mt-1">{mission.description}</p>
-                        </div>
-
-                        {/* Action buttons based on status */}
-                        <div className="shrink-0 pt-0.5">
-                          {mission.status === 'completed' ? (
-                            <div className="bg-emerald-500/10 text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center gap-1 border border-emerald-500/20">
-                              <CheckCircle2 className="w-3 h-3" /> {DICTIONARY[lang].done}
-                            </div>
-                          ) : mission.status === 'pending' ? (
-                            <div className="bg-[#FF9900]/10 text-[#FF9900] text-[10px] font-black px-3 py-1.5 rounded-lg flex items-center gap-1 border border-[#FF9900]/20 animate-pulse">
-                              <RefreshCw className="w-3 h-3 animate-spin" /> {DICTIONARY[lang].pending}
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => {
-                                if (mission.id === 'm-1') {
-                                  // Trigger wallet connect button (custom text alert helper)
-                                  showNotificationMessage(DICTIONARY[lang].connectWalletAlert);
-                                } else if (mission.id === 'm-3') {
-                                  setActiveTab('videos');
-                                } else if (mission.id === 'm-4') {
-                                  setShowSwapModal(true);
-                                } else {
-                                  handleMissionComplete(mission.id, mission.link);
-                                }
-                              }}
-                              className="bg-[#FF9900] hover:bg-[#FF9900]/80 text-black text-[10px] font-black px-3 py-1.5 rounded-lg transition-all active:scale-95 shadow-sm"
-                            >
-                              {DICTIONARY[lang].start}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Referral system Card */}
-                <div className="p-4 rounded-xl bg-gradient-to-tr from-amber-950/15 via-[#141416] to-black border border-[#FF9900]/15 space-y-3 relative overflow-hidden text-left">
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-[#FF9900]/5 rounded-full blur-xl pointer-events-none" />
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-[#FF9900]" />
-                    <h3 className="font-bold text-xs text-white">{DICTIONARY[lang].referralTitle}</h3>
-                  </div>
-                  <p className="text-[10px] text-neutral-400 leading-snug">
-                    {DICTIONARY[lang].referralDesc}
-                  </p>
-                  <div className="flex items-center gap-2 pt-1">
-                    <input 
-                      type="text" 
-                      readOnly 
-                      value="https://t.me/ston_hub_bot/app?startapp=ref_328" 
-                      className="flex-1 bg-black/50 border border-white/5 rounded-lg px-2.5 py-1.5 text-[9px] text-neutral-400 select-all cursor-pointer font-mono outline-none" 
-                    />
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText("https://t.me/ston_hub_bot/app?startapp=ref_328");
-                        showNotificationMessage(DICTIONARY[lang].referralCopied);
-                      }}
-                      className="bg-neutral-800 hover:bg-neutral-700 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg"
-                    >
-                      Copy
-                    </button>
-                  </div>
-                </div>
-
-              </motion.div>
-            )}
-
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {/* === TAB 4: ПРОФИЛЬ (PROFILE STATS) === */}
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {/* ======================================= */}
-            {activeTab === 'profile' && (
-              <motion.div
-                key="profile"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-4 text-left"
-              >
-                {showLeaderboard ? (
-                  // --- Leaderboard Overlay ---
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="space-y-4"
-                  >
-                    <div className="flex justify-between items-end border-b border-white/5 pb-2">
-                      <div>
-                        <h2 className="text-base font-black text-white flex items-center gap-1.5"><Trophy className="w-5 h-5 text-[#FF9900]" /> {DICTIONARY[lang].leaderboardTitle}</h2>
-                        <p className="text-[10px] text-neutral-400">{DICTIONARY[lang].leaderboardDesc}</p>
-                      </div>
-                      <button 
-                        onClick={() => setShowLeaderboard(false)}
-                        className="text-xs text-[#FF9900] font-bold hover:underline"
-                      >
-                        {DICTIONARY[lang].backToProfile}
-                      </button>
-                    </div>
-
-                    {/* Top 3 podium display */}
-                    <div className="grid grid-cols-3 gap-2.5 pb-2 pt-4">
-                      {/* 2nd Place */}
-                      <div className="bg-neutral-900/60 border border-white/5 rounded-xl p-3 flex flex-col items-center justify-center text-center mt-3 relative">
-                        <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center border border-neutral-700 text-[11px] font-black text-white mb-1 shadow">2</div>
-                        <span className="text-[9px] font-black truncate max-w-full text-white">cryptoboss</span>
-                        <span className="text-[10px] text-[#FF9900] font-bold mt-1">2,890 XP</span>
-                      </div>
-
-                      {/* 1st Place */}
-                      <div className="bg-gradient-to-b from-amber-500/10 to-neutral-900/80 border border-[#FF9900]/30 rounded-xl p-3.5 flex flex-col items-center justify-center text-center relative -translate-y-2.5 shadow-xl shadow-[#FF9900]/5">
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-sm animate-bounce">👑</div>
-                        <div className="w-10 h-10 rounded-full bg-[#FF9900]/20 flex items-center justify-center border-2 border-[#FF9900] text-[12px] font-black text-white mb-1 shadow-lg">1</div>
-                        <span className="text-[10px] font-black truncate max-w-full text-white">tonlegend</span>
-                        <span className="text-xs text-emerald-400 font-bold mt-1">5,420 XP</span>
-                      </div>
-
-                      {/* 3rd Place */}
-                      <div className="bg-neutral-900/60 border border-white/5 rounded-xl p-3 flex flex-col items-center justify-center text-center mt-6 relative">
-                        <div className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center border border-neutral-700 text-[10px] font-black text-white mb-1 shadow">3</div>
-                        <span className="text-[9px] font-black truncate max-w-full text-white">stonmaster</span>
-                        <span className="text-[10px] text-[#FF9900] font-bold mt-1">2,450 XP</span>
-                      </div>
-                    </div>
-
-                    {/* Table lists */}
-                    <div className="glass-panel rounded-xl overflow-hidden border border-white/5">
-                      <div className="p-3 border-b border-white/5 text-[9px] font-black uppercase tracking-wider text-neutral-400 flex justify-between">
-                        <span>{DICTIONARY[lang].tableAmbassador}</span>
-                        <span>{DICTIONARY[lang].tableXp}</span>
-                      </div>
-                      
-                      <div className="divide-y divide-white/5">
-                        {leaders.filter(l => !l.isCurrentUser).map((leader, i) => (
-                          <div 
-                            key={i}
-                            className="p-3 flex justify-between items-center text-xs hover:bg-white/5 transition"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className={`w-4 text-center font-bold text-[10px] ${
-                                leader.rank === 1 ? 'text-amber-400' : leader.rank === 2 ? 'text-neutral-300' : leader.rank === 3 ? 'text-amber-700' : 'text-neutral-500'
-                              }`}>
-                                #{leader.rank}
-                              </span>
-                              <div>
-                                <p className="text-white font-bold text-[11px]">{leader.name}</p>
-                                <p className="text-[8px] text-neutral-500">{leader.badge}</p>
-                              </div>
-                            </div>
-                            <span className="text-[#FF9900] font-bold text-[11px]">{leader.xp.toLocaleString()} XP</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Highlighted current user footer ranking */}
-                    <div className="bg-[#FF9900]/10 border border-[#FF9900]/30 p-3.5 rounded-xl flex justify-between items-center relative overflow-hidden">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-neutral-900 border border-[#FF9900]/30 flex items-center justify-center overflow-hidden">
-                          <img src="/logo.png" className="w-full h-full object-cover" />
-                        </div>
-                        <div className="text-left">
-                          <p className="text-xs font-black text-white">{lang === 'ru' ? 'Твой рейтинг (Вы)' : 'Your rank (You)'}</p>
-                          <p className="text-[9px] text-neutral-400">{userRank}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-black text-[#FF9900] block">{userXp.toLocaleString()} XP</span>
-                        <span className="text-[9px] font-bold text-neutral-500">{lang === 'ru' ? 'В рейтинге: #4' : 'Ranked: #4'}</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  // --- Profile main view ---
-                  <div className="space-y-4">
-                    {/* Ambassador status */}
-                    <div className="glass-panel rounded-xl p-4 text-center relative overflow-hidden space-y-3">
-                      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#FF5500] to-[#FF9900]" />
-                      <div className="w-16 h-16 rounded-full bg-neutral-900 border-2 border-[#FF9900] mx-auto overflow-hidden flex items-center justify-center orange-glow-sm">
-                        <img src="/logo.png" className="w-full h-full object-cover" />
-                      </div>
-                      <div>
-                        <h3 className="font-black text-sm text-white flex items-center justify-center gap-1">
-                          <span>{DICTIONARY[lang].yourLevel}</span>
-                          <span className="text-[#FF9900] font-black">Lv. 12</span>
-                        </h3>
-                        <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mt-1">{DICTIONARY[lang].officialAmbassador}</p>
-                      </div>
-                    </div>
-
-                    {/* Stats box list */}
-                    <div className="space-y-2">
-                      <h4 className="text-[10px] text-neutral-500 uppercase font-black tracking-widest pl-1">{DICTIONARY[lang].statsTitle}</h4>
-                      
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="p-3 bg-neutral-900 border border-white/5 rounded-xl">
-                          <span className="text-[8px] text-neutral-500 uppercase font-black block">{DICTIONARY[lang].statsQuests}</span>
-                          <span className="text-base font-black text-white mt-1 block">32</span>
-                        </div>
-                        <div className="p-3 bg-neutral-900 border border-white/5 rounded-xl">
-                          <span className="text-[8px] text-neutral-500 uppercase font-black block">{DICTIONARY[lang].statsFriends}</span>
-                          <span className="text-base font-black text-white mt-1 block">18</span>
-                        </div>
-                        <div className="p-3 bg-neutral-900 border border-white/5 rounded-xl">
-                          <span className="text-[8px] text-neutral-500 uppercase font-black block">{DICTIONARY[lang].statsEarnings}</span>
-                          <span className="text-base font-black text-[#FF9900] mt-1 block">2,350 $STON</span>
-                        </div>
-                        <div 
-                          onClick={() => setShowLeaderboard(true)}
-                          className="p-3 bg-neutral-900 border border-white/10 hover:border-[#FF9900]/30 rounded-xl cursor-pointer transition active:scale-95"
-                        >
-                          <span className="text-[8px] text-[#FF9900] uppercase font-black flex items-center justify-between">
-                            <span>{DICTIONARY[lang].statsRanking}</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          </span>
-                          <span className="text-base font-black text-white mt-1 block">#4</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Achievements row */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center pl-1 pr-1">
-                        <h4 className="text-[10px] text-neutral-500 uppercase font-black tracking-widest">{DICTIONARY[lang].achievementsTitle}</h4>
-                        <button onClick={() => showNotificationMessage(DICTIONARY[lang].achievementsAlert)} className="text-[9px] text-neutral-400 hover:text-white">{DICTIONARY[lang].viewAll}</button>
-                      </div>
-                      
-                      <div className="flex gap-2 justify-around bg-neutral-900/60 p-4 border border-white/5 rounded-xl">
-                        <div className="flex flex-col items-center gap-1 group relative cursor-help">
-                          <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500 flex items-center justify-center text-sm shadow">🔥</div>
-                          <span className="text-[8px] font-black text-neutral-400">{DICTIONARY[lang].badgeStreak}</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1 group relative cursor-help">
-                          <div className="w-10 h-10 rounded-full bg-slate-300/10 border border-slate-300 flex items-center justify-center text-sm shadow">💎</div>
-                          <span className="text-[8px] font-black text-neutral-400">{DICTIONARY[lang].badgeGuru}</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1 group relative cursor-help">
-                          <div className="w-10 h-10 rounded-full bg-amber-600/10 border border-amber-600 flex items-center justify-center text-sm shadow">👑</div>
-                          <span className="text-[8px] font-black text-neutral-400">{DICTIONARY[lang].badgeSwaper}</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1 group relative cursor-help">
-                          <div className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-sm shadow opacity-40">⭐</div>
-                          <span className="text-[8px] font-black text-neutral-500">{DICTIONARY[lang].badgeKing}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Disconnect button mockup */}
-                    <div className="pt-2">
-                      <button 
-                        onClick={() => showNotificationMessage(DICTIONARY[lang].funnyAlert)}
-                        className="w-full py-3 bg-neutral-900 hover:bg-neutral-800 border border-white/5 rounded-xl text-xs font-bold text-neutral-400 hover:text-white active:scale-95 transition"
-                      >
-                        STONHub OS v1.2
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-          </AnimatePresence>
-        </main>
-
-        {/* === BOTTOM PREMIUM DOCKED NAVIGATION === */}
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-40 bg-black/90 backdrop-blur-lg border-t border-white/5 px-2 py-3 flex justify-around select-none">
-          
-          {/* Home Tab */}
-          <button 
-            onClick={() => { setActiveTab('home'); setShowLeaderboard(false); }}
-            className={`flex flex-col items-center gap-1.5 transition duration-300 relative ${
-              activeTab === 'home' ? 'text-[#FF9900]' : 'text-neutral-400 hover:text-white'
-            }`}
-          >
-            <Compass className="w-5 h-5" />
-            <span className="text-[9px] font-black uppercase">{lang === 'ru' ? 'Главная' : 'Home'}</span>
-            {activeTab === 'home' && (
-              <motion.div layoutId="nav-glow" className="absolute -bottom-3 w-8 h-1 bg-[#FF9900] rounded-t-full shadow-lg shadow-[#FF9900]/50" />
-            )}
-          </button>
-
-          {/* Videos Tab */}
-          <button 
-            onClick={() => { setActiveTab('videos'); setShowLeaderboard(false); }}
-            className={`flex flex-col items-center gap-1.5 transition duration-300 relative ${
-              activeTab === 'videos' ? 'text-[#FF9900]' : 'text-neutral-400 hover:text-white'
-            }`}
-          >
-            <BookOpen className="w-5 h-5" />
-            <span className="text-[9px] font-black uppercase">{lang === 'ru' ? 'Академия' : 'Academy'}</span>
-            {activeTab === 'videos' && (
-              <motion.div layoutId="nav-glow" className="absolute -bottom-3 w-8 h-1 bg-[#FF9900] rounded-t-full shadow-lg shadow-[#FF9900]/50" />
-            )}
-          </button>
-
-          {/* Missions Tab */}
-          <button 
-            onClick={() => { setActiveTab('missions'); setShowLeaderboard(false); }}
-            className={`flex flex-col items-center gap-1.5 transition duration-300 relative ${
-              activeTab === 'missions' ? 'text-[#FF9900]' : 'text-neutral-400 hover:text-white'
-            }`}
-          >
-            <Target className="w-5 h-5" />
-            <span className="text-[9px] font-black uppercase">{lang === 'ru' ? 'Миссии' : 'Missions'}</span>
-            {activeTab === 'missions' && (
-              <motion.div layoutId="nav-glow" className="absolute -bottom-3 w-8 h-1 bg-[#FF9900] rounded-t-full shadow-lg shadow-[#FF9900]/50" />
-            )}
-          </button>
-
-          {/* Profile Tab */}
-          <button 
-            onClick={() => { setActiveTab('profile'); setShowLeaderboard(false); }}
-            className={`flex flex-col items-center gap-1.5 transition duration-300 relative ${
-              activeTab === 'profile' ? 'text-[#FF9900]' : 'text-neutral-400 hover:text-white'
-            }`}
-          >
-            <User className="w-5 h-5" />
-            <span className="text-[9px] font-black uppercase">{lang === 'ru' ? 'Профиль' : 'Profile'}</span>
-            {activeTab === 'profile' && (
-              <motion.div layoutId="nav-glow" className="absolute -bottom-3 w-8 h-1 bg-[#FF9900] rounded-t-full shadow-lg shadow-[#FF9900]/50" />
-            )}
-          </button>
-
-        </nav>
-
-        {/* ========================================== */}
-        {/* === INTERACTIVE TUTORIAL CHARACTER GUIDE === */}
-        {/* ========================================== */}
-        <AnimatePresence>
-          {tutorialStep !== null && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed sm:absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col justify-center items-center p-4 font-sans select-none"
-            >
-              <div className="relative w-full flex flex-row items-center gap-2.5">
-                
-                {/* Character Image (Left Column) */}
-                <motion.div 
-                  key={TUTORIAL_STEPS[tutorialStep].image}
-                  initial={{ x: -30, opacity: 0, scale: 0.9 }}
-                  animate={{ x: 0, opacity: 1, scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 120, damping: 15 }}
-                  className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 pointer-events-none z-10"
-                >
-                  <img 
-                    src={TUTORIAL_STEPS[tutorialStep].image} 
-                    alt="Intro Character" 
-                    className="w-full h-full object-contain filter drop-shadow-[0_5px_15px_rgba(255,153,0,0.25)]" 
-                  />
-                </motion.div>
-
-                {/* Chat Bubble / Cloud (Right Column) */}
-                <motion.div
-                  key={tutorialStep}
-                  initial={{ opacity: 0, x: 20, scale: 0.98 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex-1 bg-neutral-900/95 border-2 border-[#FF9900]/30 rounded-2xl p-4 shadow-[0_15px_40px_rgba(255,153,0,0.15)] relative text-left"
-                >
-                  <h4 className="text-[10px] font-black text-[#FF9900] uppercase tracking-wider mb-1">{DICTIONARY[lang].guideName}</h4>
-                  <p className="text-[11px] text-white leading-relaxed font-semibold">
-                    {TUTORIAL_STEPS[tutorialStep].text}
-                  </p>
-                  
-                  {/* Navigation Controls */}
-                  <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-white/5">
-                    <button 
-                      onClick={handleSkipTutorial}
-                      className="text-[10px] text-neutral-500 hover:text-white font-bold transition"
-                    >
-                      {DICTIONARY[lang].skip}
-                    </button>
-                    <button 
-                      onClick={handleNextTutorial}
-                      className="bg-[#FF9900] hover:bg-[#FF9900]/80 text-black text-[10px] font-black py-1.5 px-4 rounded-lg active:scale-95 transition"
-                    >
-                      {tutorialStep === TUTORIAL_STEPS.length - 1 ? DICTIONARY[lang].finish : DICTIONARY[lang].next}
-                    </button>
-                  </div>
-                  
-                  {/* Speech bubble tail pointing left to the character, vertically centered */}
-                  <div className="absolute left-[-8px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[8px] border-r-[#FF9900]/30" />
-                  <div className="absolute left-[-6px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[8px] border-r-neutral-900" />
-                </motion.div>
-
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-      </div>
-    );
-  }
 }
-

@@ -48,141 +48,210 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Custom STON Hub Pornhub-Style Theme Variables */
-  --color-orange-glow: #FF9900;
-  --color-orange-dark: #FF5500;
+  /* Premium STONHub Brand Theme Colors */
+  --color-brand-orange: #FF9900;
+  --color-brand-orange-dark: #FF5500;
 }
 
 :root {
-  /* Obsidian Dark & Premium Hot Orange theme */
-  --background: #0A0A0A;
+  /* Obsidian Dark & Premium Hot Orange/Amber theme */
+  --background: #060608;
   --foreground: #FFFFFF;
-  --card: #141416;
+  --card: rgba(22, 22, 26, 0.45);
   --card-foreground: #FFFFFF;
-  --popover: #141416;
+  --popover: #121215;
   --popover-foreground: #FFFFFF;
   --primary: #FF9900;
   --primary-foreground: #000000;
-  --secondary: #1C1C1E;
+  --secondary: rgba(255, 255, 255, 0.05);
   --secondary-foreground: #FFFFFF;
-  --muted: #1C1C1E;
-  --muted-foreground: #8A8A8F;
-  --accent: rgba(255, 153, 0, 0.1);
+  --muted: #16161a;
+  --muted-foreground: #8C8C96;
+  --accent: rgba(255, 153, 0, 0.08);
   --accent-foreground: #FF9900;
-  --destructive: #E63946;
+  --destructive: #FF3B30;
   --destructive-foreground: #FFFFFF;
-  --border: rgba(255, 255, 255, 0.07);
-  --input: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.03);
   --ring: #FF9900;
-  --radius: 12px;
+  --radius: 16px;
 }
 
 /* Base resets & customization */
 @layer base {
   * {
-    @apply border-border/80 outline-ring/30 transition-colors duration-200;
+    @apply border-border outline-ring/25;
   }
   body {
-    @apply bg-background text-foreground selection:bg-primary/30 selection:text-white antialiased overflow-x-hidden;
+    @apply bg-[#060608] text-foreground selection:bg-primary/20 selection:text-white antialiased overflow-x-hidden;
     background-image: 
-      radial-gradient(circle at 10% 20%, rgba(255, 153, 0, 0.04) 0%, transparent 40%),
-      radial-gradient(circle at 90% 80%, rgba(255, 85, 0, 0.04) 0%, transparent 40%);
+      radial-gradient(circle at 50% -20%, rgba(255, 153, 0, 0.06) 0%, transparent 60%),
+      radial-gradient(circle at 10% 40%, rgba(255, 85, 0, 0.015) 0%, transparent 35%),
+      radial-gradient(circle at 90% 70%, rgba(255, 153, 0, 0.015) 0%, transparent 35%);
     background-attachment: fixed;
   }
 }
 
-/* Glassmorphism helpers */
-.glass-panel {
-  background: rgba(20, 20, 22, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.6);
+/* --- SUPER REALISTIC LIQUID GLASS (GLASSMORPHISM) --- */
+.liquid-glass-card {
+  background: rgba(22, 22, 26, 0.35);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    0 4px 30px rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+  transition: all 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.glass-panel-interactive {
-  background: rgba(20, 20, 22, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.6);
-  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+.liquid-glass-card-interactive {
+  background: rgba(22, 22, 26, 0.35);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    0 4px 30px rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+  transition: all 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.glass-panel-interactive:hover {
-  border-color: rgba(255, 153, 0, 0.35);
-  box-shadow: 0 10px 40px 0 rgba(255, 153, 0, 0.04);
+.liquid-glass-card-interactive:hover {
+  background: rgba(26, 26, 32, 0.45);
+  border-color: rgba(255, 153, 0, 0.25);
+  box-shadow: 
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.15),
+    0 8px 40px rgba(255, 153, 0, 0.03),
+    0 1px 3px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
 }
 
-.glass-panel-interactive:active {
-  transform: scale(0.98);
+.liquid-glass-card-interactive:active {
+  transform: translateY(0) scale(0.985);
+  background: rgba(18, 18, 22, 0.4);
 }
 
-/* Glow effects */
-.orange-glow {
-  box-shadow: 0 0 25px rgba(255, 153, 0, 0.2);
-  text-shadow: 0 0 8px rgba(255, 153, 0, 0.4);
+/* Glass inputs */
+.liquid-glass-input {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+  transition: all 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.orange-glow-sm {
-  box-shadow: 0 0 12px rgba(255, 153, 0, 0.15);
+.liquid-glass-input:focus {
+  border-color: rgba(255, 153, 0, 0.4);
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.8),
+    0 0 12px rgba(255, 153, 0, 0.1);
+  background: rgba(0, 0, 0, 0.35);
+  outline: none;
 }
 
-.text-glow {
-  text-shadow: 0 0 10px rgba(255, 153, 0, 0.4);
-}
-
-/* Pornhub signature badge */
-.ph-badge {
-  background-color: #FF9900;
+/* High Gloss Reflective Button */
+.liquid-glass-button-primary {
+  background: linear-gradient(135deg, #FF9900 0%, #FF5500 100%);
   color: #000000;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-sans), sans-serif;
-  text-shadow: none;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    0 4px 20px rgba(255, 153, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  transition: all 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Floating Sparks Animation */
-@keyframes float-sparkle {
-  0% {
-    transform: translateY(0) translateX(0) scale(1) rotate(0deg);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.7;
-  }
-  90% {
-    opacity: 0.7;
-  }
-  100% {
-    transform: translateY(-100vh) translateX(var(--drift, 40px)) scale(0.2) rotate(360deg);
-    opacity: 0;
-  }
+.liquid-glass-button-primary::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 45%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 55%
+  );
+  transform: rotate(30deg);
+  transition: transform 600ms ease;
+  pointer-events: none;
 }
 
-.sparkle-particles {
+.liquid-glass-button-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    0 6px 24px rgba(255, 153, 0, 0.35);
+}
+
+.liquid-glass-button-primary:hover::after {
+  transform: translate(25%, 25%) rotate(30deg);
+}
+
+.liquid-glass-button-primary:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.2),
+    0 2px 10px rgba(255, 153, 0, 0.15);
+}
+
+/* Secondary Button Glass */
+.liquid-glass-button-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.liquid-glass-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.liquid-glass-button-secondary:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Glassy Reflective Overlay */
+.glossy-reflection {
+  position: relative;
+}
+
+.glossy-reflection::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
   pointer-events: none;
-  z-index: 0;
+  border-radius: inherit;
 }
 
-.sparkle-particle {
-  position: absolute;
-  bottom: -20px;
-  background: linear-gradient(135deg, #FF9900 0%, #FF5500 100%);
-  border-radius: 50%;
-  filter: blur(1.5px);
-  animation: float-sparkle infinite linear;
-  box-shadow: 0 0 8px #FF9900;
+/* Brand glows (non-neon, warm amber only) */
+.brand-glow-subtle {
+  box-shadow: 0 0 40px rgba(255, 153, 0, 0.04);
+}
+
+.text-brand-glow {
+  text-shadow: 0 0 10px rgba(255, 153, 0, 0.25);
 }
 
 /* Hide scrollbar for TMA feel */
@@ -192,4 +261,22 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* High-end loading animation */
+@keyframes spin-gradient {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner-gradient {
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 40%, #FF9900 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), black 0);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), black 0);
+  animation: spin-gradient 1.2s infinite linear;
 }
