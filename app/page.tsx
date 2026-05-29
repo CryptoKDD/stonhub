@@ -31,7 +31,7 @@ import {
   type AssetId,
   type QuoteRequest
 } from '@ston-fi/omniston-sdk-react';
-import { useAccount } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 // === Dynamic Premium Token Logos with Local /tokens/ Priority and Remote CDN Fallback ===
@@ -433,6 +433,73 @@ export default function Home() {
   const tonAddress = useTonAddress();
   const [tonConnectUI] = useTonConnectUI();
   const { address: evmAddress } = useAccount();
+
+  // Dynamic EVM Balance hook via Wagmi v2
+  const { data: evmBalanceData } = useBalance({
+    address: evmAddress,
+  });
+
+  const [tonBalance, setTonBalance] = useState<string>('0.00');
+
+  useEffect(() => {
+    if (!tonAddress) {
+      setTonBalance('0.00');
+      return;
+    }
+
+    let isMounted = true;
+    const fetchTonBalance = async () => {
+      try {
+        const res = await fetch(`https://toncenter.com/api/v2/getAddressInformation?address=${encodeURIComponent(tonAddress)}`);
+        const json = await res.json();
+        if (isMounted && json && json.ok && json.result) {
+          const rawBalance = json.result.balance;
+          const formatted = (Number(rawBalance) / 1e9).toFixed(4);
+          setTonBalance(formatted);
+        }
+      } catch (err) {
+        console.error("Error fetching TON balance from Toncenter, trying fallback...", err);
+        try {
+          const res = await fetch(`https://tonapi.io/v2/accounts/${encodeURIComponent(tonAddress)}`);
+          const json = await res.json();
+          if (isMounted && json && json.balance) {
+            const rawBalance = json.balance;
+            const formatted = (Number(rawBalance) / 1e9).toFixed(4);
+            setTonBalance(formatted);
+          }
+        } catch (fallbackErr) {
+          console.error("Error fetching TON balance from fallback...", fallbackErr);
+        }
+      }
+    };
+
+    fetchTonBalance();
+    const interval = setInterval(fetchTonBalance, 15000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [tonAddress]);
+
+  // Format balances for display
+  const evmBalanceFormatted = evmBalanceData ? Number(evmBalanceData.formatted).toFixed(4) : '0.00';
+
+  const displayedSrcBalance = useMemo(() => {
+    if (srcChain === 'ton') {
+      return tonAddress ? tonBalance : '0.00';
+    } else {
+      return evmAddress ? evmBalanceFormatted : '0.00';
+    }
+  }, [srcChain, tonAddress, tonBalance, evmAddress, evmBalanceFormatted]);
+
+  const displayedDstBalance = useMemo(() => {
+    if (dstChain === 'ton') {
+      return tonAddress ? tonBalance : '0.00';
+    } else {
+      return evmAddress ? evmBalanceFormatted : '0.00';
+    }
+  }, [dstChain, tonAddress, tonBalance, evmAddress, evmBalanceFormatted]);
 
   // === App Navigation States ===
   const [activeTab, setActiveTab] = useState<'copilot' | 'pro' | 'info' | 'support'>('copilot');
@@ -1080,7 +1147,7 @@ export default function Home() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs font-bold text-neutral-400">
                   <span>{t.sendLabel}</span>
-                  <span>{t.balanceLabel} 12.45</span>
+                  <span>{t.balanceLabel} {displayedSrcBalance}</span>
                 </div>
                 
                 <div className="bg-black/45 border border-white/5 rounded-xl p-3 flex flex-col gap-3">
@@ -1194,7 +1261,7 @@ export default function Home() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs font-bold text-neutral-400">
                   <span>{t.receiveLabel}</span>
-                  <span>{t.balanceLabel} 0.00</span>
+                  <span>{t.balanceLabel} {displayedDstBalance}</span>
                 </div>
                 
                 <div className="bg-black/45 border border-white/5 rounded-xl p-3 flex flex-col gap-3">
