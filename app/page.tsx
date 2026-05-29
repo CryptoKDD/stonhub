@@ -1114,7 +1114,7 @@ export default function Home() {
                           onClick={() => setShowSrcChainDrop(!showSrcChainDrop)}
                           className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-[9px] font-black tracking-wide cursor-pointer transition-all text-neutral-400"
                         >
-                          <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Сеть:' : 'Chain:'}</span>
+                          <span className="text-neutral-500 mr-0.5 hidden xs:inline">{lang === 'ru' ? 'Сеть:' : 'Chain:'}</span>
                           <ChainLogo chain={srcChain} className="w-3.5 h-3.5" />
                           <span className="uppercase text-white">{srcChain}</span>
                           <ChevronDown className="w-3 h-3 text-neutral-500" />
@@ -1142,7 +1142,7 @@ export default function Home() {
                           onClick={() => setShowSrcTokenDrop(!showSrcTokenDrop)}
                           className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-[9px] font-black cursor-pointer transition-all text-neutral-400"
                         >
-                          <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Токен:' : 'Token:'}</span>
+                          <span className="text-neutral-500 mr-0.5 hidden xs:inline">{lang === 'ru' ? 'Токен:' : 'Token:'}</span>
                           <TokenLogo symbol={srcToken} className="w-3.5 h-3.5" />
                           <span className="text-white text-xs">{srcToken}</span>
                           <ChevronDown className="w-3 h-3 text-neutral-500" />
@@ -1221,7 +1221,7 @@ export default function Home() {
                           onClick={() => setShowDstChainDrop(!showDstChainDrop)}
                           className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-[9px] font-black tracking-wide cursor-pointer transition-all text-neutral-400"
                         >
-                          <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Сеть:' : 'Chain:'}</span>
+                          <span className="text-neutral-500 mr-0.5 hidden xs:inline">{lang === 'ru' ? 'Сеть:' : 'Chain:'}</span>
                           <ChainLogo chain={dstChain} className="w-3.5 h-3.5" />
                           <span className="uppercase text-white">{dstChain}</span>
                           <ChevronDown className="w-3 h-3 text-neutral-500" />
@@ -1249,7 +1249,7 @@ export default function Home() {
                           onClick={() => setShowDstTokenDrop(!showDstTokenDrop)}
                           className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 flex items-center gap-1.5 text-[9px] font-black cursor-pointer transition-all text-neutral-400"
                         >
-                          <span className="text-neutral-500 mr-0.5">{lang === 'ru' ? 'Токен:' : 'Token:'}</span>
+                          <span className="text-neutral-500 mr-0.5 hidden xs:inline">{lang === 'ru' ? 'Токен:' : 'Token:'}</span>
                           <TokenLogo symbol={dstToken} className="w-3.5 h-3.5" />
                           <span className="text-white text-xs">{dstToken}</span>
                           <ChevronDown className="w-3 h-3 text-neutral-500" />
